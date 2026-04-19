@@ -1,0 +1,155 @@
+// CleanOps 核心数据库结构 V1.0 (2026版)
+// 适用架构：Next.js + NestJS + PostgreSQL
+
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN    // 老板/管理员
+  MANAGER  // 经理/主管
+  WORKER   // 普通员工
+}
+
+// 1. 公司 (租户隔离核心)
+model Company {
+  id                String   @id @default(uuid())
+  name              String
+  vatNumber         String?  // 爱尔兰 VAT 号码
+  baseHourlyRate    Int      @default(1480) // 默认起薪 14.80 欧元 (以分存储)
+  pensionEnrollment Boolean  @default(true) // 是否开启 2026 自动养老金计划 (1.5%)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // 关系
+  users             User[]      // 后台管理账号
+  workers           Worker[]    // 清洁工
+  customers         Customer[]  // 客户库
+  jobs              Job[]       // 任务库
+  invoices          Invoice[]   // 账单库
+}
+
+// 2. 后台管理用户
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      Role     @default(WORKER) // 默认角色是员工
+  
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+}
+
+// 3. 清洁工
+model Worker {
+  id            String   @id @default(uuid())
+  firstName     String
+  lastName      String
+  phone         String   @unique // 核心：WhatsApp 登录唯一凭证
+  email         String?
+  ppsn          String?  // 爱尔兰个人税号 (用于报税)
+  hourlyRate    Int?     // 个体时薪 (分)，为空则使用 Company 默认值
+  isActive      Boolean  @default(true)
+  
+  companyId     String
+  company       Company  @relation(fields: [companyId], references: [id])
+  
+  assignments   JobAssignment[] // 关联的任务
+}
+
+// 4. 客户
+model Customer {
+  id            String   @id @default(uuid())
+  name          String
+  email         String?
+  phone         String?
+  address       String   // 物理地址
+  eircode       String?  // 爱尔兰 Eircode 邮编
+  accessCode    String?  // 附加信息：如公寓大门密码 (都柏林刚需)
+  lat           Float    // 纬度：用于地缘围栏打卡校验
+  lng           Float    // 经度：用于地缘围栏打卡校验
+  isCommercial  Boolean  @default(false) // 商业客户(23% VAT)还是住宅客户(13.5% VAT)
+  
+  companyId     String
+  company       Company  @relation(fields: [companyId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  jobs          Job[]
+}
+
+// 5. 任务 (工单)
+model Job {
+  id              String    @id @default(uuid())
+  title           String?
+  description     String?
+  scheduledStart  DateTime
+  scheduledEnd    DateTime?
+  
+  // 状态机: PENDING, IN_PROGRESS, COMPLETED, ISSUE, CANCELLED
+  status          String    @default("PENDING")
+  internalNotes   String?   @db.Text // 用于记录意外状况或纠纷备注
+  notes           String?   // 创建任务时的备注信息
+  estimatedDuration Int?     // 预计耗时（分钟）
+
+  // 地缘围栏打卡数据
+  actualStart     DateTime?
+  actualEnd       DateTime?
+  startLocationLat Float?
+  startLocationLng Float?
+  endLocationLat   Float?
+  endLocationLng   Float?
+  
+  // 重复任务逻辑
+  isRecurring     Boolean   @default(false)
+  recurrenceRule  String?   // "WEEKLY", "BI-WEEKLY" (用于后续自动排班扩展)
+
+  // 时间戳
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // 关联
+  customerId      String
+  customer        Customer  @relation(fields: [customerId], references: [id])
+  
+  companyId       String
+  company         Company   @relation(fields: [companyId], references: [id])
+  
+  assignments     JobAssignment[]
+  invoice         Invoice?
+}
+
+// 6. 任务-员工多对多中间表
+model JobAssignment {
+  id        String   @id @default(uuid())
+  jobId     String
+  workerId  String
+  job       Job      @relation(fields: [jobId], references: [id])
+  worker    Worker   @relation(fields: [workerId], references: [id])
+
+  @@unique([jobId, workerId])
+}
+
+// 7. 账单
+model Invoice {
+  id              String    @id @default(uuid())
+  amount          Int       // 总金额 (分)
+  vatAmount       Int       // 税额 (分)
+  pensionAmount   Int       @default(0) // 2026 强制养老金提留额 (分)
+  
+  // 状态: UNPAID, PAID, VOID
+  status          String    @default("UNPAID")
+  paymentLink     String?   // 存储生成的支付链接
+  paidAt          DateTime?
+  createdAt       DateTime  @default(now())
+
+  jobId           String    @unique
+  job             Job       @relation(fields: [jobId], references: [id])
+  
+  companyId       String
+  company         Company   @relation(fields: [companyId], references: [id])
+}

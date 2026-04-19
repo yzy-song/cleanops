@@ -1,0 +1,65 @@
+# Node/Monorepo
+node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+.pnpm-store
+dist/
+build/
+out/
+
+web/
+
+# Next.js
+.next/
+.next/cache/
+.next/static/
+.vercel/
+next-env.d.ts
+
+# NestJS
+coverage/
+*.tsbuildinfo
+
+# Prisma
+prisma/migrations/
+prisma/dev.db
+
+# 环境变量
+.env*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 日志
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+logs/
+*.log
+
+# IDE/编辑器
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+*.tgz
+*.zip
+*.pem
+
+# TurboRepo
+.turbo
