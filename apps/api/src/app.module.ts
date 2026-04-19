@@ -1,0 +1,28 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { PrismaModule } from './prisma/prisma.module';
+import { CompanyModule } from './company/company.module';
+import { WorkerModule } from './worker/worker.module';
+import { CustomerModule } from './customer/customer.module';
+import { AuthModule } from './auth/auth.module';
+import { AppLogger } from './common/utils/logger';
+import { JobModule } from './job/job.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    PrismaModule,
+    CompanyModule,
+    WorkerModule,
+    CustomerModule,
+    AuthModule,
+    JobModule,
+  ],
+  controllers: [AppController],
+  providers: [AppService, AppLogger],
+})
+export class AppModule {}
