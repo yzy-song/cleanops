@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCompanyWithAdminDto } from './dto/create-company-with-admin.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -34,15 +34,20 @@ export class CompanyService {
     });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} company`;
+  async findOne(id: string) {
+    const company = await this.prisma.client.company.findUnique({
+      where: { id },
+      include: { _count: { select: { users: true, workers: true, customers: true, jobs: true } } },
+    });
+    if (!company) throw new NotFoundException('Company not found');
+    return company;
   }
 
-  update(id: number, updateCompanyDto: UpdateCompanyDto) {
-    return `This action updates a #${id} company`;
+  async update(id: string, dto: UpdateCompanyDto) {
+    return this.prisma.client.company.update({ where: { id }, data: dto });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} company`;
+  async remove(id: string) {
+    return this.prisma.client.company.delete({ where: { id } });
   }
 }
