@@ -6,11 +6,17 @@ import { Resend } from 'resend';
 
 @Injectable()
 export class EmailService {
-  private readonly resend: Resend;
+  private readonly resend: Resend | null;
   private readonly logger = new Logger(EmailService.name);
 
   constructor(private configService: ConfigService) {
-    this.resend = new Resend(configService.get<string>('RESEND_API_KEY'));
+    const apiKey = configService.get<string>('RESEND_API_KEY');
+    if (!apiKey) {
+      this.logger.warn('RESEND_API_KEY is not set. Email functionality will be disabled.');
+      this.resend = null;
+    } else {
+      this.resend = new Resend(apiKey);
+    }
   }
 
   // 发送老板/管理员欢迎邮件
@@ -68,6 +74,10 @@ export class EmailService {
 
   private async sendEmail(to: string, subject: string, html: string) {
     if (!to) return;
+    if (!this.resend) {
+      this.logger.warn(`Email service is disabled. Skipping email to ${to}`);
+      return;
+    }
     try {
       const from = this.configService.get<string>('EMAIL_FROM') || 'noreply@cleanops.com';
       await this.resend.emails.send({

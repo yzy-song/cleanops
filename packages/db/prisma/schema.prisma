@@ -43,6 +43,8 @@ model User {
   
   companyId String
   company   Company  @relation(fields: [companyId], references: [id])
+
+  worker    Worker? // 允许通过 user 找到对应的 worker 档案
 }
 
 // 3. 清洁工
@@ -59,6 +61,8 @@ model Worker {
   companyId     String
   company       Company  @relation(fields: [companyId], references: [id])
   
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   assignments   JobAssignment[] // 关联的任务
 }
 

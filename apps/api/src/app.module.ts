@@ -9,6 +9,7 @@ import { CustomerModule } from './customer/customer.module';
 import { AuthModule } from './auth/auth.module';
 import { AppLogger } from './common/utils/logger';
 import { JobModule } from './job/job.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { JobModule } from './job/job.module';
     }),
     PrismaModule,
     CompanyModule,
+    EmailModule,
     WorkerModule,
     CustomerModule,
     AuthModule,

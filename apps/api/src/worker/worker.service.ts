@@ -1,21 +1,58 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { CreateWorkerDto } from './dto/create-worker.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateWorkerDto } from './dto/update-worker.dto';
+import { EmailService } from 'src/email/email.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class WorkerService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private emailService: EmailService,
+  ) {}
 
-  async create(dto: CreateWorkerDto) {
-    return this.prisma.client.worker.create({
-      data: {
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-        phone: dto.phone,
-        companyId: dto.companyId,
-        hourlyRate: dto.hourlyRate, // 如果传了就用专有时薪，没传 Prisma 自动用 null 或 DB 默认值
-      },
+  // apps/api/src/modules/worker/worker.service.ts
+
+  async create(companyId: string, dto: CreateWorkerDto) {
+    const existing = await this.prisma.client.user.findUnique({ where: { email: dto.email } });
+    if (existing) throw new ConflictException('Email already registered');
+
+    const tempPassword = Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+    return this.prisma.client.$transaction(async (tx) => {
+      // 1. 创建账号
+      const user = await tx.user.create({
+        data: {
+          email: dto.email,
+          password: hashedPassword,
+          role: 'WORKER',
+          companyId: companyId,
+        },
+      });
+
+      // 2. 创建档案
+      const worker = await tx.worker.create({
+        data: {
+          firstName: dto.firstName,
+          lastName: dto.lastName,
+          phone: dto.phone,
+          hourlyRate: dto.hourlyRate,
+          // 使用关联写法，Prisma 会自动处理 userId
+          user: {
+            connect: { id: user.id },
+          },
+          company: {
+            connect: { id: companyId },
+          },
+        },
+      });
+
+      // 3. 异步发送邮件 (发送原始 tempPassword)
+      this.emailService.sendNewAccountInfoEmail(dto.email, dto.firstName, tempPassword, 'CleanOps');
+
+      return worker;
     });
   }
 
