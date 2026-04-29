@@ -1,38 +1,48 @@
-import { Controller, Post, Body, Get, Param, UseGuards, Patch, Request } from '@nestjs/common';
+import { Controller, Patch, Param, Body, UseGuards, Request } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { JobService } from './job.service';
-import { CreateJobDto } from './dto/create-job.dto';
-import { CheckInDto } from './dto/check-in.dto';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { CurrentCompanyId } from 'src/common/decorators/get-company.decorator';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { Role } from '@cleanops/db';
 
 @ApiTags('Jobs')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('jobs')
 export class JobController {
   constructor(private readonly jobService: JobService) {}
 
-  @Post()
-  @ApiOperation({ summary: '老板指派新任务' })
-  create(@CurrentCompanyId() companyId: string, @Body() dto: CreateJobDto) {
-    return this.jobService.create(companyId, dto);
-  }
-
-  @Get()
-  @ApiOperation({ summary: '获取公司所有任务列表' })
-  findAll(@CurrentCompanyId() companyId: string) {
-    return this.jobService.findAll(companyId);
-  }
-
   @Patch(':id/check-in')
+  @Roles(Role.WORKER, Role.ADMIN) // 员工和管理员都能打卡
   @ApiOperation({ summary: '员工打卡开始工作' })
-  checkIn(
-    @Param('id') id: string,
-    @Request() req, // 从 JWT 获取 workerId (通常对应 User 表中的关联)
-    @Body() location: CheckInDto,
-  ) {
-    // 假设你的 JWT payload 中记录了 user.id
-    return this.jobService.checkIn(id, req.user.userId, location);
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        lat: { type: 'number', example: 53.3498 },
+        lng: { type: 'number', example: -6.2603 },
+      },
+      required: ['lat', 'lng'],
+    },
+  })
+  async checkIn(@Param('id') jobId: string, @Request() req: any, @Body('lat') lat: number, @Body('lng') lng: number) {
+    // 这里的 req.user.userId 是从 JwtStrategy 返回的对象中提取的
+    return this.jobService.checkIn(jobId, req.user.userId, lat, lng);
+  }
+
+  @Patch(':id/complete')
+  @Roles(Role.WORKER, Role.ADMIN)
+  @ApiOperation({ summary: '员工完成任务' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        notes: { type: 'string', description: '内部备注或现场反馈', example: 'Everything went well, keys returned.' },
+      },
+    },
+  })
+  async completeJob(@Param('id') jobId: string, @Request() req: any, @Body('notes') notes?: string) {
+    return this.jobService.complete(jobId, req.user.userId, notes);
   }
 }

@@ -2,14 +2,18 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { WorkerService } from './worker.service';
 import { CreateWorkerDto } from './dto/create-worker.dto';
 import { UpdateWorkerDto } from './dto/update-worker.dto';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 
 @Controller('worker')
 export class WorkerController {
   constructor(private readonly workerService: WorkerService) {}
 
   @Post()
-  create(@Body() createWorkerDto: CreateWorkerDto) {
-    return this.workerService.create(createWorkerDto);
+  async createWorker(
+    @CurrentUser('companyId') companyId: string, // 自动从 JWT 拿，安全且简单
+    @Body() dto: CreateWorkerDto,
+  ) {
+    return this.workerService.create(companyId, dto);
   }
 
   @Get()
