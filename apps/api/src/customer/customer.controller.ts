@@ -2,33 +2,48 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { CustomerService } from './customer.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { Auth } from '../auth/decorators/auth.decorator';
+import { Role } from '@cleanops/db';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
+@ApiTags('Customers')
 @Controller('customer')
 export class CustomerController {
   constructor(private readonly customerService: CustomerService) {}
 
   @Post()
+  @Auth(Role.ADMIN, Role.MANAGER)
+  @ApiOperation({ summary: '添加客户' })
   create(@Body() createCustomerDto: CreateCustomerDto) {
     return this.customerService.create(createCustomerDto);
   }
 
   @Get()
-  findAll(@Body('companyId') companyId: string) {
+  @Auth()
+  @ApiOperation({ summary: '获取客户列表' })
+  findAll(@CurrentUser('companyId') companyId: string) {
     return this.customerService.findAll(companyId);
   }
 
   @Get(':id')
+  @Auth()
+  @ApiOperation({ summary: '获取客户详情' })
   findOne(@Param('id') id: string) {
-    return this.customerService.findOne(+id);
+    return this.customerService.findOne(id);
   }
 
   @Patch(':id')
+  @Auth(Role.ADMIN, Role.MANAGER)
+  @ApiOperation({ summary: '更新客户信息' })
   update(@Param('id') id: string, @Body() updateCustomerDto: UpdateCustomerDto) {
-    return this.customerService.update(+id, updateCustomerDto);
+    return this.customerService.update(id, updateCustomerDto);
   }
 
   @Delete(':id')
+  @Auth(Role.ADMIN)
+  @ApiOperation({ summary: '删除客户' })
   remove(@Param('id') id: string) {
-    return this.customerService.remove(+id);
+    return this.customerService.remove(id);
   }
 }

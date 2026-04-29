@@ -10,6 +10,8 @@ import { AuthModule } from './auth/auth.module';
 import { AppLogger } from './common/utils/logger';
 import { JobModule } from './job/job.module';
 import { EmailModule } from './email/email.module';
+import { InvoiceModule } from './invoice/invoice.module';
+import { ReportModule } from './report/report.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { EmailModule } from './email/email.module';
     CustomerModule,
     AuthModule,
     JobModule,
+    InvoiceModule,
+    ReportModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppLogger],

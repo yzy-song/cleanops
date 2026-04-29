@@ -43,7 +43,8 @@ export class AuthService {
     const payload = {
       sub: user.id,
       email: user.email,
-      companyId: user.companyId, // 注入租户ID
+      role: user.role,
+      companyId: user.companyId,
     };
 
     return {

@@ -1,4 +1,4 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { CreateWorkerDto } from './dto/create-worker.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateWorkerDto } from './dto/update-worker.dto';
@@ -62,15 +62,97 @@ export class WorkerService {
     });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} worker`;
+  async findOne(id: string) {
+    const worker = await this.prisma.client.worker.findUnique({
+      where: { id },
+      include: { user: { select: { email: true, role: true } }, assignments: true },
+    });
+    if (!worker) throw new NotFoundException('Worker not found');
+    return worker;
   }
 
-  update(id: number, updateWorkerDto: UpdateWorkerDto) {
-    return `This action updates a #${id} worker`;
+  async update(id: string, dto: UpdateWorkerDto) {
+    const data: any = { ...dto };
+    // 如果更新了 email，同步更新 User
+    if (dto.email) {
+      const worker = await this.prisma.client.worker.findUnique({ where: { id } });
+      if (worker) {
+        await this.prisma.client.user.update({
+          where: { id: worker.userId },
+          data: { email: dto.email },
+        });
+      }
+    }
+    return this.prisma.client.worker.update({ where: { id }, data });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} worker`;
+  async remove(id: string) {
+    return this.prisma.client.worker.update({
+      where: { id },
+      data: { isActive: false },
+    });
+  }
+
+  async getMyEarnings(userId: string, from?: string, to?: string) {
+    // Find worker by userId
+    const worker = await this.prisma.client.worker.findFirst({
+      where: { userId },
+      include: { company: true },
+    });
+    if (!worker) throw new NotFoundException('Worker profile not found');
+
+    const where: any = {
+      companyId: worker.companyId,
+      status: 'COMPLETED',
+      assignments: { some: { workerId: worker.id } },
+    };
+    if (from || to) {
+      where.actualEnd = {};
+      if (from) where.actualEnd.gte = new Date(from);
+      if (to) where.actualEnd.lte = new Date(to);
+    }
+
+    const jobs = await this.prisma.client.job.findMany({
+      where,
+      include: { customer: true },
+    });
+
+    const hourlyRate = worker.hourlyRate ?? worker.company.baseHourlyRate;
+    let totalMinutes = 0;
+    for (const job of jobs) {
+      if (job.actualStart && job.actualEnd) {
+        totalMinutes += Math.round((job.actualEnd.getTime() - job.actualStart.getTime()) / 60000);
+      } else if (job.estimatedDuration) {
+        totalMinutes += job.estimatedDuration;
+      }
+    }
+
+    const hours = totalMinutes / 60;
+    return {
+      workerId: worker.id,
+      name: `${worker.firstName} ${worker.lastName}`,
+      hourlyRate,
+      totalHours: Math.round(hours * 100) / 100,
+      totalEarnings: Math.round(hours * hourlyRate),
+      jobCount: jobs.length,
+      jobs,
+    };
+  }
+
+  async getMyJobs(userId: string) {
+    const worker = await this.prisma.client.worker.findFirst({
+      where: { userId },
+    });
+    if (!worker) throw new NotFoundException('Worker profile not found');
+
+    return this.prisma.client.job.findMany({
+      where: {
+        companyId: worker.companyId,
+        assignments: { some: { workerId: worker.id } },
+      },
+      include: { customer: true, assignments: { include: { worker: true } } },
+      orderBy: { scheduledStart: 'desc' },
+      take: 50,
+    });
   }
 }
