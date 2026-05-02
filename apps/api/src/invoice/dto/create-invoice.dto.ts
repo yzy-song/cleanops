@@ -17,10 +17,4 @@ export class CreateInvoiceDto {
   @Min(0)
   vatAmount: number;
 
-  @ApiProperty({ example: 75, description: '养老金提留额（分）', required: false, default: 0 })
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  pensionAmount?: number;
-
 }

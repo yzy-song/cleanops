@@ -6,6 +6,6 @@ import { StripeService } from '../common/services/stripe.service';
 @Module({
   controllers: [InvoiceController],
   providers: [InvoiceService, StripeService],
-  exports: [InvoiceService],
+  exports: [InvoiceService, StripeService],
 })
 export class InvoiceModule {}

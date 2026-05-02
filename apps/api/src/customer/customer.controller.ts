@@ -26,11 +26,25 @@ export class CustomerController {
     return this.customerService.findAll(companyId);
   }
 
+  @Get('list/credit-risk')
+  @Auth()
+  @ApiOperation({ summary: '获取客户信用风险列表' })
+  findAllWithCreditRisk(@CurrentUser('companyId') companyId: string) {
+    return this.customerService.findAllWithCreditRisk(companyId);
+  }
+
   @Get(':id')
   @Auth()
   @ApiOperation({ summary: '获取客户详情' })
   findOne(@Param('id') id: string) {
     return this.customerService.findOne(id);
+  }
+
+  @Get(':id/credit-summary')
+  @Auth()
+  @ApiOperation({ summary: '获取客户信用摘要（未付账单和风险等级）' })
+  getCreditSummary(@Param('id') id: string) {
+    return this.customerService.getCreditSummary(id);
   }
 
   @Patch(':id')

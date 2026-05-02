@@ -163,8 +163,6 @@ model Invoice {
   id              String    @id @default(uuid())
   amount          Int       // 总金额 (分)
   vatAmount       Int       // 税额 (分)
-  pensionAmount   Int       @default(0) // 2026 强制养老金提留额 (分)
-  
   // 状态: UNPAID, PAID, VOID
   status          String    @default("UNPAID")
   paymentMethod   String?   // STRIPE, CASH, REVOLUT, BANK_TRANSFER

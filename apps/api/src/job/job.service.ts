@@ -5,6 +5,7 @@ import { QueryJobDto } from './dto/query-job.dto';
 import { EmailService } from '../email/email.service';
 import { InvoiceService } from '../invoice/invoice.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { StripeService } from '../common/services/stripe.service';
 import * as geolib from 'geolib';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { paginate } from '../common/utils/pagination.util';
@@ -16,6 +17,7 @@ export class JobService {
     private emailService: EmailService,
     private invoiceService: InvoiceService,
     private cloudinaryService: CloudinaryService,
+    private stripeService: StripeService,
   ) {}
 
   async create(companyId: string, dto: CreateJobDto) {
@@ -392,5 +394,44 @@ export class JobService {
   async deletePhoto(jobId: string, photoId: string, companyId: string) {
     await this.findOne(jobId, companyId);
     return this.prisma.client.jobPhoto.delete({ where: { id: photoId } });
+  }
+
+  async markDepositPaid(jobId: string, companyId: string) {
+    const job = await this.findOne(jobId, companyId);
+    if (!job.depositAmount || job.depositAmount <= 0) {
+      throw new BadRequestException('Job has no deposit');
+    }
+    if (job.isDepositPaid) {
+      throw new BadRequestException('Deposit is already paid');
+    }
+    return this.prisma.client.job.update({
+      where: { id: jobId },
+      data: { isDepositPaid: true },
+    });
+  }
+
+  async generateDepositPaymentLink(jobId: string, companyId: string) {
+    const job = await this.findOne(jobId, companyId);
+    if (!job.depositAmount || job.depositAmount <= 0) {
+      throw new BadRequestException('Job has no deposit');
+    }
+    if (job.isDepositPaid) {
+      throw new BadRequestException('Deposit is already paid');
+    }
+
+    const description = `Deposit - ${job.customer?.name || 'Cleaning Service'} (Job #${jobId.slice(0, 8)})`;
+    const url = await this.stripeService.createPaymentLink(job.depositAmount, description, {
+      jobId,
+      type: 'deposit',
+      companyId,
+    });
+
+    return {
+      paymentLink: url,
+      jobId,
+      depositAmount: job.depositAmount,
+      customerName: job.customer?.name,
+      customerPhone: job.customer?.phone,
+    };
   }
 }

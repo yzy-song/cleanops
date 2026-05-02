@@ -175,9 +175,15 @@ export class InvoiceService {
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
-      const invoiceId = session.metadata?.invoiceId;
+      const { invoiceId, jobId, type } = session.metadata || {};
 
-      if (invoiceId) {
+      if (type === 'deposit' && jobId) {
+        await this.prisma.client.job.update({
+          where: { id: jobId },
+          data: { isDepositPaid: true },
+        });
+        this.logger.log(`Job ${jobId} deposit marked as PAID via Stripe webhook`);
+      } else if (invoiceId) {
         await this.prisma.client.invoice.update({
           where: { id: invoiceId },
           data: { status: 'PAID', paidAt: new Date(), paymentMethod: 'STRIPE' },
