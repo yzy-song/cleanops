@@ -61,7 +61,14 @@
       "Bash(pnpm --filter @cleanops/web run tsc --noEmit)",
       "Bash(pnpm --filter @cleanops/web run build)",
       "Bash(vercel --version)",
-      "Bash(npx vercel *)"
+      "Bash(npx vercel *)",
+      "Bash(git -C \"d:/workspace/yzy_React/cleanops\" log --oneline -20)",
+      "WebFetch(domain:www.spotlessapp.io)",
+      "WebFetch(domain:www.getjobber.com)",
+      "Bash(.\\\\node_modules\\\\.bin\\\\prisma.cmd db *)",
+      "Bash(Get-ChildItem -Path \"d:\\\\workspace\\\\yzy_React\\\\cleanops\\\\node_modules\\\\.bin\\\\prisma*\")",
+      "Bash(d:/workspace/yzy_React/cleanops/packages/db/node_modules/.bin/prisma db *)",
+      "Bash(./node_modules/.bin/prisma db *)"
     ],
     "additionalDirectories": [
       "d:\\workspace\\yzy_React\\cleanops\\apps\\web\\src\\app\\(dashboard)\\customers",

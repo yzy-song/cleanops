@@ -27,6 +27,7 @@ export class ReportService {
       totalWorkers,
       totalCustomers,
       upcomingJobs,
+      pendingDeposits,
     ] = await Promise.all([
       this.prisma.client.job.findMany({
         where: { companyId, scheduledStart: { gte: today, lt: tomorrow }, status: { not: 'CANCELLED' } },
@@ -74,6 +75,17 @@ export class ReportService {
         orderBy: { scheduledStart: 'asc' },
         take: 5,
       }),
+      this.prisma.client.job.findMany({
+        where: {
+          companyId,
+          depositAmount: { gt: 0 },
+          isDepositPaid: false,
+          status: { not: 'CANCELLED' },
+        },
+        include: { customer: true },
+        orderBy: { scheduledStart: 'asc' },
+        take: 10,
+      }),
     ]);
 
     // Calculate today's expected revenue
@@ -115,6 +127,15 @@ export class ReportService {
       })),
       inProgressCount: inProgressJobs.length,
       missingCheckIns,
+      pendingDeposits: pendingDeposits.map((j) => ({
+        id: j.id,
+        customerName: j.customer.name,
+        amount: j.depositAmount,
+        scheduledStart: j.scheduledStart,
+        status: j.status,
+      })),
+      pendingDepositsCount: pendingDeposits.length,
+      pendingDepositsAmount: pendingDeposits.reduce((sum, j) => sum + (j.depositAmount ?? 0), 0),
       activeWorkers: totalWorkers,
       totalCustomers,
       upcomingJobs: upcomingJobs.map((j) => ({

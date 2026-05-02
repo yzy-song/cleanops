@@ -148,6 +148,20 @@ export class JobController {
     return this.jobService.sendInvoiceToCustomer(id, companyId);
   }
 
+  @Patch(':id/mark-deposit-paid')
+  @Auth(Role.ADMIN, Role.MANAGER)
+  @ApiOperation({ summary: '标记定金已到账' })
+  markDepositPaid(@Param('id') id: string, @CurrentUser('companyId') companyId: string) {
+    return this.jobService.markDepositPaid(id, companyId);
+  }
+
+  @Post(':id/deposit-link')
+  @Auth(Role.ADMIN, Role.MANAGER)
+  @ApiOperation({ summary: '生成定金支付链接（Stripe）' })
+  generateDepositPaymentLink(@Param('id') id: string, @CurrentUser('companyId') companyId: string) {
+    return this.jobService.generateDepositPaymentLink(id, companyId);
+  }
+
   @Post(':id/photos')
   @Auth()
   @ApiOperation({ summary: '上传任务现场照片' })
