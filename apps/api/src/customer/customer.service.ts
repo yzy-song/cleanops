@@ -15,8 +15,7 @@ export class CustomerService {
         accessCode: dto.accessCode,
         lat: dto.lat,
         lng: dto.lng,
-        // 关键点：使用 connect 方式关联公司，
-        // 这样即使 TS 类型推导混乱，Prisma 也能明确知道这是在做外键关联。
+        isCommercial: dto.isCommercial ?? false,
         company: {
           connect: { id: dto.companyId },
         },

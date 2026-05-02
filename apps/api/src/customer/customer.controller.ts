@@ -15,8 +15,8 @@ export class CustomerController {
   @Post()
   @Auth(Role.ADMIN, Role.MANAGER)
   @ApiOperation({ summary: '添加客户' })
-  create(@Body() createCustomerDto: CreateCustomerDto) {
-    return this.customerService.create(createCustomerDto);
+  create(@CurrentUser('companyId') companyId: string, @Body() dto: CreateCustomerDto) {
+    return this.customerService.create({ ...dto, companyId });
   }
 
   @Get()

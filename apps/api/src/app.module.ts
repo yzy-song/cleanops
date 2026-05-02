@@ -12,6 +12,8 @@ import { JobModule } from './job/job.module';
 import { EmailModule } from './email/email.module';
 import { InvoiceModule } from './invoice/invoice.module';
 import { ReportModule } from './report/report.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { CustomerPortalModule } from './customer-portal/customer-portal.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { ReportModule } from './report/report.module';
     JobModule,
     InvoiceModule,
     ReportModule,
+    CloudinaryModule,
+    CustomerPortalModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppLogger],

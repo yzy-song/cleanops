@@ -1,0 +1,1918 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/": {
+      "get": {
+        "operationId": "AppController_getHello",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "App"
+        ]
+      }
+    },
+    "/company": {
+      "post": {
+        "operationId": "CompanyController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCompanyWithAdminDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "注册新清洁公司（公开）",
+        "tags": [
+          "Companies"
+        ]
+      },
+      "get": {
+        "operationId": "CompanyController_findAll",
+        "parameters": [],
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "获取所有公司（平台管理员）",
+        "tags": [
+          "Companies"
+        ]
+      }
+    },
+    "/company/{id}": {
+      "get": {
+        "operationId": "CompanyController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "获取公司详情",
+        "tags": [
+          "Companies"
+        ]
+      },
+      "patch": {
+        "operationId": "CompanyController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCompanyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "更新公司信息",
+        "tags": [
+          "Companies"
+        ]
+      },
+      "delete": {
+        "operationId": "CompanyController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "删除公司",
+        "tags": [
+          "Companies"
+        ]
+      }
+    },
+    "/worker": {
+      "post": {
+        "operationId": "WorkerController_createWorker",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "添加清洁工",
+        "tags": [
+          "Workers"
+        ]
+      },
+      "get": {
+        "operationId": "WorkerController_findAll",
+        "parameters": [],
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "获取清洁工列表",
+        "tags": [
+          "Workers"
+        ]
+      }
+    },
+    "/worker/me/earnings": {
+      "get": {
+        "operationId": "WorkerController_getMyEarnings",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "查看我的收入",
+        "tags": [
+          "Workers"
+        ]
+      }
+    },
+    "/worker/me/jobs": {
+      "get": {
+        "operationId": "WorkerController_getMyJobs",
+        "parameters": [],
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "查看我的任务",
+        "tags": [
+          "Workers"
+        ]
+      }
+    },
+    "/worker/{id}": {
+      "get": {
+        "operationId": "WorkerController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "获取清洁工详情",
+        "tags": [
+          "Workers"
+        ]
+      },
+      "patch": {
+        "operationId": "WorkerController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "更新清洁工信息",
+        "tags": [
+          "Workers"
+        ]
+      },
+      "delete": {
+        "operationId": "WorkerController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "停用清洁工",
+        "tags": [
+          "Workers"
+        ]
+      }
+    },
+    "/customer": {
+      "post": {
+        "operationId": "CustomerController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "添加客户",
+        "tags": [
+          "Customers"
+        ]
+      },
+      "get": {
+        "operationId": "CustomerController_findAll",
+        "parameters": [],
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "获取客户列表",
+        "tags": [
+          "Customers"
+        ]
+      }
+    },
+    "/customer/{id}": {
+      "get": {
+        "operationId": "CustomerController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "获取客户详情",
+        "tags": [
+          "Customers"
+        ]
+      },
+      "patch": {
+        "operationId": "CustomerController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCustomerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "更新客户信息",
+        "tags": [
+          "Customers"
+        ]
+      },
+      "delete": {
+        "operationId": "CustomerController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "删除客户",
+        "tags": [
+          "Customers"
+        ]
+      }
+    },
+    "/auth": {
+      "post": {
+        "operationId": "AuthController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAuthDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      },
+      "get": {
+        "operationId": "AuthController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/{id}": {
+      "get": {
+        "operationId": "AuthController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      },
+      "patch": {
+        "operationId": "AuthController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAuthDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      },
+      "delete": {
+        "operationId": "AuthController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "用户登录（ADMIN, MANAGER, WORKER）",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/jobs": {
+      "post": {
+        "operationId": "JobController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateJobDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "创建新任务",
+        "tags": [
+          "Jobs"
+        ]
+      },
+      "get": {
+        "operationId": "JobController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "description": "Current page number",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "description": "Number of items per page",
+            "schema": {
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "按状态筛选: PENDING, IN_PROGRESS, COMPLETED, ISSUE, CANCELLED",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "customerId",
+            "required": false,
+            "in": "query",
+            "description": "按客户ID筛选",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workerId",
+            "required": false,
+            "in": "query",
+            "description": "按员工ID筛选",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fromDate",
+            "required": false,
+            "in": "query",
+            "description": "开始日期 (ISO 8601)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "toDate",
+            "required": false,
+            "in": "query",
+            "description": "结束日期 (ISO 8601)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "获取任务列表（支持筛选和分页）",
+        "tags": [
+          "Jobs"
+        ]
+      }
+    },
+    "/jobs/{id}": {
+      "get": {
+        "operationId": "JobController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "获取任务详情",
+        "tags": [
+          "Jobs"
+        ]
+      },
+      "patch": {
+        "operationId": "JobController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateJobDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "更新任务",
+        "tags": [
+          "Jobs"
+        ]
+      },
+      "delete": {
+        "operationId": "JobController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "取消任务",
+        "tags": [
+          "Jobs"
+        ]
+      }
+    },
+    "/jobs/{id}/assign": {
+      "patch": {
+        "operationId": "JobController_assignWorkers",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "workerIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "workerIds"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "指派员工到任务",
+        "tags": [
+          "Jobs"
+        ]
+      }
+    },
+    "/jobs/{id}/unassign/{workerId}": {
+      "patch": {
+        "operationId": "JobController_unassignWorker",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "从任务中移除员工",
+        "tags": [
+          "Jobs"
+        ]
+      }
+    },
+    "/jobs/{id}/check-in": {
+      "patch": {
+        "operationId": "JobController_checkIn",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "lat": {
+                    "type": "number",
+                    "example": 53.3498
+                  },
+                  "lng": {
+                    "type": "number",
+                    "example": -6.2603
+                  }
+                },
+                "required": [
+                  "lat",
+                  "lng"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "员工打卡开始工作",
+        "tags": [
+          "Jobs"
+        ]
+      }
+    },
+    "/jobs/{id}/complete": {
+      "patch": {
+        "operationId": "JobController_completeJob",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "notes": {
+                    "type": "string",
+                    "description": "内部备注或现场反馈",
+                    "example": "Everything went well, keys returned."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "员工完成任务",
+        "tags": [
+          "Jobs"
+        ]
+      }
+    },
+    "/invoice/generate/{jobId}": {
+      "post": {
+        "operationId": "InvoiceController_generateFromJob",
+        "parameters": [
+          {
+            "name": "jobId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "从已完成任务自动生成账单",
+        "tags": [
+          "Invoices"
+        ]
+      }
+    },
+    "/invoice": {
+      "post": {
+        "operationId": "InvoiceController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInvoiceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "手动创建账单",
+        "tags": [
+          "Invoices"
+        ]
+      },
+      "get": {
+        "operationId": "InvoiceController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "description": "Current page number",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "description": "Number of items per page",
+            "schema": {
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "UNPAID, PAID, VOID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "获取账单列表",
+        "tags": [
+          "Invoices"
+        ]
+      }
+    },
+    "/invoice/{id}": {
+      "get": {
+        "operationId": "InvoiceController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "获取账单详情",
+        "tags": [
+          "Invoices"
+        ]
+      },
+      "patch": {
+        "operationId": "InvoiceController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateInvoiceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "更新账单（仅限未支付状态）",
+        "tags": [
+          "Invoices"
+        ]
+      }
+    },
+    "/invoice/{id}/pay": {
+      "post": {
+        "operationId": "InvoiceController_generatePaymentLink",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "生成 Stripe 支付链接",
+        "tags": [
+          "Invoices"
+        ]
+      }
+    },
+    "/invoice/{id}/mark-paid": {
+      "post": {
+        "operationId": "InvoiceController_markAsPaid",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "手动标记已支付",
+        "tags": [
+          "Invoices"
+        ]
+      }
+    },
+    "/invoice/{id}/void": {
+      "post": {
+        "operationId": "InvoiceController_voidInvoice",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "作废账单",
+        "tags": [
+          "Invoices"
+        ]
+      }
+    },
+    "/report/dashboard": {
+      "get": {
+        "operationId": "ReportController_getDashboard",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "仪表盘 KPI 数据",
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/report/payroll": {
+      "get": {
+        "operationId": "ReportController_getPayroll",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "薪资报表（含养老金和 PRSI）",
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/report/vat": {
+      "get": {
+        "operationId": "ReportController_getVatReport",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "VAT 报税汇总",
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/report/timesheet": {
+      "get": {
+        "operationId": "ReportController_getTimesheet",
+        "parameters": [
+          {
+            "name": "workerId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "未登录或 Token 无效"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "工时表",
+        "tags": [
+          "Reports"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "CleanOps API",
+    "description": "The CleanOps 2026 Management API - 专业清洁业务管理系统",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "CreateCompanyWithAdminDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Joy Cleaning Ltd",
+            "description": "公司名称"
+          },
+          "vatNumber": {
+            "type": "string",
+            "example": "IE1234567W",
+            "description": "爱尔兰 VAT 税号"
+          },
+          "baseHourlyRate": {
+            "type": "number",
+            "example": 1550,
+            "default": 1480,
+            "description": "起薪(分)，1550=15.50欧"
+          },
+          "adminEmail": {
+            "type": "string",
+            "example": "admin@company.com",
+            "description": "管理员邮箱"
+          },
+          "adminPass": {
+            "type": "string",
+            "example": "securePassword123",
+            "description": "管理员密码"
+          }
+        },
+        "required": [
+          "name",
+          "baseHourlyRate",
+          "adminEmail",
+          "adminPass"
+        ]
+      },
+      "UpdateCompanyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Joy Cleaning Ltd",
+            "description": "公司名称"
+          },
+          "vatNumber": {
+            "type": "string",
+            "example": "IE1234567W",
+            "description": "爱尔兰 VAT 税号"
+          },
+          "baseHourlyRate": {
+            "type": "number",
+            "example": 1550,
+            "default": 1480,
+            "description": "起薪(分)，1550=15.50欧"
+          }
+        }
+      },
+      "CreateWorkerDto": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "example": "Liam"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Murphy"
+          },
+          "phone": {
+            "type": "string",
+            "example": "0851234567",
+            "description": "电话号码"
+          },
+          "email": {
+            "type": "string",
+            "example": "liam.murphy@example.com",
+            "description": "邮箱地址"
+          },
+          "ppsn": {
+            "type": "string",
+            "example": "1234567FA",
+            "description": "PPSN 号码"
+          },
+          "hourlyRate": {
+            "type": "number",
+            "example": 1600,
+            "description": "时薪(分)"
+          },
+          "companyId": {
+            "type": "string",
+            "example": "company-uuid-here"
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName",
+          "phone",
+          "email",
+          "companyId"
+        ]
+      },
+      "UpdateWorkerDto": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "example": "Liam"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Murphy"
+          },
+          "phone": {
+            "type": "string",
+            "example": "0851234567",
+            "description": "电话号码"
+          },
+          "email": {
+            "type": "string",
+            "example": "liam.murphy@example.com",
+            "description": "邮箱地址"
+          },
+          "ppsn": {
+            "type": "string",
+            "example": "1234567FA",
+            "description": "PPSN 号码"
+          },
+          "hourlyRate": {
+            "type": "number",
+            "example": 1600,
+            "description": "时薪(分)"
+          },
+          "companyId": {
+            "type": "string",
+            "example": "company-uuid-here"
+          }
+        }
+      },
+      "CreateCustomerDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Alice Johnson"
+          },
+          "address": {
+            "type": "string",
+            "example": "123 Dublin St, Dublin 2",
+            "description": "完整地址"
+          },
+          "eircode": {
+            "type": "string",
+            "example": "D02 X123",
+            "description": "爱尔兰 Eircode"
+          },
+          "accessCode": {
+            "type": "string",
+            "example": "Key under the mat / Code: 1234",
+            "description": "入户方式"
+          },
+          "lat": {
+            "type": "number",
+            "example": 53.3498
+          },
+          "lng": {
+            "type": "number",
+            "example": -6.2603
+          },
+          "companyId": {
+            "type": "string",
+            "example": "uuid-of-company"
+          },
+          "isCommercial": {
+            "type": "boolean",
+            "example": true,
+            "description": "商业/住宅"
+          }
+        },
+        "required": [
+          "name",
+          "address",
+          "eircode",
+          "accessCode",
+          "lat",
+          "lng"
+        ]
+      },
+      "UpdateCustomerDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Alice Johnson"
+          },
+          "address": {
+            "type": "string",
+            "example": "123 Dublin St, Dublin 2",
+            "description": "完整地址"
+          },
+          "eircode": {
+            "type": "string",
+            "example": "D02 X123",
+            "description": "爱尔兰 Eircode"
+          },
+          "accessCode": {
+            "type": "string",
+            "example": "Key under the mat / Code: 1234",
+            "description": "入户方式"
+          },
+          "lat": {
+            "type": "number",
+            "example": 53.3498
+          },
+          "lng": {
+            "type": "number",
+            "example": -6.2603
+          },
+          "companyId": {
+            "type": "string",
+            "example": "uuid-of-company"
+          },
+          "isCommercial": {
+            "type": "boolean",
+            "example": true,
+            "description": "商业/住宅"
+          }
+        }
+      },
+      "CreateAuthDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateAuthDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateJobDto": {
+        "type": "object",
+        "properties": {
+          "scheduledStart": {
+            "type": "string",
+            "example": "2026-05-01T09:00:00Z"
+          },
+          "estimatedDuration": {
+            "type": "number",
+            "example": 120,
+            "description": "预计耗时（分钟）"
+          },
+          "customerId": {
+            "type": "string",
+            "example": "customer-uuid"
+          },
+          "workerIds": {
+            "example": [
+              "worker-uuid-1"
+            ],
+            "description": "指派的员工ID列表",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": "string",
+            "example": "请带上备用钥匙"
+          }
+        },
+        "required": [
+          "scheduledStart",
+          "customerId"
+        ]
+      },
+      "UpdateJobDto": {
+        "type": "object",
+        "properties": {
+          "scheduledStart": {
+            "type": "string",
+            "example": "2026-05-01T09:00:00Z"
+          },
+          "estimatedDuration": {
+            "type": "number",
+            "example": 120,
+            "description": "预计耗时（分钟）"
+          },
+          "customerId": {
+            "type": "string",
+            "example": "customer-uuid"
+          },
+          "workerIds": {
+            "example": [
+              "worker-uuid-1"
+            ],
+            "description": "指派的员工ID列表",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": "string",
+            "example": "请带上备用钥匙"
+          }
+        }
+      },
+      "CreateInvoiceDto": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "example": "job-uuid",
+            "description": "关联任务ID"
+          },
+          "amount": {
+            "type": "number",
+            "example": 5000,
+            "description": "总金额（分）"
+          },
+          "vatAmount": {
+            "type": "number",
+            "example": 750,
+            "description": "VAT 税额（分）"
+          },
+          "pensionAmount": {
+            "type": "number",
+            "example": 75,
+            "description": "养老金提留额（分）",
+            "default": 0
+          },
+          "companyId": {
+            "type": "string",
+            "example": "company-uuid"
+          }
+        },
+        "required": [
+          "jobId",
+          "amount",
+          "vatAmount",
+          "companyId"
+        ]
+      },
+      "UpdateInvoiceDto": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number"
+          },
+          "vatAmount": {
+            "type": "number"
+          },
+          "pensionAmount": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "description": "UNPAID, PAID, VOID"
+          }
+        }
+      }
+    }
+  }
+}

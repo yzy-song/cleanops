@@ -3,6 +3,8 @@ import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 import { QueryJobDto } from './dto/query-job.dto';
 import { EmailService } from '../email/email.service';
+import { InvoiceService } from '../invoice/invoice.service';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import * as geolib from 'geolib';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { paginate } from '../common/utils/pagination.util';
@@ -12,6 +14,8 @@ export class JobService {
   constructor(
     private prisma: PrismaService,
     private emailService: EmailService,
+    private invoiceService: InvoiceService,
+    private cloudinaryService: CloudinaryService,
   ) {}
 
   async create(companyId: string, dto: CreateJobDto) {
@@ -20,6 +24,9 @@ export class JobService {
         scheduledStart: new Date(dto.scheduledStart),
         estimatedDuration: dto.estimatedDuration,
         notes: dto.notes,
+        isRecurring: dto.isRecurring ?? false,
+        recurrenceRule: dto.recurrenceRule ?? null,
+        depositAmount: dto.depositAmount ?? null,
         company: { connect: { id: companyId } },
         customer: { connect: { id: dto.customerId } },
         assignments: {
@@ -132,7 +139,7 @@ export class JobService {
   }
 
   // 1. 员工打卡逻辑 (Check-in)
-  async checkIn(jobId: string, workerId: string, lat: number, lng: number) {
+  async checkIn(jobId: string, userId: string, lat: number, lng: number) {
     const job = await this.prisma.client.job.findUnique({
       where: { id: jobId },
       include: { customer: true, assignments: true },
@@ -144,9 +151,11 @@ export class JobService {
       throw new BadRequestException(`Cannot check in. Job is currently ${job.status}`);
     }
 
-    // 安全检查：确认该员工是否被指派了此任务
-    // 假设 User 表的 id 就是这里的 workerId
-    const isAssigned = job.assignments.some((a) => a.workerId === workerId);
+    // 通过 userId 找到对应的 worker
+    const worker = await this.prisma.client.worker.findUnique({ where: { userId } });
+    if (!worker) throw new BadRequestException('Worker profile not found');
+
+    const isAssigned = job.assignments.some((a) => a.workerId === worker.id);
     if (!isAssigned) throw new BadRequestException('You are not assigned to this job');
 
     // 坐标校验
@@ -172,7 +181,7 @@ export class JobService {
   }
 
   // 2. 员工完成任务 (Complete) 并发邮件
-  async complete(jobId: string, workerId: string, notes?: string) {
+  async complete(jobId: string, userId: string, notes?: string) {
     const job = await this.prisma.client.job.findUnique({
       where: { id: jobId },
       include: {
@@ -187,7 +196,10 @@ export class JobService {
       throw new BadRequestException('Job must be IN_PROGRESS to mark as completed');
     }
 
-    const isAssigned = job.assignments.some((a) => a.workerId === workerId);
+    const worker = await this.prisma.client.worker.findUnique({ where: { userId } });
+    if (!worker) throw new BadRequestException('Worker profile not found');
+
+    const isAssigned = job.assignments.some((a) => a.workerId === worker.id);
     if (!isAssigned) throw new BadRequestException('You are not assigned to this job');
 
     // 更新任务状态
@@ -200,16 +212,185 @@ export class JobService {
       },
     });
 
-    // 异步发送邮件给客户
-    // 这里我们假设 EmailService 中已经有了类似 sendServiceCompletedEmail 的方法
-    // 如果没有，你可以在 EmailService 中添加它，或者重用发确认信的方法稍作修改
+    // 自动生成 invoice 并发账单邮件给客户
     try {
-      await this.emailService.sendJobConfirmationEmail(job.customer, job, job.company);
+      const invoice = await this.invoiceService.generateFromJob(job.companyId, jobId);
+
+      let paymentLink: string | undefined;
+      try {
+        const result = await this.invoiceService.generatePaymentLink(invoice.id, job.companyId);
+        paymentLink = result.paymentLink;
+      } catch {
+        // payment link generation is optional
+      }
+
+      await this.emailService.sendInvoiceEmail(job.customer, job, invoice, paymentLink);
     } catch (error) {
-      // 我们只记录日志，不让邮件发送失败影响整个 API 的返回
-      console.error('Failed to send completion email', error);
+      console.error('Failed to generate invoice or send email', error);
+    }
+
+    // 重复任务：自动生成下一次任务
+    if (job.isRecurring && job.recurrenceRule) {
+      try {
+        const nextStart = new Date(job.scheduledStart);
+        const days = job.recurrenceRule === 'BI-WEEKLY' ? 14 : 7;
+        nextStart.setDate(nextStart.getDate() + days);
+
+        const workerIds = job.assignments.map((a) => a.workerId);
+
+        await this.prisma.client.job.create({
+          data: {
+            scheduledStart: nextStart,
+            estimatedDuration: job.estimatedDuration,
+            notes: job.notes,
+            isRecurring: true,
+            recurrenceRule: job.recurrenceRule,
+            customer: { connect: { id: job.customerId } },
+            company: { connect: { id: job.companyId } },
+            assignments: {
+              create: workerIds.map((workerId) => ({
+                worker: { connect: { id: workerId } },
+              })),
+            },
+          },
+        });
+      } catch (error) {
+        console.error('Failed to create recurring job instance', error);
+      }
     }
 
     return updatedJob;
+  }
+
+  // 3. 员工签退 (Check-out)
+  async checkOut(jobId: string, userId: string, lat: number, lng: number, complete?: boolean, notes?: string) {
+    const job = await this.prisma.client.job.findUnique({
+      where: { id: jobId },
+      include: { customer: true, company: true, assignments: true },
+    });
+
+    if (!job) throw new NotFoundException('Job not found');
+    if (job.status !== 'IN_PROGRESS') {
+      throw new BadRequestException(`Cannot check out. Job is currently ${job.status}`);
+    }
+
+    const worker = await this.prisma.client.worker.findUnique({ where: { userId } });
+    if (!worker) throw new BadRequestException('Worker profile not found');
+
+    const isAssigned = job.assignments.some((a) => a.workerId === worker.id);
+    if (!isAssigned) throw new BadRequestException('You are not assigned to this job');
+
+    const updateData: any = {
+      actualEnd: new Date(),
+      endLocationLat: lat,
+      endLocationLng: lng,
+    };
+
+    if (complete) {
+      updateData.status = 'COMPLETED';
+    }
+
+    const updatedJob = await this.prisma.client.job.update({
+      where: { id: jobId },
+      data: updateData,
+    });
+
+    if (complete) {
+      try {
+        const invoice = await this.invoiceService.generateFromJob(job.companyId, jobId);
+        let paymentLink: string | undefined;
+        try {
+          const result = await this.invoiceService.generatePaymentLink(invoice.id, job.companyId);
+          paymentLink = result.paymentLink;
+        } catch { /* optional */ }
+        await this.emailService.sendInvoiceEmail(job.customer, job, invoice, paymentLink);
+      } catch (error) {
+        console.error('Failed to generate invoice or send email on check-out', error);
+      }
+
+      // 重复任务自动生成
+      if (job.isRecurring && job.recurrenceRule) {
+        try {
+          const nextStart = new Date(job.scheduledStart);
+          const days = job.recurrenceRule === 'BI-WEEKLY' ? 14 : 7;
+          nextStart.setDate(nextStart.getDate() + days);
+          const workerIds = job.assignments.map((a) => a.workerId);
+
+          await this.prisma.client.job.create({
+            data: {
+              scheduledStart: nextStart,
+              estimatedDuration: job.estimatedDuration,
+              notes: job.notes,
+              isRecurring: true,
+              recurrenceRule: job.recurrenceRule,
+              customer: { connect: { id: job.customerId } },
+              company: { connect: { id: job.companyId } },
+              assignments: {
+                create: workerIds.map((workerId) => ({
+                  worker: { connect: { id: workerId } },
+                })),
+              },
+            },
+          });
+        } catch (error) {
+          console.error('Failed to create recurring job instance on check-out', error);
+        }
+      }
+    }
+
+    return updatedJob;
+  }
+
+  // 手动发送账单邮件给客户
+  async sendInvoiceToCustomer(jobId: string, companyId: string) {
+    const job = await this.prisma.client.job.findFirst({
+      where: { id: jobId, companyId },
+      include: { customer: true, company: true, invoice: true },
+    });
+
+    if (!job) throw new NotFoundException('Job not found');
+    if (job.status !== 'COMPLETED') {
+      throw new BadRequestException('Job must be completed to send invoice');
+    }
+    if (!job.invoice) {
+      throw new BadRequestException('No invoice found for this job');
+    }
+
+    let paymentLink: string | undefined;
+    try {
+      const result = await this.invoiceService.generatePaymentLink(job.invoice.id, companyId);
+      paymentLink = result.paymentLink;
+    } catch {
+      // payment link generation is optional
+    }
+
+    await this.emailService.sendInvoiceEmail(job.customer, job, job.invoice, paymentLink);
+    return { success: true };
+  }
+
+  async uploadPhoto(jobId: string, companyId: string, file: Express.Multer.File, type: string) {
+    const job = await this.findOne(jobId, companyId);
+    const result = await this.cloudinaryService.uploadImage(file);
+
+    return this.prisma.client.jobPhoto.create({
+      data: {
+        url: result.secure_url,
+        type: type === 'AFTER' ? 'AFTER' : 'BEFORE',
+        job: { connect: { id: jobId } },
+      },
+    });
+  }
+
+  async listPhotos(jobId: string, companyId: string) {
+    await this.findOne(jobId, companyId);
+    return this.prisma.client.jobPhoto.findMany({
+      where: { jobId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async deletePhoto(jobId: string, photoId: string, companyId: string) {
+    await this.findOne(jobId, companyId);
+    return this.prisma.client.jobPhoto.delete({ where: { id: photoId } });
   }
 }

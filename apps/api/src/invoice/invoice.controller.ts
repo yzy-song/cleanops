@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Patch, Param, Body, Query, Req, Headers, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, Query, Req, Headers, HttpCode, HttpStatus, RawBodyRequest, Res } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Request, Response } from 'express';
 import { InvoiceService } from './invoice.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
@@ -58,8 +59,8 @@ export class InvoiceController {
   @Post(':id/mark-paid')
   @Auth(Role.ADMIN)
   @ApiOperation({ summary: '手动标记已支付' })
-  markAsPaid(@Param('id') id: string, @CurrentUser('companyId') companyId: string) {
-    return this.invoiceService.markAsPaid(id, companyId);
+  markAsPaid(@Param('id') id: string, @CurrentUser('companyId') companyId: string, @Body('paymentMethod') paymentMethod?: string) {
+    return this.invoiceService.markAsPaid(id, companyId, paymentMethod);
   }
 
   @Post(':id/void')
@@ -67,5 +68,29 @@ export class InvoiceController {
   @ApiOperation({ summary: '作废账单' })
   voidInvoice(@Param('id') id: string, @CurrentUser('companyId') companyId: string) {
     return this.invoiceService.voidInvoice(id, companyId);
+  }
+
+  @Post('webhook')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Stripe webhook 回调（无需认证）' })
+  async stripeWebhook(
+    @Req() req: RawBodyRequest<Request>,
+    @Headers('stripe-signature') signature: string,
+  ) {
+    return this.invoiceService.handleStripeWebhook(req.rawBody!, signature);
+  }
+
+  @Get(':id/pdf')
+  @Auth()
+  @ApiOperation({ summary: '下载账单 PDF' })
+  async downloadPdf(
+    @Param('id') id: string,
+    @CurrentUser('companyId') companyId: string,
+    @Res() res: Response,
+  ) {
+    const pdfBuffer = await this.invoiceService.generatePdf(id, companyId);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="invoice-${id.slice(0, 8)}.pdf"`);
+    res.send(pdfBuffer);
   }
 }
