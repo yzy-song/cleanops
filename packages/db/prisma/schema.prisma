@@ -36,11 +36,13 @@ model Company {
 
 // 2. 后台管理用户
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  role      Role     @default(WORKER) // 默认角色是员工
-  
+  id                  String    @id @default(uuid())
+  email               String    @unique
+  password            String
+  role                Role      @default(WORKER) // 默认角色是员工
+  resetToken          String?
+  resetTokenExpiresAt DateTime?
+
   companyId String
   company   Company  @relation(fields: [companyId], references: [id])
 
@@ -77,8 +79,10 @@ model Customer {
   accessCode    String?  // 附加信息：如公寓大门密码 (都柏林刚需)
   lat           Float    // 纬度：用于地缘围栏打卡校验
   lng           Float    // 经度：用于地缘围栏打卡校验
-  isCommercial  Boolean  @default(false) // 商业客户(23% VAT)还是住宅客户(13.5% VAT)
-  
+  isCommercial        Boolean   @default(false) // 商业客户(23% VAT)还是住宅客户(13.5% VAT)
+  authToken           String?   // 客户自助门户 magic link token
+  authTokenExpiresAt  DateTime?
+
   companyId     String
   company       Company  @relation(fields: [companyId], references: [id])
   createdAt     DateTime  @default(now())
@@ -112,6 +116,10 @@ model Job {
   isRecurring     Boolean   @default(false)
   recurrenceRule  String?   // "WEEKLY", "BI-WEEKLY" (用于后续自动排班扩展)
 
+  // 定金 (爱尔兰市场: end-of-tenancy / one-off 大单需要)
+  depositAmount   Int?
+  isDepositPaid   Boolean   @default(false)
+
   // 时间戳
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -124,6 +132,7 @@ model Job {
   company         Company   @relation(fields: [companyId], references: [id])
   
   assignments     JobAssignment[]
+  photos          JobPhoto[]
   invoice         Invoice?
 }
 
@@ -138,7 +147,18 @@ model JobAssignment {
   @@unique([jobId, workerId])
 }
 
-// 7. 账单
+// 7. 任务现场照片
+model JobPhoto {
+  id        String   @id @default(uuid())
+  url       String
+  type      String   @default("BEFORE") // BEFORE 或 AFTER
+  createdAt DateTime @default(now())
+
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+}
+
+// 8. 账单
 model Invoice {
   id              String    @id @default(uuid())
   amount          Int       // 总金额 (分)
@@ -147,6 +167,7 @@ model Invoice {
   
   // 状态: UNPAID, PAID, VOID
   status          String    @default("UNPAID")
+  paymentMethod   String?   // STRIPE, CASH, REVOLUT, BANK_TRANSFER
   paymentLink     String?   // 存储生成的支付链接
   paidAt          DateTime?
   createdAt       DateTime  @default(now())

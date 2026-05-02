@@ -32,8 +32,4 @@ export class CreateWorkerDto {
   @Min(1100)
   hourlyRate?: number;
 
-  @ApiProperty({ example: 'company-uuid-here' })
-  @IsString()
-  @IsNotEmpty()
-  companyId: string;
 }

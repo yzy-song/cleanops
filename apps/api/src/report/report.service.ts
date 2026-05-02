@@ -10,35 +10,52 @@ export class ReportService {
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
+    const now = new Date();
+    const overdueThreshold = new Date(now);
+    overdueThreshold.setDate(overdueThreshold.getDate() - 7);
+
+    const company = await this.prisma.client.company.findUnique({ where: { id: companyId } });
 
     const [
-      todayJobsTotal,
-      todayJobsInProgress,
-      todayJobsCompleted,
-      thisMonthRevenue,
-      pendingInvoices,
+      todayJobDetails,
+      todayCompletedCount,
+      todayRevenueAgg,
+      inProgressJobs,
+      thisMonthPaidRevenue,
+      overdueInvoices,
+      pendingInvoicesAgg,
       totalWorkers,
       totalCustomers,
-      recentJobs,
+      upcomingJobs,
     ] = await Promise.all([
-      this.prisma.client.job.count({
-        where: { companyId, scheduledStart: { gte: today, lt: tomorrow } },
-      }),
-      this.prisma.client.job.count({
-        where: { companyId, status: 'IN_PROGRESS' },
+      this.prisma.client.job.findMany({
+        where: { companyId, scheduledStart: { gte: today, lt: tomorrow }, status: { not: 'CANCELLED' } },
+        include: { customer: true, assignments: { include: { worker: true } } },
+        orderBy: { scheduledStart: 'asc' },
       }),
       this.prisma.client.job.count({
         where: { companyId, status: 'COMPLETED', actualEnd: { gte: today } },
       }),
       this.prisma.client.invoice.aggregate({
+        where: { companyId, createdAt: { gte: today }, status: { not: 'VOID' } },
+        _sum: { amount: true },
+      }),
+      this.prisma.client.job.findMany({
+        where: { companyId, status: 'IN_PROGRESS' },
+        include: { customer: true, assignments: { include: { worker: true } } },
+      }),
+      this.prisma.client.invoice.aggregate({
         where: {
           companyId,
           status: 'PAID',
-          paidAt: {
-            gte: new Date(today.getFullYear(), today.getMonth(), 1),
-          },
+          paidAt: { gte: new Date(today.getFullYear(), today.getMonth(), 1) },
         },
         _sum: { amount: true },
+      }),
+      this.prisma.client.invoice.findMany({
+        where: { companyId, status: 'UNPAID', createdAt: { lt: overdueThreshold } },
+        include: { job: { include: { customer: true } } },
+        orderBy: { createdAt: 'asc' },
       }),
       this.prisma.client.invoice.aggregate({
         where: { companyId, status: 'UNPAID' },
@@ -48,23 +65,65 @@ export class ReportService {
       this.prisma.client.worker.count({ where: { companyId, isActive: true } }),
       this.prisma.client.customer.count({ where: { companyId } }),
       this.prisma.client.job.findMany({
-        where: { companyId },
+        where: {
+          companyId,
+          scheduledStart: { gte: tomorrow },
+          status: { not: 'CANCELLED' },
+        },
         include: { customer: true, assignments: { include: { worker: true } } },
-        orderBy: { updatedAt: 'desc' },
+        orderBy: { scheduledStart: 'asc' },
         take: 5,
       }),
     ]);
 
+    // Calculate today's expected revenue
+    const hourlyRate = company.baseHourlyRate;
+    let todayExpectedRevenue = 0;
+    let missingCheckIns = 0;
+    for (const job of todayJobDetails) {
+      const minutes = job.estimatedDuration ?? 60;
+      todayExpectedRevenue += Math.round((minutes / 60) * hourlyRate);
+      if (job.status === 'PENDING' && new Date(job.scheduledStart) < now) {
+        missingCheckIns++;
+      }
+    }
+
     return {
-      todayActiveJobs: todayJobsInProgress,
-      todayJobsTotal,
-      todayJobsCompleted,
-      thisMonthRevenue: thisMonthRevenue._sum.amount ?? 0,
-      pendingInvoicesCount: pendingInvoices._count,
-      pendingInvoicesAmount: pendingInvoices._sum.amount ?? 0,
-      totalWorkers,
+      todayJobs: todayJobDetails.length,
+      todayJobDetails,
+      todayCompletedCount,
+      todayExpectedRevenue,
+      todayRevenue: todayRevenueAgg._sum.amount ?? 0,
+      thisMonthRevenue: thisMonthPaidRevenue._sum.amount ?? 0,
+      pendingInvoices: pendingInvoicesAgg._count,
+      pendingInvoicesAmount: pendingInvoicesAgg._sum.amount ?? 0,
+      overdueInvoices: overdueInvoices.map((inv) => ({
+        id: inv.id,
+        amount: inv.amount,
+        customerName: inv.job.customer.name,
+        createdAt: inv.createdAt,
+        jobCompletedAt: inv.job.actualEnd,
+      })),
+      overdueInvoicesCount: overdueInvoices.length,
+      overdueInvoicesAmount: overdueInvoices.reduce((sum, inv) => sum + inv.amount, 0),
+      inProgressJobs: inProgressJobs.map((j) => ({
+        id: j.id,
+        customerName: j.customer.name,
+        address: j.customer.address,
+        scheduledStart: j.scheduledStart,
+        workers: j.assignments.map((a) => `${a.worker.firstName} ${a.worker.lastName}`),
+      })),
+      inProgressCount: inProgressJobs.length,
+      missingCheckIns,
+      activeWorkers: totalWorkers,
       totalCustomers,
-      recentJobs,
+      upcomingJobs: upcomingJobs.map((j) => ({
+        id: j.id,
+        customerName: j.customer.name,
+        scheduledStart: j.scheduledStart,
+        status: j.status,
+        workerNames: j.assignments.map((a) => `${a.worker.firstName} ${a.worker.lastName}`),
+      })),
     };
   }
 
@@ -116,7 +175,9 @@ export class ReportService {
       return {
         workerId: entry.worker.id,
         name: `${entry.worker.firstName} ${entry.worker.lastName}`,
+        workerName: `${entry.worker.firstName} ${entry.worker.lastName}`,
         hours: Math.round(hours * 100) / 100,
+        totalHours: Math.round(hours * 100) / 100,
         hourlyRate,
         grossPay,
         pensionAmount,
@@ -217,6 +278,7 @@ export class ReportService {
         jobId: job.id,
         date: job.scheduledStart,
         customer: job.customer.name,
+        customerName: job.customer.name,
         worker: worker ? `${worker.firstName} ${worker.lastName}` : 'Unassigned',
         hours: Math.round(hours * 100) / 100,
         hourlyRate,

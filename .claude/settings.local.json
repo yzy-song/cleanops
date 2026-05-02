@@ -1,7 +1,48 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(npm install *)",
+      "Bash(uipro init *)",
+      "Bash(python3 \"C:/Users/yanzi/.claude/plugins/cache/ui-ux-pro-max-skill/ui-ux-pro-max/2.5.0/.claude/skills/ui-ux-pro-max/scripts/search.py\" \"SaaS cleaning business management professional clean organized efficient\" --design-system -p \"CleanOps\" -f markdown)",
+      "Read(//c/Users/yanzi/.claude/plugins/cache/ui-ux-pro-max-skill/**)",
+      "Bash(python3 \"C:/Users/yanzi/.claude/plugins/cache/ui-ux-pro-max-skill/ui-ux-pro-max/2.5.0/src/ui-ux-pro-max/scripts/search.py\" \"SaaS cleaning business management professional clean\" --design-system -p \"CleanOps\" -f markdown)",
+      "Bash(python3 \"C:/Users/yanzi/.claude/plugins/cache/ui-ux-pro-max-skill/ui-ux-pro-max/2.5.0/src/ui-ux-pro-max/scripts/search.py\" \"minimalism professional corporate clean\" --domain style -n 5)",
+      "Bash(python3 \"C:/Users/yanzi/.claude/plugins/cache/ui-ux-pro-max-skill/ui-ux-pro-max/2.5.0/src/ui-ux-pro-max/scripts/search.py\" \"SaaS dashboard admin business management\" --domain product -n 5)",
+      "Bash(python3 \"C:/Users/yanzi/.claude/plugins/cache/ui-ux-pro-max-skill/ui-ux-pro-max/2.5.0/src/ui-ux-pro-max/scripts/search.py\" \"green fresh nature clean professional trust\" --domain color -n 5)",
+      "Bash(python3 \"C:/Users/yanzi/.claude/plugins/cache/ui-ux-pro-max-skill/ui-ux-pro-max/2.5.0/src/ui-ux-pro-max/scripts/search.py\" \"service business Ireland green trust\" --domain color -n 5)",
+      "Bash(python3 \"C:/Users/yanzi/.claude/plugins/cache/ui-ux-pro-max-skill/ui-ux-pro-max/2.5.0/src/ui-ux-pro-max/scripts/search.py\" \"mobile bottom-navigation touch worker field\" --domain ux -n 5)",
+      "Bash(python3 \"C:/Users/yanzi/.claude/plugins/cache/ui-ux-pro-max-skill/ui-ux-pro-max/2.5.0/src/ui-ux-pro-max/scripts/search.py\" \"Geist sans professional SaaS dashboard\" --domain typography -n 3)",
+      "Bash(npx next *)",
+      "Bash(ls .env*)",
+      "Bash(cat apps/api/.env)",
+      "Bash(cat apps/api/.env.local)",
+      "Bash(psql --version)",
+      "Bash(pg_isready)",
+      "Bash(netstat -ano)",
+      "Bash(npx prisma *)",
+      "Bash(psql -U postgres -d db-cleanops -c \"SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;\")",
+      "Bash(curl -s http://localhost:3000/api-docs-json)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\('info',{}\\).get\\('title','N/A'\\), '-', d.get\\('info',{}\\).get\\('version','N/A'\\)\\)\")",
+      "Bash(curl -s -X POST http://localhost:3000/company -H 'Content-Type: application/json' -d '{\"companyName\":\"Test Clean Co Dublin\",\"businessNumber\":\"IE123456\",\"address\":\"123 OConnell Street, Dublin 1\",\"phone\":\"+353 1 234 5678\",\"baseHourlyRate\":1600,\"adminEmail\":\"admin@testclean.ie\",\"adminPass\":\"test123456\"}')",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s -X POST http://localhost:3000/company -H 'Content-Type: application/json' -d '{\"name\":\"Test Clean Co Dublin\",\"vatNumber\":\"IE123456\",\"baseHourlyRate\":1600,\"adminEmail\":\"admin@testclean.ie\",\"adminPass\":\"test123456\"}')",
+      "Bash(curl -s -X POST http://localhost:3000/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"admin@testclean.ie\",\"pass\":\"test123456\"}')",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\('info',{}\\).get\\('title','down'\\)\\)\")",
+      "Bash(curl -s http://localhost:3000/worker -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiZWNhOTgwYy0yYWE4LTRhM2QtOTE4ZS03OTA0MTE1YTY2NmEiLCJlbWFpbCI6ImFkbWluQHRlc3RjbGVhbi5pZSIsInJvbGUiOiJBRE1JTiIsImNvbXBhbnlJZCI6Ijg2ODM2ZjIxLTczMTctNDM2MS1hOTk2LTFiMWJlYmJhZGU1NCIsImlhdCI6MTc3NzQ2OTg3NCwiZXhwIjoxNzc4MDc0Njc0fQ.gkTEXd0v1AoPtQIi64rQy_UluYwdpvMi4C8_D9ZxlNY')",
+      "Bash(npx skills *)",
+      "WebFetch(domain:github.com)",
+      "WebSearch",
+      "WebFetch(domain:skills.sh)",
+      "Bash(ln -sfn __TRACKED_VAR__/.agents/skills/__TRACKED_VAR__ .claude/skills/__TRACKED_VAR__)",
+      "Bash(git checkout *)",
+      "Bash(git fsck *)",
+      "Bash(ps -p 3760 -o comm=)",
+      "Bash(tasklist /FI \"PID eq 3760\")",
+      "PowerShell(Get-Process *)"
+    ],
+    "additionalDirectories": [
+      "d:\\workspace\\yzy_React\\cleanops\\apps\\web\\src\\app\\(worker)\\job"
     ]
   }
 }

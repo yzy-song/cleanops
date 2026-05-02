@@ -36,8 +36,12 @@ export class CreateCustomerDto {
   @Max(180)
   lng?: number;
 
-  @ApiProperty({ example: 'uuid-of-company' })
+  @ApiProperty({ example: 'uuid-of-company', required: false })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  companyId: string;
+  companyId?: string;
+
+  @ApiProperty({ example: true, description: '商业/住宅', required: false })
+  @IsOptional()
+  isCommercial?: boolean;
 }

@@ -58,6 +58,34 @@ export class EmailService {
     await this.sendEmail(customer.email || '', subject, html); // 确保 Customer 模型有 email 字段
   }
 
+  // 账单邮件 (发送给客户)
+  async sendInvoiceEmail(
+    customer: Customer,
+    job: Job,
+    invoice: { id: string; amount: number; vatAmount: number },
+    paymentLink?: string,
+  ) {
+    const startTime = format(new Date(job.scheduledStart), 'yyyy-MM-dd HH:mm');
+    const vatRate = (customer as any).isCommercial ? '23%' : '13.5%';
+    const subtotal = invoice.amount - invoice.vatAmount;
+    const eur = (cents: number) => `€${(cents / 100).toFixed(2)}`;
+
+    const subject = `Your cleaning invoice #${invoice.id.slice(0, 8)} is ready`;
+    const html = `
+      <h3>Hello, ${customer.name}!</h3>
+      <p>Your cleaning service has been completed.</p>
+      <p><strong>Service Date:</strong> ${startTime}</p>
+      <p><strong>Location:</strong> ${customer.address}</p>
+      <hr />
+      <p><strong>Subtotal:</strong> ${eur(subtotal)}</p>
+      <p><strong>VAT (${vatRate}):</strong> ${eur(invoice.vatAmount)}</p>
+      <p><strong>Total:</strong> ${eur(invoice.amount)}</p>
+      ${paymentLink ? `<p><a href="${paymentLink}">Pay online</a></p>` : ''}
+      <p>Thank you for your business!</p>
+    `;
+    await this.sendEmail(customer.email || '', subject, html);
+  }
+
   // 账号邀请邮件 (用于给员工或新管理员发送临时密码)
   async sendNewAccountInfoEmail(email: string, name: string, temporaryPassword: string, companyName: string) {
     const subject = `Your New Account at ${companyName} (CleanOps)`;
@@ -72,7 +100,7 @@ export class EmailService {
     await this.sendEmail(email, subject, html);
   }
 
-  private async sendEmail(to: string, subject: string, html: string) {
+  async sendEmail(to: string, subject: string, html: string) {
     if (!to) return;
     if (!this.resend) {
       this.logger.warn(`Email service is disabled. Skipping email to ${to}`);

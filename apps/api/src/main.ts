@@ -15,7 +15,7 @@ import { AppLogger } from './common/utils/logger';
 async function bootstrap() {
   // 使用 NestExpressApplication 以获得更好的 Express 中间件支持
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    // 1. 如果你使用了自定义 Logger，建议禁用内置日志
+    rawBody: true,
     logger: false,
   });
 
@@ -34,6 +34,7 @@ async function bootstrap() {
     .setDescription('The CleanOps 2026 Management API - 专业清洁业务管理系统')
     .setVersion('1.0')
     .addBearerAuth()
+    .addServer('http://localhost:3000', 'Local development')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document);

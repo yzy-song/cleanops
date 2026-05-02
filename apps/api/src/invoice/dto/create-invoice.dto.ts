@@ -23,8 +23,4 @@ export class CreateInvoiceDto {
   @Min(0)
   pensionAmount?: number;
 
-  @ApiProperty({ example: 'company-uuid' })
-  @IsString()
-  @IsNotEmpty()
-  companyId: string;
 }

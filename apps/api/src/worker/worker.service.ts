@@ -59,13 +59,14 @@ export class WorkerService {
   async findByCompany(companyId: string) {
     return this.prisma.client.worker.findMany({
       where: { companyId },
+      include: { user: { select: { id: true, email: true, role: true } } },
     });
   }
 
   async findOne(id: string) {
     const worker = await this.prisma.client.worker.findUnique({
       where: { id },
-      include: { user: { select: { email: true, role: true } }, assignments: true },
+      include: { user: { select: { id: true, email: true, role: true } }, assignments: true },
     });
     if (!worker) throw new NotFoundException('Worker not found');
     return worker;
