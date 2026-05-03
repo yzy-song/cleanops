@@ -50,8 +50,20 @@ export class AuthService {
       companyId: user.companyId,
     };
 
+    const accessToken = this.jwtService.sign(payload);
+
+    // Generate refresh token (raw → store sha256 hash → return raw)
+    const rawRefreshToken = crypto.randomBytes(48).toString('hex');
+    const refreshTokenHash = crypto.createHash('sha256').update(rawRefreshToken).digest('hex');
+
+    await this.prisma.client.user.update({
+      where: { id: user.id },
+      data: { refreshToken: refreshTokenHash },
+    });
+
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: accessToken,
+      refresh_token: rawRefreshToken,
     };
   }
 
@@ -96,6 +108,41 @@ export class AuthService {
         resetTokenExpiresAt: null,
       },
     });
+  }
+
+  async refresh(refreshToken: string) {
+    const hash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+
+    const user = await this.prisma.client.user.findFirst({
+      where: { refreshToken: hash },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('无效的 refresh token');
+    }
+
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      companyId: user.companyId,
+    };
+
+    const accessToken = this.jwtService.sign(payload);
+
+    // Rotate refresh token
+    const rawRefreshToken = crypto.randomBytes(48).toString('hex');
+    const refreshTokenHash = crypto.createHash('sha256').update(rawRefreshToken).digest('hex');
+
+    await this.prisma.client.user.update({
+      where: { id: user.id },
+      data: { refreshToken: refreshTokenHash },
+    });
+
+    return {
+      access_token: accessToken,
+      refresh_token: rawRefreshToken,
+    };
   }
 
   async changePassword(userId: string, oldPassword: string, newPassword: string) {

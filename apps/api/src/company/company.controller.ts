@@ -5,6 +5,7 @@ import { UpdateCompanyDto } from './dto/update-company.dto';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { Role } from '@cleanops/db';
+import { TrialBypass } from '../billing/decorators/trial-bypass.decorator';
 
 @ApiTags('Companies')
 @Controller('company')
@@ -12,6 +13,7 @@ export class CompanyController {
   constructor(private readonly companyService: CompanyService) {}
 
   @Post()
+  @TrialBypass()
   @ApiOperation({ summary: '注册新清洁公司（公开）' })
   create(@Body() body: CreateCompanyWithAdminDto) {
     return this.companyService.create(body);

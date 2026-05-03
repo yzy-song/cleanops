@@ -23,6 +23,14 @@ model Company {
   vatNumber         String?  // 爱尔兰 VAT 号码
   baseHourlyRate    Int      @default(1480) // 默认起薪 14.80 欧元 (以分存储)
   pensionEnrollment Boolean  @default(true) // 是否开启 2026 自动养老金计划 (1.5%)
+
+  // SaaS 订阅
+  stripeCustomerId   String?   // Stripe Customer ID
+  subscriptionStatus String?   // TRIALING | ACTIVE | PAST_DUE | CANCELLED | NONE
+  subscriptionPlan   String?   // STARTER | PRO | BUSINESS
+  subscriptionEndsAt DateTime? // 当前订阅周期结束时间
+  trialEndsAt        DateTime? // 14天试用截止
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -42,6 +50,7 @@ model User {
   role                Role      @default(WORKER) // 默认角色是员工
   resetToken          String?
   resetTokenExpiresAt DateTime?
+  refreshToken        String?  // SHA256 hash of refresh token
 
   companyId String
   company   Company  @relation(fields: [companyId], references: [id])

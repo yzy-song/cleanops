@@ -5,6 +5,7 @@ import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { QueryInvoiceDto } from './dto/query-invoice.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { StripeService } from '../common/services/stripe.service';
+import { RevolutService } from '../common/services/revolut.service';
 import { paginate } from '../common/utils/pagination.util';
 import Stripe from 'stripe';
 import type { TDocumentDefinitions } from 'pdfmake/interfaces';
@@ -18,6 +19,7 @@ export class InvoiceService {
   constructor(
     private prisma: PrismaService,
     private stripeService: StripeService,
+    private revolutService: RevolutService,
     private configService: ConfigService,
   ) {}
 
@@ -281,5 +283,50 @@ export class InvoiceService {
       pdfDoc.on('error', reject);
       pdfDoc.end();
     });
+  }
+
+  async generateRevolutPaymentLink(id: string, companyId: string) {
+    const invoice = await this.findOne(id, companyId);
+    if (invoice.status === 'PAID') {
+      throw new BadRequestException('Invoice is already paid');
+    }
+
+    const customer = invoice.job.customer;
+    const description = `${customer.name} — Invoice #${invoice.id.slice(0, 8)}`;
+
+    const result = await this.revolutService.createPaymentOrder(invoice.amount, description, {
+      invoiceId: invoice.id,
+      companyId,
+    });
+
+    if (result?.checkoutUrl) {
+      return { paymentLink: result.checkoutUrl, invoice };
+    }
+    throw new BadRequestException('Revolut Pay is not configured');
+  }
+
+  async handleRevolutWebhook(body: any, signature: string) {
+    if (!this.revolutService.isConfigured()) {
+      return { received: true };
+    }
+
+    const payload = JSON.stringify(body);
+    const valid = this.revolutService.verifyWebhookSignature(payload, signature);
+    if (!valid) {
+      this.logger.warn('Invalid Revolut webhook signature');
+      throw new BadRequestException('Invalid signature');
+    }
+
+    const event = body as { event: string; order?: { state: string; merchant_order_id?: string } };
+    if (event.event === 'ORDER_COMPLETED' && event.order?.merchant_order_id) {
+      const invoiceId = event.order.merchant_order_id;
+      await this.prisma.client.invoice.update({
+        where: { id: invoiceId },
+        data: { status: 'PAID', paidAt: new Date(), paymentMethod: 'REVOLUT' },
+      });
+      this.logger.log(`Invoice ${invoiceId} marked as PAID via Revolut webhook`);
+    }
+
+    return { received: true };
   }
 }

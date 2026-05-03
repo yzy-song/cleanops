@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, HttpCode, HttpStatus, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, HttpCode, HttpStatus, BadRequestException, Patch, Param, Delete } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
@@ -8,6 +8,8 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Auth } from './decorators/auth.decorator';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { TrialBypass } from '../billing/decorators/trial-bypass.decorator';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -41,6 +43,8 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @TrialBypass()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: '用户登录（ADMIN, MANAGER, WORKER）' })
   async login(@Body() body: { email: string; pass: string }) {
     return this.authService.login(body.email, body.pass);
@@ -48,6 +52,8 @@ export class AuthController {
 
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
+  @TrialBypass()
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @ApiOperation({ summary: '忘记密码 — 发送重置链接至邮箱' })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto.email);
@@ -55,10 +61,23 @@ export class AuthController {
 
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
+  @TrialBypass()
   @ApiOperation({ summary: '通过 Token 重置密码' })
   async resetPassword(@Body() dto: ResetPasswordDto) {
     await this.authService.resetPassword(dto.token, dto.newPassword);
     return { message: '密码重置成功' };
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @TrialBypass()
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @ApiOperation({ summary: '用 refresh token 换取新的 access token（token 轮换）' })
+  async refresh(@Body() body: { refresh_token: string }) {
+    if (!body.refresh_token) {
+      throw new BadRequestException('refresh_token is required');
+    }
+    return this.authService.refresh(body.refresh_token);
   }
 
   @Post('change-password')
