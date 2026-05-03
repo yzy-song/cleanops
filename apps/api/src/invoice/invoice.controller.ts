@@ -8,6 +8,7 @@ import { QueryInvoiceDto } from './dto/query-invoice.dto';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Role } from '@cleanops/db';
+import { TrialBypass } from '../billing/decorators/trial-bypass.decorator';
 
 @ApiTags('Invoices')
 @Controller('invoice')
@@ -70,14 +71,33 @@ export class InvoiceController {
     return this.invoiceService.voidInvoice(id, companyId);
   }
 
+  @Post(':id/revolut-pay')
+  @Auth(Role.ADMIN)
+  @ApiOperation({ summary: '生成 Revolut Pay 支付链接' })
+  generateRevolutLink(@Param('id') id: string, @CurrentUser('companyId') companyId: string) {
+    return this.invoiceService.generateRevolutPaymentLink(id, companyId);
+  }
+
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
+  @TrialBypass()
   @ApiOperation({ summary: 'Stripe webhook 回调（无需认证）' })
   async stripeWebhook(
     @Req() req: RawBodyRequest<Request>,
     @Headers('stripe-signature') signature: string,
   ) {
     return this.invoiceService.handleStripeWebhook(req.rawBody!, signature);
+  }
+
+  @Post('webhook/revolut')
+  @HttpCode(HttpStatus.OK)
+  @TrialBypass()
+  @ApiOperation({ summary: 'Revolut webhook 回调（无需认证）' })
+  async revolutWebhook(
+    @Req() req: Request,
+    @Headers('revolut-signature') signature: string,
+  ) {
+    return this.invoiceService.handleRevolutWebhook(req.body, signature);
   }
 
   @Get(':id/pdf')
