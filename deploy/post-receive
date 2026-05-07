@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# CleanOps API — Git post-receive hook
+# 放置路径: /var/www/cleanops-api/repo.git/hooks/post-receive
+# 权限: chmod +x post-receive
+
+while read oldrev newrev refname
+do
+    # 仅在推送到 main 分支时触发部署
+    if [ "$refname" = "refs/heads/main" ]; then
+        echo "Push received on 'main' branch. Starting deployment..."
+        /var/www/cleanops-api/deploy.sh $newrev
+    fi
+done
