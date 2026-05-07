@@ -80,7 +80,8 @@
     "additionalDirectories": [
       "d:\\workspace\\yzy_React\\cleanops\\apps\\web\\src\\app\\(dashboard)\\customers",
       "d:\\workspace\\yzy_React\\cleanops\\apps\\web\\src\\app\\(dashboard)\\jobs",
-      "d:\\workspace\\yzy_React\\cleanops\\apps\\web\\src\\app\\(dashboard)\\invoices"
+      "d:\\workspace\\yzy_React\\cleanops\\apps\\web\\src\\app\\(dashboard)\\invoices",
+      "\\tmp"
     ]
   }
 }
