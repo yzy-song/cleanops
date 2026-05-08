@@ -76,7 +76,8 @@
       "Bash(pnpm --version)",
       "Bash(./node_modules/.bin/prisma generate *)",
       "Bash(pnpm --filter @cleanops/api build)",
-      "Bash(pnpm --filter @cleanops/db build)"
+      "Bash(pnpm --filter @cleanops/db build)",
+      "Bash(Remove-Item \"d:\\\\workspace\\\\yzy_React\\\\cleanops\\\\vercel.json\")"
     ],
     "additionalDirectories": [
       "d:\\workspace\\yzy_React\\cleanops\\apps\\web\\src\\app\\(dashboard)\\customers",
