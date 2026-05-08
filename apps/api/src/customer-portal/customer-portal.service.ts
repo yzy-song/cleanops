@@ -101,16 +101,15 @@ export class CustomerPortalService {
     lng?: number;
     scheduledDate: string;
     notes?: string;
+    isCommercial?: boolean;
     companyId?: string;
   }) {
-    // If no companyId provided, use the first company (MVP)
     if (!data.companyId) {
       const firstCompany = await this.prisma.client.company.findFirst();
       if (!firstCompany) throw new BadRequestException('No company configured');
       data.companyId = firstCompany.id;
     }
 
-    // Find or create customer
     let customer = await this.prisma.client.customer.findFirst({
       where: { email: data.email, companyId: data.companyId },
     });
@@ -124,6 +123,7 @@ export class CustomerPortalService {
           address: data.address,
           eircode: data.eircode,
           accessCode: data.accessCode,
+          isCommercial: data.isCommercial ?? false,
           lat: data.lat ?? 53.3498,
           lng: data.lng ?? -6.2603,
           company: { connect: { id: data.companyId } },

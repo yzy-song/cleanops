@@ -71,6 +71,13 @@ export class InvoiceController {
     return this.invoiceService.voidInvoice(id, companyId);
   }
 
+  @Post(':id/send-reminder')
+  @Auth(Role.ADMIN)
+  @ApiOperation({ summary: '发送催款邮件' })
+  sendReminder(@Param('id') id: string, @CurrentUser('companyId') companyId: string) {
+    return this.invoiceService.sendReminder(id, companyId);
+  }
+
   @Post(':id/revolut-pay')
   @Auth(Role.ADMIN)
   @ApiOperation({ summary: '生成 Revolut Pay 支付链接' })
@@ -110,7 +117,11 @@ export class InvoiceController {
   ) {
     const pdfBuffer = await this.invoiceService.generatePdf(id, companyId);
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="invoice-${id.slice(0, 8)}.pdf"`);
+    const invoice = await this.invoiceService.findOne(id, companyId);
+    const invNum = invoice.invoiceNumber
+      ? `INV-${new Date(invoice.createdAt).getFullYear()}-${String(invoice.invoiceNumber).padStart(4, '0')}`
+      : id.slice(0, 8);
+    res.setHeader('Content-Disposition', `attachment; filename="${invNum}.pdf"`);
     res.send(pdfBuffer);
   }
 }
