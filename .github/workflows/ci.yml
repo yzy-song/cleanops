@@ -27,9 +27,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm --filter @cleanops/db build
-
       - run: pnpm --filter @cleanops/db exec prisma generate
+
+      - run: pnpm --filter @cleanops/db build
 
       - name: TypeCheck API
         run: pnpm --filter @cleanops/api exec tsc --noEmit
@@ -55,9 +55,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm --filter @cleanops/db build
-
       - run: pnpm --filter @cleanops/db exec prisma generate
+
+      - run: pnpm --filter @cleanops/db build
 
       - name: Build API
         run: pnpm --filter @cleanops/api build
