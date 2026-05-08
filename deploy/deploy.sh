@@ -242,18 +242,18 @@ pnpm install --frozen-lockfile || {
     exit 1
 }
 
-# ---- 7. 编译 packages/db (生产环境需要 .js) ----
-echo -e "${YELLOW}build @cleanops/db...${NC}"
-pnpm --filter @cleanops/db build || {
-    log_error "db_build_failed"
+# ---- 7. Prisma ----
+echo -e "${YELLOW}prisma generate...${NC}"
+pnpm --filter @cleanops/db exec prisma generate || {
+    log_error "prisma_failed"
     rollback_deployment
     exit 1
 }
 
-# ---- 8. Prisma ----
-echo -e "${YELLOW}prisma generate...${NC}"
-pnpm --filter @cleanops/db exec prisma generate || {
-    log_error "prisma_failed"
+# ---- 8. 编译 packages/db ----
+echo -e "${YELLOW}build @cleanops/db...${NC}"
+pnpm --filter @cleanops/db build || {
+    log_error "db_build_failed"
     rollback_deployment
     exit 1
 }
