@@ -6,11 +6,18 @@ import { QueryInvoiceDto } from './dto/query-invoice.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { StripeService } from '../common/services/stripe.service';
 import { RevolutService } from '../common/services/revolut.service';
+import { EmailService } from '../email/email.service';
 import { paginate } from '../common/utils/pagination.util';
 import Stripe from 'stripe';
 import type { TDocumentDefinitions } from 'pdfmake/interfaces';
 import { format } from 'date-fns';
 const PdfPrinter = require('pdfmake');
+
+function formatInvoiceNumber(invoice: { invoiceNumber: number | null; createdAt: Date }): string {
+  const num = invoice.invoiceNumber;
+  if (!num) return `INV-${invoice.createdAt.getFullYear()}-DRAFT`;
+  return `INV-${invoice.createdAt.getFullYear()}-${String(num).padStart(4, '0')}`;
+}
 
 @Injectable()
 export class InvoiceService {
@@ -21,7 +28,16 @@ export class InvoiceService {
     private stripeService: StripeService,
     private revolutService: RevolutService,
     private configService: ConfigService,
+    private emailService: EmailService,
   ) {}
+
+  private async getNextInvoiceNumber(companyId: string): Promise<number> {
+    const result = await this.prisma.client.invoice.aggregate({
+      where: { companyId, invoiceNumber: { not: null } },
+      _max: { invoiceNumber: true },
+    });
+    return (result._max.invoiceNumber ?? 0) + 1;
+  }
 
   async generateFromJob(companyId: string, jobId: string) {
     const job = await this.prisma.client.job.findFirst({
@@ -33,7 +49,6 @@ export class InvoiceService {
       throw new BadRequestException('Can only generate invoice for completed jobs');
     }
 
-    // Calculate hours from actual clock-in/out times
     let totalMinutes = 0;
     if (job.actualStart && job.actualEnd) {
       totalMinutes = Math.round((job.actualEnd.getTime() - job.actualStart.getTime()) / 60000);
@@ -42,19 +57,19 @@ export class InvoiceService {
     }
 
     const hours = totalMinutes / 60;
-    // Use the first assigned worker's rate, or company default
     const worker = job.assignments[0]?.worker;
     const hourlyRate = worker?.hourlyRate ?? job.company.baseHourlyRate;
     const subtotal = Math.round(hours * hourlyRate);
 
-    // Irish VAT rates: 23% for commercial, 13.5% for residential
     const vatRate = job.customer.isCommercial ? 0.23 : 0.135;
     const vatAmount = Math.round(subtotal * vatRate);
-
     const amount = subtotal + vatAmount;
+
+    const invoiceNumber = await this.getNextInvoiceNumber(companyId);
 
     return this.prisma.client.invoice.create({
       data: {
+        invoiceNumber,
         amount,
         vatAmount,
         status: 'UNPAID',
@@ -66,8 +81,11 @@ export class InvoiceService {
   }
 
   async create(companyId: string, dto: CreateInvoiceDto) {
+    const invoiceNumber = await this.getNextInvoiceNumber(companyId);
+
     return this.prisma.client.invoice.create({
       data: {
+        invoiceNumber,
         amount: dto.amount,
         vatAmount: dto.vatAmount,
         status: 'UNPAID',
@@ -143,7 +161,8 @@ export class InvoiceService {
     }
 
     const customer = invoice.job.customer;
-    const description = `CleanOps - ${customer.name} (Invoice #${invoice.id.slice(0, 8)})`;
+    const invoiceRef = formatInvoiceNumber(invoice);
+    const description = `CleanOps - ${customer.name} (${invoiceRef})`;
 
     const url = await this.stripeService.createPaymentLink(invoice.amount, description, {
       invoiceId: invoice.id,
@@ -180,11 +199,17 @@ export class InvoiceService {
       const { invoiceId, jobId, type } = session.metadata || {};
 
       if (type === 'deposit' && jobId) {
-        await this.prisma.client.job.update({
+        const job = await this.prisma.client.job.update({
           where: { id: jobId },
           data: { isDepositPaid: true },
+          include: { customer: true },
         });
         this.logger.log(`Job ${jobId} deposit marked as PAID via Stripe webhook`);
+        try {
+          await this.emailService.sendDepositConfirmationEmail(job.customer, job);
+        } catch (err: any) {
+          this.logger.warn(`Failed to send deposit confirmation: ${err.message}`);
+        }
       } else if (invoiceId) {
         await this.prisma.client.invoice.update({
           where: { id: invoiceId },
@@ -212,7 +237,7 @@ export class InvoiceService {
 
     const content: any[] = [
       { text: company?.name || 'CleanOps', style: 'header' },
-      { text: `Invoice #${invoice.id.slice(0, 8)}`, style: 'subheader' },
+      { text: formatInvoiceNumber(invoice), style: 'subheader' },
       { text: format(new Date(invoice.createdAt), 'PPP'), style: 'subheader' },
       { text: '\n' },
       { text: 'Bill To:', style: 'label' },
@@ -292,7 +317,7 @@ export class InvoiceService {
     }
 
     const customer = invoice.job.customer;
-    const description = `${customer.name} — Invoice #${invoice.id.slice(0, 8)}`;
+    const description = `${customer.name} — ${formatInvoiceNumber(invoice)}`;
 
     const result = await this.revolutService.createPaymentOrder(invoice.amount, description, {
       invoiceId: invoice.id,
@@ -328,5 +353,37 @@ export class InvoiceService {
     }
 
     return { received: true };
+  }
+
+  async sendReminder(id: string, companyId: string) {
+    const invoice = await this.findOne(id, companyId);
+    if (invoice.status !== 'UNPAID') {
+      throw new BadRequestException('Can only send reminders for unpaid invoices');
+    }
+
+    const customer = invoice.job.customer;
+
+    // Ensure a payment link exists
+    let paymentLink = invoice.paymentLink;
+    if (!paymentLink) {
+      try {
+        const result = await this.generatePaymentLink(id, companyId);
+        paymentLink = result.paymentLink;
+      } catch (err: any) {
+        this.logger.warn(`Could not generate payment link for reminder: ${err.message}`);
+      }
+    }
+
+    await this.emailService.sendInvoiceReminderEmail(invoice, customer, paymentLink);
+
+    await this.prisma.client.invoice.update({
+      where: { id },
+      data: {
+        reminderSentAt: new Date(),
+        reminderCount: { increment: 1 },
+      },
+    });
+
+    return { success: true };
   }
 }

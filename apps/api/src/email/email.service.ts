@@ -1,8 +1,14 @@
-﻿import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Job, Customer, User, Company } from '@cleanops/db';
 import { format } from 'date-fns';
 import { Resend } from 'resend';
+
+function formatInvoiceRef(invoice: { invoiceNumber?: number | null; createdAt: Date }): string {
+  const year = invoice.createdAt.getFullYear();
+  if (!(invoice as any).invoiceNumber) return `INV-${year}-DRAFT`;
+  return `INV-${year}-${String((invoice as any).invoiceNumber).padStart(4, '0')}`;
+}
 
 @Injectable()
 export class EmailService {
@@ -19,7 +25,6 @@ export class EmailService {
     }
   }
 
-  // 发送老板/管理员欢迎邮件
   async sendWelcomeEmail(user: User & { company: Company }) {
     const subject = `Welcome to CleanOps, ${user.company.name}!`;
     const html = `
@@ -30,7 +35,6 @@ export class EmailService {
     await this.sendEmail(user.email, subject, html);
   }
 
-  // 密码重置邮件 (通用)
   async sendPasswordResetEmail(email: string, token: string) {
     const resetLink = `${this.configService.get<string>('FRONTEND_URL')}/reset-password?token=${token}`;
     const subject = 'CleanOps Password Reset Request';
@@ -43,7 +47,6 @@ export class EmailService {
     await this.sendEmail(email, subject, html);
   }
 
-  // 任务确认邮件 (发送给客户)
   async sendJobConfirmationEmail(customer: Customer, job: Job, company: Company) {
     const startTime = format(new Date(job.scheduledStart), 'yyyy-MM-dd HH:mm');
     const subject = `Service Confirmed: Your booking with ${company.name}`;
@@ -53,27 +56,29 @@ export class EmailService {
       <p><strong>Scheduled Time:</strong> ${startTime}</p>
       <p><strong>Location:</strong> ${customer.address}</p>
       <p><strong>Access Instructions:</strong> ${customer.accessCode || 'None provided'}</p>
+      ${(job as any).depositAmount ? `<p><strong>Deposit:</strong> €${((job as any).depositAmount / 100).toFixed(2)} — ${(job as any).isDepositPaid ? 'Paid' : 'Pending'}</p>` : ''}
       <p>If you need to change your booking, please contact ${company.name} directly.</p>
     `;
-    await this.sendEmail(customer.email || '', subject, html); // 确保 Customer 模型有 email 字段
+    await this.sendEmail(customer.email || '', subject, html);
   }
 
-  // 账单邮件 (发送给客户)
   async sendInvoiceEmail(
     customer: Customer,
     job: Job,
-    invoice: { id: string; amount: number; vatAmount: number },
+    invoice: { id: string; amount: number; vatAmount: number; invoiceNumber?: number | null; createdAt: Date },
     paymentLink?: string,
   ) {
     const startTime = format(new Date(job.scheduledStart), 'yyyy-MM-dd HH:mm');
     const vatRate = (customer as any).isCommercial ? '23%' : '13.5%';
     const subtotal = invoice.amount - invoice.vatAmount;
     const eur = (cents: number) => `€${(cents / 100).toFixed(2)}`;
+    const ref = formatInvoiceRef(invoice);
 
-    const subject = `Your cleaning invoice #${invoice.id.slice(0, 8)} is ready`;
+    const subject = `Your cleaning invoice ${ref} is ready`;
     const html = `
       <h3>Hello, ${customer.name}!</h3>
       <p>Your cleaning service has been completed.</p>
+      <p><strong>Invoice:</strong> ${ref}</p>
       <p><strong>Service Date:</strong> ${startTime}</p>
       <p><strong>Location:</strong> ${customer.address}</p>
       <hr />
@@ -86,7 +91,6 @@ export class EmailService {
     await this.sendEmail(customer.email || '', subject, html);
   }
 
-  // 账号邀请邮件 (用于给员工或新管理员发送临时密码)
   async sendNewAccountInfoEmail(email: string, name: string, temporaryPassword: string, companyName: string) {
     const subject = `Your New Account at ${companyName} (CleanOps)`;
     const html = `
@@ -98,6 +102,55 @@ export class EmailService {
         <p>Please change your password after your first login.</p>
       `;
     await this.sendEmail(email, subject, html);
+  }
+
+  async sendDepositRequestEmail(customer: Customer, job: Job, depositLink?: string) {
+    const eur = (cents: number) => `€${(cents / 100).toFixed(2)}`;
+    const startTime = format(new Date(job.scheduledStart), 'yyyy-MM-dd HH:mm');
+    const subject = `Deposit requested for your booking`;
+
+    const html = `
+      <h3>Hello, ${customer.name}!</h3>
+      <p>Your booking has been received. A deposit is required to confirm your service.</p>
+      <p><strong>Scheduled:</strong> ${startTime}</p>
+      <p><strong>Deposit Amount:</strong> ${eur((job as any).depositAmount || 0)}</p>
+      ${depositLink ? `<p><a href="${depositLink}">Pay deposit online</a></p>` : '<p>We will contact you with payment details.</p>'}
+      <p>Your booking will be confirmed once the deposit is received.</p>
+    `;
+    await this.sendEmail(customer.email || '', subject, html);
+  }
+
+  async sendDepositConfirmationEmail(customer: Customer, job: Job) {
+    const eur = (cents: number) => `€${(cents / 100).toFixed(2)}`;
+    const startTime = format(new Date(job.scheduledStart), 'yyyy-MM-dd HH:mm');
+    const subject = `Deposit received — booking confirmed`;
+
+    const html = `
+      <h3>Hello, ${customer.name}!</h3>
+      <p>Your deposit of <strong>${eur((job as any).depositAmount || 0)}</strong> has been received.</p>
+      <p>Your booking for <strong>${startTime}</strong> at <strong>${customer.address}</strong> is now confirmed.</p>
+      <p>Thank you!</p>
+    `;
+    await this.sendEmail(customer.email || '', subject, html);
+  }
+
+  async sendInvoiceReminderEmail(
+    invoice: { id: string; amount: number; invoiceNumber?: number | null; createdAt: Date },
+    customer: Customer,
+    paymentLink?: string,
+  ) {
+    const eur = (cents: number) => `€${(cents / 100).toFixed(2)}`;
+    const ref = formatInvoiceRef(invoice);
+
+    const subject = `Reminder: Your invoice ${ref} is due`;
+    const html = `
+      <h3>Hello, ${customer.name}!</h3>
+      <p>This is a friendly reminder that your invoice <strong>${ref}</strong> for <strong>${eur(invoice.amount)}</strong> is still unpaid.</p>
+      <p>Please settle at your earliest convenience.</p>
+      ${paymentLink ? `<p><a href="${paymentLink}">Pay online</a></p>` : ''}
+      <p>If you have already paid, please disregard this message.</p>
+    `;
+    await this.sendEmail(customer.email || '', subject, html);
   }
 
   async sendEmail(to: string, subject: string, html: string) {

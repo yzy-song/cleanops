@@ -1,177 +1,61 @@
-# ChimeraLens AI
+# CleanOps
 
-**Transform your photos into stunning, stylized portraits with a single click. ChimeraLens is a full-stack AI face-swapping application that allows you to blend your face with artistic templates.**
+清洁业务管理 SaaS — 工单调度、GPS 打卡、账单支付、客户管理。
 
-![ChimeraLens Demo](https://res.cloudinary.com/deaxv6w30/image/upload/v1758833446/Gemini_Generated_Image_n1rtbpn1rtbpn1rt_hyaw8k.png)
+## 技术栈
 
-## ✨ Features
+| 层 | 技术 |
+|----|------|
+| 前端 | Next.js 15 (App Router), React 19, Tailwind CSS |
+| 后端 | NestJS 11, TypeScript, Prisma |
+| 数据库 | PostgreSQL |
+| 支付 | Stripe Billing + Revolut Pay |
+| CI/CD | GitHub Actions, Vercel, PM2 |
+| 包管理 | pnpm 10 (monorepo) |
 
-- **🎨 AI-Powered Face Swapping**: Upload your photo, choose a style from our curated templates, and let the AI work its magic
-- **👥 Guest & Registered Users**: Try the app without an account. Sign up to save your creations and manage your profile
-- **🔐 Social & Email Login**: Quick and easy authentication using Google or traditional email and password
-- **💳 Credit System**: Start with free credits and purchase more through our secure Stripe integration
-- **🖼️ Personal Gallery**: All your creations are saved in a personal, paginated gallery where you can view, download, or delete them
-- **🎯 Intelligent Face Detection**: Automatically detects faces in your uploaded photos. If multiple faces are found, you can select which one to use
-- **⚡ Image Optimization**: Images are compressed and optimized for speed and quality before being sent to the AI model
-- **📱 Responsive Design**: A beautiful and intuitive interface that works seamlessly on both desktop and mobile devices
-
-## 🛠️ Tech Stack
-
-- **Monorepo**: pnpm Workspaces, Turborepo
-- **Frontend**: Next.js, React, TypeScript, Tailwind CSS, shadcn/ui, React Query, Zustand
-- **Backend**: NestJS, TypeScript, PostgreSQL, Prisma
-- **AI**: Replicate API
-- **Image Storage**: Cloudinary
-- **Authentication**: JWT, Firebase Authentication
-- **Payments**: Stripe
-- **Deployment**: Vercel (Frontend), Render (Backend)
-
-## 📦 Project Structure
-
-```
-chimeralens/
-├── apps/
-│   ├── api/         # NestJS backend API
-│   └── web/         # Next.js frontend application
-├── packages/
-│   ├── db/          # Shared database package (Prisma schema & client)
-│   └── ui/          # Shared UI components
-└── turbo.json       # Turborepo configuration
-```
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js (v18+)
-- pnpm
-- PostgreSQL database
-
-### Installation
-
-1. **Clone the repository**
-
-   ```bash
-   git clone https://github.com/your-username/chimeralens.git
-   cd chimeralens
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   pnpm install
-   ```
-
-3. **Set up environment variables**
-
-   Create a `.env` file in `apps/api/` and a `.env.local` file in `apps/web/` based on the example files:
-
-   ```bash
-   # apps/api/.env
-   DATABASE_URL="postgresql://postgres:abc%40123456@localhost:5432/db-cleanops?schema=public"
-   JWT_SECRET="your-jwt-secret"
-   REPLICATE_API_TOKEN="your-replicate-token"
-   CLOUDINARY_CLOUD_NAME="your-cloudinary-name"
-   CLOUDINARY_API_KEY="your-cloudinary-key"
-   CLOUDINARY_API_SECRET="your-cloudinary-secret"
-   STRIPE_SECRET_KEY="your-stripe-secret"
-   STRIPE_WEBHOOK_SECRET="your-stripe-webhook-secret"
-   FIREBASE_PROJECT_ID="your-firebase-project"
-   ```
-
-   ```bash
-   # apps/web/.env.local
-   NEXT_PUBLIC_API_URL="http://localhost:3000"
-   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="your-stripe-publishable-key"
-   NEXT_PUBLIC_FIREBASE_API_KEY="your-firebase-api-key"
-   ```
-
-4. **Set up the database**
-
-   ```bash
-   pnpm -F @chimeralens/db db:push
-   ```
-
-5. **Start development servers**
-
-   ```bash
-   pnpm dev
-   ```
-
-   - Frontend: http://localhost:3001
-   - Backend: http://localhost:3000
-
-## 💡 Core Concepts
-
-### Monorepo Architecture
-
-The project uses pnpm Workspaces and Turborepo for efficient development and deployment across multiple packages.
-
-### Authentication System
-
-- **Guest Mode**: Device fingerprinting allows instant access without registration
-- **Registered Users**: JWT-based authentication with email/password or Google OAuth
-- **Session Management**: Secure token-based authentication with automatic refresh
-
-### AI Integration
-
-- **Face Detection**: Client-side MediaPipe for pre-processing and face selection
-- **Image Processing**: Automatic cropping and optimization before AI processing
-- **Asynchronous Generation**: Polling mechanism for handling long-running AI tasks
-
-### Payment System
-
-- **Credit-based Model**: Users purchase credits to generate images
-- **Stripe Integration**: Secure checkout with webhook-based credit fulfillment
-- **Guest Credits**: Free trial credits for first-time users
-
-## 🔧 Development Scripts
+## 快速开始
 
 ```bash
-# Development
-pnpm dev              # Start all services in development mode
-pnpm dev:api          # Start only the backend API
-pnpm dev:web          # Start only the frontend
+# 要求 Node.js 20 + pnpm 10 + PostgreSQL
+git clone git@github.com:yzy-song/cleanops.git
+cd cleanops
+pnpm install
 
-# Building
-pnpm build            # Build all packages
-pnpm build:api        # Build only the backend
-pnpm build:web        # Build only the frontend
+cp .env.example apps/api/.env
+cp .env.example packages/db/.env
+# 编辑两处 .env，填入 DATABASE_URL 和 JWT_SECRET
 
-# Database
-pnpm db:push          # Push schema changes to database
-pnpm db:studio        # Open Prisma Studio
-pnpm db:generate      # Generate Prisma Client
+pnpm --filter @cleanops/db exec prisma db push
+pnpm --filter @cleanops/db exec prisma generate
+pnpm --filter @cleanops/db build
 
-# Linting & Testing
-pnpm lint             # Lint all packages
+pnpm dev   # 前端 :3001  后端 :3000
 ```
 
-## 🌟 What Makes This Project Special
+## 项目结构
 
-- **Production-Ready**: Complete with authentication, payments, and error handling
-- **Modern Stack**: Built with the latest tools and best practices
-- **Scalable Architecture**: Monorepo structure allows for easy expansion
-- **User Experience**: Seamless flow from guest to paid user
-- **Performance**: Optimized images and efficient AI processing
+```
+cleanops/
+├── apps/
+│   ├── api/            # NestJS 后端
+│   └── web/            # Next.js 前端
+├── packages/db/        # Prisma schema + 共享客户端
+├── deploy/             # 服务器部署脚本
+├── docs/               # 文档
+└── .github/workflows/  # CI + Deploy
+```
 
-## 🤝 Contributing
+## 文档
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+- [开发指南](docs/CONTRIB.md) — 环境配置、脚本参考、工作流
+- [运维手册](docs/RUNBOOK.md) — 部署流程、故障排查、回滚
 
-## 📄 License
+## 定价
 
-This project is licensed under the ISC License - see the package.json file for details.
+| 等级 | 月费 | 工人数 |
+|------|------|--------|
+| Starter | €29/mo | ≤5 |
+| Pro | €69/mo | ≤20 |
+| Business | €129/mo | 无限 |
 
-## 🔮 Future Improvements
-
-- [ ] More AI models and style options
-- [ ] Batch processing for multiple images
-- [ ] Social sharing features
-- [ ] Mobile app development
-- [ ] Advanced editing tools
-- [ ] Subscription-based pricing
-
----
-
-**Built with ❤️ using modern web technologies**
+14 天免费试用，无需信用卡。

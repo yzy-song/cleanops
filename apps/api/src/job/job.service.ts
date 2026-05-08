@@ -21,7 +21,7 @@ export class JobService {
   ) {}
 
   async create(companyId: string, dto: CreateJobDto) {
-    return this.prisma.client.job.create({
+    const job = await this.prisma.client.job.create({
       data: {
         scheduledStart: new Date(dto.scheduledStart),
         estimatedDuration: dto.estimatedDuration,
@@ -39,6 +39,22 @@ export class JobService {
       },
       include: { assignments: { include: { worker: true } }, customer: true },
     });
+
+    // Auto-send deposit request if deposit is set
+    if (dto.depositAmount && dto.depositAmount > 0 && job.customer?.email) {
+      try {
+        const depositLink = await this.stripeService.createPaymentLink(
+          dto.depositAmount,
+          `Deposit - ${job.customer.name} (Job #${job.id.slice(0, 8)})`,
+          { jobId: job.id, type: 'deposit', companyId },
+        );
+        await this.emailService.sendDepositRequestEmail(job.customer, job, depositLink ?? undefined);
+      } catch (err: any) {
+        // Non-blocking: deposit email failure should not abort job creation
+      }
+    }
+
+    return job;
   }
 
   async findAll(companyId: string, query: QueryJobDto) {
@@ -404,10 +420,21 @@ export class JobService {
     if (job.isDepositPaid) {
       throw new BadRequestException('Deposit is already paid');
     }
-    return this.prisma.client.job.update({
+    const updated = await this.prisma.client.job.update({
       where: { id: jobId },
       data: { isDepositPaid: true },
+      include: { customer: true },
     });
+
+    if (updated.customer?.email) {
+      try {
+        await this.emailService.sendDepositConfirmationEmail(updated.customer, updated);
+      } catch (err: any) {
+        // Non-blocking
+      }
+    }
+
+    return updated;
   }
 
   async generateDepositPaymentLink(jobId: string, companyId: string) {

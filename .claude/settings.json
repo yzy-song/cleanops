@@ -77,7 +77,12 @@
       "Bash(./node_modules/.bin/prisma generate *)",
       "Bash(pnpm --filter @cleanops/api build)",
       "Bash(pnpm --filter @cleanops/db build)",
-      "Bash(Remove-Item \"d:\\\\workspace\\\\yzy_React\\\\cleanops\\\\vercel.json\")"
+      "Bash(Remove-Item \"d:\\\\workspace\\\\yzy_React\\\\cleanops\\\\vercel.json\")",
+      "Bash(pnpm --filter @cleanops/db exec prisma db push)",
+      "Bash(pnpm --filter @cleanops/db exec prisma generate)",
+      "Bash(pnpm --filter @cleanops/db exec prisma generate --skip-generate)",
+      "Bash(Select-String -Pattern \"invoiceNumber|reminderSentAt|reminderCount|Invoice\" -NotMatch)",
+      "Bash(Select-Object -First 10)"
     ],
     "additionalDirectories": [
       "d:\\workspace\\yzy_React\\cleanops\\apps\\web\\src\\app\\(dashboard)\\customers",

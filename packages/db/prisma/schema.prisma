@@ -170,6 +170,7 @@ model JobPhoto {
 // 8. 账单
 model Invoice {
   id              String    @id @default(uuid())
+  invoiceNumber   Int?      // 公司范围内连续编号
   amount          Int       // 总金额 (分)
   vatAmount       Int       // 税额 (分)
   // 状态: UNPAID, PAID, VOID
@@ -177,11 +178,15 @@ model Invoice {
   paymentMethod   String?   // STRIPE, CASH, REVOLUT, BANK_TRANSFER
   paymentLink     String?   // 存储生成的支付链接
   paidAt          DateTime?
+  reminderSentAt  DateTime? // 最近催款时间
+  reminderCount   Int       @default(0) // 催款次数
   createdAt       DateTime  @default(now())
 
   jobId           String    @unique
   job             Job       @relation(fields: [jobId], references: [id])
-  
+
   companyId       String
   company         Company   @relation(fields: [companyId], references: [id])
+
+  @@unique([companyId, invoiceNumber])
 }
