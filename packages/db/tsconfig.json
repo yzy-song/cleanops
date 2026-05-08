@@ -1,9 +1,1 @@
-{
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "outDir": "dist",
-    "declaration": true,
-  },
-  "include": ["index.ts"],
-  "exclude": ["node_modules", "dist"]
-}
+{"compilerOptions":{"module":"commonjs","target":"ES2023","declaration":true,"outDir":"./dist","rootDir":".","strict":true,"esModuleInterop":true,"skipLibCheck":true,"forceConsistentCasingInFileNames":true},"include":["index.ts"]}

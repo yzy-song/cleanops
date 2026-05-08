@@ -75,7 +75,8 @@
       "Bash(python -c \"import yaml; yaml.safe_load\\(open\\('.github/workflows/ci.yml'\\)\\); print\\('YAML valid'\\)\")",
       "Bash(pnpm --version)",
       "Bash(./node_modules/.bin/prisma generate *)",
-      "Bash(pnpm --filter @cleanops/api build)"
+      "Bash(pnpm --filter @cleanops/api build)",
+      "Bash(pnpm --filter @cleanops/db build)"
     ],
     "additionalDirectories": [
       "d:\\workspace\\yzy_React\\cleanops\\apps\\web\\src\\app\\(dashboard)\\customers",
