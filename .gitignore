@@ -12,8 +12,6 @@ dist/
 build/
 out/
 
-web/
-
 # Next.js
 .next/
 .next/cache/
