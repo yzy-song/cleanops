@@ -83,7 +83,13 @@
       "Bash(pnpm --filter @cleanops/db exec prisma generate --skip-generate)",
       "Bash(Select-String -Pattern \"invoiceNumber|reminderSentAt|reminderCount|Invoice\" -NotMatch)",
       "Bash(Select-Object -First 10)",
-      "Bash(pnpm --filter @cleanops/web add recharts)"
+      "Bash(pnpm --filter @cleanops/web add recharts)",
+      "Bash(nslookup db.vvuypqbfrgsklsigowpt.supabase.co)",
+      "Bash(ping -6 -n 3 google.com)",
+      "Bash(ping -6 -n 2 2a00:1450:4009:81f::200e)",
+      "Bash(nslookup -type=AAAA google.com)",
+      "Bash(psql \"postgresql://postgres:postgres@168.138.32.70:5432/postgres\" -c \"CREATE DATABASE cleanops;\")",
+      "Bash(pnpm db:seed)"
     ],
     "additionalDirectories": [
       "d:\\workspace\\yzy_React\\cleanops\\apps\\web\\src\\app\\(dashboard)\\customers",

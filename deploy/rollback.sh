@@ -1,7 +1,7 @@
 #!/bin/bash
 # =========================================================================
 # CleanOps API — 手动回滚到指定版本
-# 使用方法: /var/www/cleanops-api/rollback.sh 20240830120000
+# 使用方法: /var/www/cleanops/rollback.sh 20240830120000
 # =========================================================================
 set -e
 
@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # 无色
 
 # 部署配置
-PROJECT_NAME="cleanops-api"
+PROJECT_NAME="cleanops"
 DEPLOY_ROOT="/var/www/${PROJECT_NAME}"
 RELEASES_DIR="${DEPLOY_ROOT}/releases"
 CURRENT_SYMLINK="${DEPLOY_ROOT}/current"
@@ -106,7 +106,7 @@ main() {
     cleanup_releases
     log "Rollback completed successfully"
     echo -e "${GREEN}✓ Rollback to ${TARGET_VERSION} succeeded!${NC}"
-    echo -e "${YELLOW}Run 'pm2 logs cleanops-api' to monitor the application.${NC}"
+    echo -e "${YELLOW}Run 'pm2 logs cleanops' to monitor the application.${NC}"
 }
 
 # 执行主流程

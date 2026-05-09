@@ -30,4 +30,4 @@ jobs:
           command_timeout: 15m
           script: |
             set -e
-            /var/www/cleanops-api/deploy.sh
+            /var/www/cleanops/deploy.sh

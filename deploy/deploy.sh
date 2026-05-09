@@ -3,9 +3,9 @@
 # 适用: pnpm monorepo (NestJS + Prisma)，GitHub Actions 通过 SSH 触发
 #
 # 服务器初始化:
-#   git clone https://github.com/yzy-song/cleanops.git /var/www/cleanops-api/repo
-#   mkdir -p /var/www/cleanops-api/{releases,backups,logs}
-#   创建 /var/www/cleanops-api/.env
+#   git clone https://github.com/yzy-song/cleanops.git /var/www/cleanops/repo
+#   mkdir -p /var/www/cleanops/{releases,backups,logs}
+#   创建 /var/www/cleanops/.env
 set -e
 
 RED='\033[0;31m'
@@ -16,7 +16,7 @@ NC='\033[0m'
 
 # ============================ 配置 ============================
 
-PROJECT_NAME="cleanops-api"
+PROJECT_NAME="cleanops"
 DEPLOY_ROOT="/var/www/${PROJECT_NAME}"
 REPO_DIR="${DEPLOY_ROOT}/repo"
 RELEASES_DIR="${DEPLOY_ROOT}/releases"
