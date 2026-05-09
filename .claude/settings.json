@@ -140,7 +140,10 @@
       "Bash(curl -sk https://168.138.32.70/api-docs)",
       "Bash(curl -sk --connect-timeout 5 http://168.138.32.70/)",
       "Bash(curl -sk --connect-timeout 5 https://168.138.32.70/)",
-      "Bash(pnpm --filter @cleanops/web add next@latest)"
+      "Bash(pnpm --filter @cleanops/web add next@latest)",
+      "Bash(ssh -T -o ConnectTimeout=10 git@github.com)",
+      "Bash(GIT_SSH_COMMAND=\"ssh -o ConnectTimeout=30\" git push origin main)",
+      "Bash(pnpm list *)"
     ],
     "additionalDirectories": [
       "d:\\workspace\\yzy_React\\cleanops\\apps\\web\\src\\app\\(dashboard)\\customers",
