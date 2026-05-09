@@ -5,8 +5,8 @@ import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { QueryInvoiceDto } from './dto/query-invoice.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { StripeService } from '../common/services/stripe.service';
-import { RevolutService } from '../common/services/revolut.service';
 import { EmailService } from '../email/email.service';
+import { CompanyService } from '../company/company.service';
 import { paginate } from '../common/utils/pagination.util';
 import Stripe from 'stripe';
 import type { TDocumentDefinitions } from 'pdfmake/interfaces';
@@ -26,9 +26,9 @@ export class InvoiceService {
   constructor(
     private prisma: PrismaService,
     private stripeService: StripeService,
-    private revolutService: RevolutService,
     private configService: ConfigService,
     private emailService: EmailService,
+    private companyService: CompanyService,
   ) {}
 
   private async getNextInvoiceNumber(companyId: string): Promise<number> {
@@ -160,13 +160,27 @@ export class InvoiceService {
       throw new BadRequestException('Invoice is already paid');
     }
 
+    // Check Stripe Connect is set up
+    const company = await this.prisma.client.company.findUnique({
+      where: { id: companyId },
+      select: { stripeAccountId: true, stripeAccountStatus: true },
+    });
+    if (!company?.stripeAccountId) {
+      throw new BadRequestException('Please connect your Stripe account in Settings first');
+    }
+    if (company.stripeAccountStatus === 'restricted') {
+      throw new BadRequestException('Your Stripe account needs attention. Please check Settings.');
+    }
+
     const customer = invoice.job.customer;
     const invoiceRef = formatInvoiceNumber(invoice);
-    const description = `CleanOps - ${customer.name} (${invoiceRef})`;
+    const description = `CleanOps — ${customer.name} (${invoiceRef})`;
 
-    const url = await this.stripeService.createPaymentLink(invoice.amount, description, {
-      invoiceId: invoice.id,
-      companyId,
+    const url = await this.stripeService.createConnectCheckoutSession({
+      amount: invoice.amount,
+      connectedAccountId: company.stripeAccountId,
+      description,
+      metadata: { invoiceId: invoice.id, companyId, type: 'invoice' },
     });
 
     if (url) {
@@ -217,6 +231,38 @@ export class InvoiceService {
         });
         this.logger.log(`Invoice ${invoiceId} marked as PAID via Stripe webhook`);
       }
+    }
+
+    // Handle refunds — check if we need to void the connected invoice
+    if (event.type === 'charge.refunded') {
+      const charge = event.data.object as Stripe.Charge;
+      // Refunds via Stripe Connect with reverse_transfer automatically return the app fee.
+      // We just log it; the connected account balance is adjusted by Stripe.
+      this.logger.log(`Charge ${charge.id} refunded — platform fee reversed if applicable`);
+    }
+
+    return { received: true };
+  }
+
+  /** Handle Stripe Connect account.updated webhook events. */
+  async handleConnectWebhook(rawBody: Buffer, signature: string) {
+    const webhookSecret = this.configService.get<string>('STRIPE_CONNECT_WEBHOOK_SECRET');
+    if (!webhookSecret) {
+      this.logger.warn('STRIPE_CONNECT_WEBHOOK_SECRET not configured');
+      return { received: true };
+    }
+
+    let event: Stripe.Event;
+    try {
+      event = this.stripeService.constructWebhookEvent(rawBody, signature, webhookSecret);
+    } catch (err: any) {
+      this.logger.error(`Connect webhook signature verification failed: ${err.message}`);
+      throw new BadRequestException('Invalid signature');
+    }
+
+    if (event.type === 'account.updated') {
+      const account = event.data.object as Stripe.Account;
+      await this.companyService.updateConnectAccountStatus(account.id, account.charges_enabled);
     }
 
     return { received: true };
@@ -308,51 +354,6 @@ export class InvoiceService {
       pdfDoc.on('error', reject);
       pdfDoc.end();
     });
-  }
-
-  async generateRevolutPaymentLink(id: string, companyId: string) {
-    const invoice = await this.findOne(id, companyId);
-    if (invoice.status === 'PAID') {
-      throw new BadRequestException('Invoice is already paid');
-    }
-
-    const customer = invoice.job.customer;
-    const description = `${customer.name} — ${formatInvoiceNumber(invoice)}`;
-
-    const result = await this.revolutService.createPaymentOrder(invoice.amount, description, {
-      invoiceId: invoice.id,
-      companyId,
-    });
-
-    if (result?.checkoutUrl) {
-      return { paymentLink: result.checkoutUrl, invoice };
-    }
-    throw new BadRequestException('Revolut Pay is not configured');
-  }
-
-  async handleRevolutWebhook(body: any, signature: string) {
-    if (!this.revolutService.isConfigured()) {
-      return { received: true };
-    }
-
-    const payload = JSON.stringify(body);
-    const valid = this.revolutService.verifyWebhookSignature(payload, signature);
-    if (!valid) {
-      this.logger.warn('Invalid Revolut webhook signature');
-      throw new BadRequestException('Invalid signature');
-    }
-
-    const event = body as { event: string; order?: { state: string; merchant_order_id?: string } };
-    if (event.event === 'ORDER_COMPLETED' && event.order?.merchant_order_id) {
-      const invoiceId = event.order.merchant_order_id;
-      await this.prisma.client.invoice.update({
-        where: { id: invoiceId },
-        data: { status: 'PAID', paidAt: new Date(), paymentMethod: 'REVOLUT' },
-      });
-      this.logger.log(`Invoice ${invoiceId} marked as PAID via Revolut webhook`);
-    }
-
-    return { received: true };
   }
 
   async sendReminder(id: string, companyId: string) {

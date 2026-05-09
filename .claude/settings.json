@@ -82,7 +82,8 @@
       "Bash(pnpm --filter @cleanops/db exec prisma generate)",
       "Bash(pnpm --filter @cleanops/db exec prisma generate --skip-generate)",
       "Bash(Select-String -Pattern \"invoiceNumber|reminderSentAt|reminderCount|Invoice\" -NotMatch)",
-      "Bash(Select-Object -First 10)"
+      "Bash(Select-Object -First 10)",
+      "Bash(pnpm --filter @cleanops/web add recharts)"
     ],
     "additionalDirectories": [
       "d:\\workspace\\yzy_React\\cleanops\\apps\\web\\src\\app\\(dashboard)\\customers",

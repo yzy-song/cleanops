@@ -59,7 +59,7 @@ export class BillingService {
     const priceId = this.getPriceId(plan, interval);
     if (!priceId) throw new BadRequestException(`Price not configured for ${plan} (${interval})`);
 
-    const stripe = (this.stripeService as any).stripe as Stripe | null;
+    const stripe = this.stripeService.client as Stripe | null;
     if (!stripe) throw new BadRequestException('Stripe is not configured');
 
     const session = await stripe.checkout.sessions.create({
@@ -83,7 +83,7 @@ export class BillingService {
     });
     if (!company?.stripeCustomerId) throw new BadRequestException('No Stripe customer');
 
-    const stripe = (this.stripeService as any).stripe as Stripe | null;
+    const stripe = this.stripeService.client as Stripe | null;
     if (!stripe) throw new BadRequestException('Stripe is not configured');
 
     const session = await stripe.billingPortal.sessions.create({
@@ -101,7 +101,7 @@ export class BillingService {
       return { received: true };
     }
 
-    const stripe = (this.stripeService as any).stripe as Stripe | null;
+    const stripe = this.stripeService.client as Stripe | null;
     if (!stripe) return { received: true };
 
     let event: Stripe.Event;
@@ -166,7 +166,7 @@ export class BillingService {
   }
 
   private async fetchSubscription(subscriptionId: string): Promise<Stripe.Subscription | null> {
-    const stripe = (this.stripeService as any).stripe as Stripe | null;
+    const stripe = this.stripeService.client as Stripe | null;
     if (!stripe) return null;
     try {
       return await stripe.subscriptions.retrieve(subscriptionId);

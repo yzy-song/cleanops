@@ -31,6 +31,11 @@ model Company {
   subscriptionEndsAt DateTime? // 当前订阅周期结束时间
   trialEndsAt        DateTime? // 14天试用截止
 
+  // Stripe Connect (公司收自己的款)
+  stripeAccountId       String?   // Connect 账户 ID (acct_xxxx)
+  stripeAccountStatus   String?   // enabled | restricted | pending
+  stripeAccountEmail    String?   // Stripe 账户关联邮箱
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

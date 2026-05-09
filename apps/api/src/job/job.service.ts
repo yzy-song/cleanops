@@ -40,17 +40,27 @@ export class JobService {
       include: { assignments: { include: { worker: true } }, customer: true },
     });
 
-    // Auto-send deposit request if deposit is set
+    // Auto-send deposit request if deposit is set and company has Stripe Connect
     if (dto.depositAmount && dto.depositAmount > 0 && job.customer?.email) {
       try {
-        const depositLink = await this.stripeService.createPaymentLink(
-          dto.depositAmount,
-          `Deposit - ${job.customer.name} (Job #${job.id.slice(0, 8)})`,
-          { jobId: job.id, type: 'deposit', companyId },
-        );
-        await this.emailService.sendDepositRequestEmail(job.customer, job, depositLink ?? undefined);
+        const company = await this.prisma.client.company.findUnique({
+          where: { id: companyId },
+          select: { stripeAccountId: true },
+        });
+        let depositLink: string | null = null;
+        if (company?.stripeAccountId) {
+          depositLink = await this.stripeService.createConnectCheckoutSession({
+            amount: dto.depositAmount,
+            connectedAccountId: company.stripeAccountId,
+            description: `Deposit — ${job.customer.name} (Job #${job.id.slice(0, 8)})`,
+            metadata: { jobId: job.id, type: 'deposit', companyId },
+          });
+        }
+        if (depositLink) {
+          await this.emailService.sendDepositRequestEmail(job.customer, job, depositLink);
+        }
       } catch (err: any) {
-        // Non-blocking: deposit email failure should not abort job creation
+        // Non-blocking
       }
     }
 
@@ -446,11 +456,21 @@ export class JobService {
       throw new BadRequestException('Deposit is already paid');
     }
 
-    const description = `Deposit - ${job.customer?.name || 'Cleaning Service'} (Job #${jobId.slice(0, 8)})`;
-    const url = await this.stripeService.createPaymentLink(job.depositAmount, description, {
-      jobId,
-      type: 'deposit',
-      companyId,
+    // Check Stripe Connect
+    const company = await this.prisma.client.company.findUnique({
+      where: { id: companyId },
+      select: { stripeAccountId: true, stripeAccountStatus: true },
+    });
+    if (!company?.stripeAccountId) {
+      throw new BadRequestException('Please connect your Stripe account in Settings first');
+    }
+
+    const description = `Deposit — ${job.customer?.name || 'Cleaning Service'} (Job #${jobId.slice(0, 8)})`;
+    const url = await this.stripeService.createConnectCheckoutSession({
+      amount: job.depositAmount,
+      connectedAccountId: company.stripeAccountId,
+      description,
+      metadata: { jobId, type: 'deposit', companyId },
     });
 
     return {
