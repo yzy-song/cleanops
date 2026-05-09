@@ -89,7 +89,13 @@
       "Bash(ping -6 -n 2 2a00:1450:4009:81f::200e)",
       "Bash(nslookup -type=AAAA google.com)",
       "Bash(psql \"postgresql://postgres:postgres@168.138.32.70:5432/postgres\" -c \"CREATE DATABASE cleanops;\")",
-      "Bash(pnpm db:seed)"
+      "Bash(pnpm db:seed)",
+      "Bash(git branch *)",
+      "Bash(git push *)",
+      "Bash(git fetch *)",
+      "Bash(gh api *)",
+      "Bash(curl -s https://api.github.com/repos/yzy-song/cleanops)",
+      "Bash(git remote *)"
     ],
     "additionalDirectories": [
       "d:\\workspace\\yzy_React\\cleanops\\apps\\web\\src\\app\\(dashboard)\\customers",
