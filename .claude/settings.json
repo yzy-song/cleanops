@@ -145,7 +145,8 @@
       "Bash(GIT_SSH_COMMAND=\"ssh -o ConnectTimeout=30\" git push origin main)",
       "Bash(pnpm list *)",
       "Bash(nslookup api.cleanops.yzysong.com)",
-      "Bash(curl -sk --connect-timeout 5 https://api.cleanops.yzysong.com/api-docs)"
+      "Bash(curl -sk --connect-timeout 5 https://api.cleanops.yzysong.com/api-docs)",
+      "Bash(pnpm ls *)"
     ],
     "additionalDirectories": [
       "d:\\workspace\\yzy_React\\cleanops\\apps\\web\\src\\app\\(dashboard)\\customers",
