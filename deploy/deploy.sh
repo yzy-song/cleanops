@@ -41,7 +41,7 @@ else
     APP_USER=""; APP_GROUP=""
 fi
 
-export PATH="${PATH}:/www/server/nodejs/current/bin:/usr/local/bin:${HOME}/.local/bin"
+export PATH="${PATH}:$(npm config get prefix 2>/dev/null)/bin:/www/server/nodejs/current/bin:/usr/local/bin:${HOME}/.local/bin"
 
 mkdir -p "${RELEASES_DIR}" "${BACKUPS_DIR}" "${LOGS_DIR}"
 
