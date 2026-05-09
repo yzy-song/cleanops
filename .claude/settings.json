@@ -95,7 +95,14 @@
       "Bash(git fetch *)",
       "Bash(gh api *)",
       "Bash(curl -s https://api.github.com/repos/yzy-song/cleanops)",
-      "Bash(git remote *)"
+      "Bash(git remote *)",
+      "Bash(git check-ignore *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(vercel whoami *)",
+      "Bash(npm view *)",
+      "Bash(npm config *)",
+      "Bash(vercel login *)"
     ],
     "additionalDirectories": [
       "d:\\workspace\\yzy_React\\cleanops\\apps\\web\\src\\app\\(dashboard)\\customers",
