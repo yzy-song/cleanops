@@ -39,7 +39,7 @@ export default function PortalLoginPage() {
             </div>
             <h2 className="text-xl font-semibold">Check your email</h2>
             <p className="text-muted-foreground">
-              If an account exists with that email, you'll receive a login link shortly.
+              If an account exists with that email, you&apos;ll receive a login link shortly.
             </p>
           </CardContent>
         </Card>

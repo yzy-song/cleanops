@@ -59,7 +59,7 @@ export default function BookPage() {
             </div>
             <h2 className="text-xl font-semibold">Booking Request Sent!</h2>
             <p className="text-muted-foreground">
-              We've received your booking request. Our team will confirm your appointment shortly via email.
+              We&apos;ve received your booking request. Our team will confirm your appointment shortly via email.
             </p>
             <Button variant="outline" onClick={() => router.push("/book")}>
               Book another service
@@ -74,7 +74,7 @@ export default function BookPage() {
     <div className="mx-auto max-w-lg space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Book a Cleaning Service</h1>
-        <p className="text-muted-foreground text-sm">Fill in your details and we'll get back to you</p>
+        <p className="text-muted-foreground text-sm">Fill in your details and we&apos;ll get back to you</p>
       </div>
 
       <Card>
