@@ -13,11 +13,11 @@ module.exports = {
       exec_mode: "cluster",
       env: {
         NODE_ENV: "development",
-        PORT: 3000,
+        PORT: 4000,
       },
       env_production: {
         NODE_ENV: "production",
-        PORT: 3000,
+        PORT: 4000,
       },
       // 日志配置
       error_file: "/var/www/cleanops/logs/pm2-error.log",
