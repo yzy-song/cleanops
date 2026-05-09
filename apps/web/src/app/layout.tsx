@@ -3,6 +3,7 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -50,6 +51,7 @@ export default function RootLayout({
           {children}
           <Toaster richColors />
         </QueryProvider>
+        <Analytics />
       </body>
     </html>
   );
