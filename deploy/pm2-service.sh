@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROJECT_NAME="cleanops
+PROJECT_NAME="cleanops"
 DEPLOY_ROOT="/var/www/${PROJECT_NAME}"
 ECOSYSTEM_CONFIG_FILE="${DEPLOY_ROOT}/ecosystem.config.js"
-APP_USER="root
+APP_USER="root"
 APP_HOME="/home/${APP_USER}"
 
 usage() {
