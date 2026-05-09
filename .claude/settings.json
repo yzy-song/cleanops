@@ -134,7 +134,10 @@
       "Bash(ssh root@168.138.32.70 \"cat /www/server/panel/vhost/nginx/api.cleanops.yzysong.com.conf\")",
       "Bash(ssh root@168.138.32.70 *)",
       "Bash(curl -sf https://api.cleanops.yzysong.com/api-docs)",
-      "Bash(curl -sv https://api.cleanops.yzysong.com/api-docs)"
+      "Bash(curl -sv https://api.cleanops.yzysong.com/api-docs)",
+      "Bash(nslookup -type=NS cleanops.yzysong.com)",
+      "Bash(nslookup -type=A api.cleanops.yzysong.com 8.8.8.8)",
+      "Bash(curl -sk https://168.138.32.70/api-docs)"
     ],
     "additionalDirectories": [
       "d:\\workspace\\yzy_React\\cleanops\\apps\\web\\src\\app\\(dashboard)\\customers",
