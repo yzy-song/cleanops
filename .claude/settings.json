@@ -146,7 +146,16 @@
       "Bash(pnpm list *)",
       "Bash(nslookup api.cleanops.yzysong.com)",
       "Bash(curl -sk --connect-timeout 5 https://api.cleanops.yzysong.com/api-docs)",
-      "Bash(pnpm ls *)"
+      "Bash(pnpm ls *)",
+      "mcp__chrome-devtools__list_pages",
+      "mcp__chrome-devtools__navigate_page",
+      "mcp__chrome-devtools__take_snapshot",
+      "mcp__chrome-devtools__fill",
+      "mcp__chrome-devtools__fill_form",
+      "mcp__chrome-devtools__click",
+      "mcp__chrome-devtools__wait_for",
+      "mcp__chrome-devtools__list_console_messages",
+      "Bash(ssh -o ConnectTimeout=5 root@168.138.32.70 \"echo OK\")"
     ],
     "additionalDirectories": [
       "d:\\workspace\\yzy_React\\cleanops\\apps\\web\\src\\app\\(dashboard)\\customers",

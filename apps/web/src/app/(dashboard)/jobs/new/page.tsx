@@ -21,8 +21,6 @@ export default function NewJobPage() {
   const { data: creditRisks } = useCustomersCreditRisk();
   const { data: workers } = useWorkers();
 
-  const selectedCustomerRisk = creditRisks?.find((r) => r.id === form.customerId);
-
   const [form, setForm] = useState({
     customerId: "",
     scheduledStart: "",
@@ -32,6 +30,8 @@ export default function NewJobPage() {
     recurrenceRule: "WEEKLY" as string,
     depositAmount: "",
   });
+
+  const selectedCustomerRisk = creditRisks?.find((r) => r.id === form.customerId);
 
   useEffect(() => {
     const dateParam = searchParams.get("date");
