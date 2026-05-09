@@ -308,4 +308,65 @@ export class ReportService {
       };
     });
   }
+
+  async getOverview(companyId: string) {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const twoWeeksAgo = new Date(today);
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 13);
+
+    // Revenue by day for last 14 days
+    const recentInvoices = await this.prisma.client.invoice.findMany({
+      where: {
+        companyId,
+        status: 'PAID',
+        paidAt: { gte: twoWeeksAgo },
+      },
+      select: { amount: true, paidAt: true },
+    });
+
+    const revenueByDay: { date: string; amount: number }[] = [];
+    const dayMap = new Map<string, number>();
+    for (const inv of recentInvoices) {
+      const key = inv.paidAt!.toISOString().slice(0, 10);
+      dayMap.set(key, (dayMap.get(key) ?? 0) + inv.amount);
+    }
+    for (let d = new Date(twoWeeksAgo); d <= today; d.setDate(d.getDate() + 1)) {
+      const key = d.toISOString().slice(0, 10);
+      revenueByDay.push({ date: key, amount: dayMap.get(key) ?? 0 });
+    }
+
+    // Invoice status counts
+    const [paid, unpaid] = await Promise.all([
+      this.prisma.client.invoice.count({ where: { companyId, status: 'PAID' } }),
+      this.prisma.client.invoice.count({ where: { companyId, status: 'UNPAID' } }),
+    ]);
+
+    // Revenue this week vs last week
+    const thisMonday = new Date(today);
+    thisMonday.setDate(thisMonday.getDate() - thisMonday.getDay() + (thisMonday.getDay() === 0 ? -6 : 1));
+    const lastMonday = new Date(thisMonday);
+    lastMonday.setDate(lastMonday.getDate() - 7);
+
+    const [thisWeekAgg, lastWeekAgg] = await Promise.all([
+      this.prisma.client.invoice.aggregate({
+        where: { companyId, status: 'PAID', paidAt: { gte: thisMonday } },
+        _sum: { amount: true },
+      }),
+      this.prisma.client.invoice.aggregate({
+        where: { companyId, status: 'PAID', paidAt: { gte: lastMonday, lt: thisMonday } },
+        _sum: { amount: true },
+      }),
+    ]);
+
+    const thisWeekRevenue = thisWeekAgg._sum.amount ?? 0;
+    const lastWeekRevenue = lastWeekAgg._sum.amount ?? 0;
+
+    return {
+      revenueByDay,
+      invoiceBreakdown: { paid, unpaid },
+      thisWeekRevenue,
+      lastWeekRevenue,
+    };
+  }
 }
