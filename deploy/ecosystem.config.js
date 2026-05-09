@@ -30,8 +30,6 @@ module.exports = {
       restart_delay: 5000,
       // 优雅退出
       kill_timeout: 10000,
-      wait_ready: true,
-      listen_timeout: 30000,
     },
   ],
 };

@@ -208,9 +208,9 @@ backup_current_version
 
 echo -e "${YELLOW}PM2 restart...${NC}"
 if pm2 list 2>/dev/null | grep -q "${PROJECT_NAME}"; then
-    pm2 restart "${ECOSYSTEM_CONFIG_FILE}" --env production --wait-ready 30 || { log_error "pm2_restart_failed"; rollback_deployment; }
+    pm2 restart "${ECOSYSTEM_CONFIG_FILE}" --env production  || { log_error "pm2_restart_failed"; rollback_deployment; }
 else
-    pm2 start "${ECOSYSTEM_CONFIG_FILE}" --env production --wait-ready 30 || { log_error "pm2_start_failed"; rollback_deployment; }
+    pm2 start "${ECOSYSTEM_CONFIG_FILE}" --env production  || { log_error "pm2_start_failed"; rollback_deployment; }
 fi
 
 # ---- 13. 健康检查 ----
