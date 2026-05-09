@@ -8,7 +8,7 @@ GitHub Repo (yzy-song/cleanops)
      ├─→ GitHub Actions CI  (typecheck → build → lint)
      │
      ├─→ GitHub Actions Deploy (apps/api/** 变更时触发)
-     │     └─→ SSH → 服务器 /var/www/cleanops-api/deploy.sh
+     │     └─→ SSH → 服务器 /var/www/cleanops/deploy.sh
      │           └─→ PM2 cluster (2 instances) :3000
      │
      └─→ Vercel (apps/web/**)
@@ -16,6 +16,7 @@ GitHub Repo (yzy-song/cleanops)
 ```
 
 服务端点：
+
 - **API**: `https://api.cleanops.yzysong.com`（Nginx → PM2 :3000）
 - **Web**: Vercel 自动分配域名
 - **Swagger**: `https://api.cleanops.yzysong.com/api-docs`
@@ -27,6 +28,7 @@ GitHub Repo (yzy-song/cleanops)
 推送到 main 分支，且 `apps/api/**` 或 `packages/db/**` 有变更时自动触发。
 
 服务器执行流程：
+
 1. `git pull` 最新代码
 2. 检测后端相关文件是否有变更
 3. `pnpm install --frozen-lockfile`
@@ -47,10 +49,10 @@ Vercel 自动检测 `apps/web/` 变更并构建部署。
 ssh root@<服务器IP>
 
 # 查看可用版本
-ls /var/www/cleanops-api/releases/
+ls /var/www/cleanops/releases/
 
 # 回滚到指定版本
-/var/www/cleanops-api/rollback.sh 20250508123000-abc1234
+/var/www/cleanops/rollback.sh 20250508123000-abc1234
 ```
 
 ## 常用运维命令
@@ -59,10 +61,10 @@ ls /var/www/cleanops-api/releases/
 
 ```bash
 pm2 status                     # 查看状态
-pm2 logs cleanops-api --lines 50  # 查看日志
-pm2 restart cleanops-api       # 重启
-pm2 stop cleanops-api          # 停止
-pm2 start cleanops-api         # 启动
+pm2 logs cleanops --lines 50  # 查看日志
+pm2 restart cleanops       # 重启
+pm2 stop cleanops          # 停止
+pm2 start cleanops         # 启动
 ```
 
 ### 数据库操作
@@ -94,7 +96,7 @@ systemctl reload nginx    # 重载配置
 pm2 status
 
 # 2. 检查日志
-pm2 logs cleanops-api --lines 100
+pm2 logs cleanops --lines 100
 
 # 3. 检查端口
 netstat -tlnp | grep 3000
@@ -110,7 +112,7 @@ curl http://127.0.0.1:3000/api-docs
 
 ```bash
 # 查看部署日志
-cat /var/www/cleanops-api/logs/deployment.log
+cat /var/www/cleanops/logs/deployment.log
 
 # 常见原因：
 # - .env 中 DATABASE_URL 配置错误
@@ -129,7 +131,7 @@ systemctl status postgresql
 psql "postgresql://用户名:密码@localhost:5432/数据库名"
 
 # 检查 .env 中的 DATABASE_URL
-cat /var/www/cleanops-api/.env | grep DATABASE_URL
+cat /var/www/cleanops/.env | grep DATABASE_URL
 ```
 
 ### 前端 Vercel 构建失败
@@ -144,7 +146,7 @@ cat /var/www/cleanops-api/.env | grep DATABASE_URL
 ## 监控
 
 - **GitHub Actions**: PR 页面检查 CI 状态
-- **PM2 日志**: `pm2 logs cleanops-api`
+- **PM2 日志**: `pm2 logs cleanops`
 - **服务器磁盘**: `df -h /var/www`
 - **Vercel**: Dashboard 查看前端部署状态
 
