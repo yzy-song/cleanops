@@ -98,7 +98,7 @@ backup_current_version() {
 check_db_connection() {
     echo -e "${YELLOW}Checking database connection...${NC}"
     local SCRIPT="
-        var PrismaClient = require('${RELEASE_PATH}/node_modules/@prisma/client').PrismaClient;
+        var PrismaClient = require('@prisma/client').PrismaClient;
         var prisma = new PrismaClient({ datasources: { db: { url: process.env.DATABASE_URL } } });
         prisma.\$connect().then(function() { console.log('OK'); process.exit(0); }).catch(function(e) { console.error(e.message); process.exit(1); });
     "
