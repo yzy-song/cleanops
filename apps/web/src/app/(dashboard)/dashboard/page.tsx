@@ -299,7 +299,7 @@ export default function DashboardPage() {
             <CardTitle className="text-base font-semibold">Invoice Status</CardTitle>
           </CardHeader>
           <CardContent>
-            {pieData[0].value === 0 && pieData[1].value === 0 ? (
+            {(pieData[0]?.value ?? 0) === 0 && (pieData[1]?.value ?? 0) === 0 ? (
               <div className="flex items-center justify-center h-[260px] text-muted-foreground text-sm">
                 No invoices yet
               </div>
