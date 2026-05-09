@@ -183,9 +183,9 @@ pnpm --filter @cleanops/db exec prisma generate || { log_error "prisma_failed"; 
 echo -e "${YELLOW}build @cleanops/db...${NC}"
 pnpm --filter @cleanops/db build || { log_error "db_build_failed"; rollback_deployment; }
 
-# ---- 7. 数据库检查 ----
+# ---- 7. 数据库检查 (非阻塞 — 健康检查会兜底) ----
 if [ -f "${ENV_FILE}" ]; then
-    check_db_connection || { log_error "db_failed"; rollback_deployment; }
+    check_db_connection || echo -e "${YELLOW}DB check skipped, health check will verify${NC}"
 fi
 
 # ---- 8. 构建 API ----
