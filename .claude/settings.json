@@ -155,7 +155,16 @@
       "mcp__chrome-devtools__click",
       "mcp__chrome-devtools__wait_for",
       "mcp__chrome-devtools__list_console_messages",
-      "Bash(ssh -o ConnectTimeout=5 root@168.138.32.70 \"echo OK\")"
+      "Bash(ssh -o ConnectTimeout=5 root@168.138.32.70 \"echo OK\")",
+      "mcp__chrome-devtools__take_screenshot",
+      "mcp__chrome-devtools__list_network_requests",
+      "mcp__chrome-devtools__get_network_request",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\" https://api.cleanops.yzysong.com/auth/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"admin@testclean.ie\",\"pass\":\"test123456\"}')",
+      "Bash(curl -s https://api.cleanops.yzysong.com/health)",
+      "Bash(curl -s https://api.cleanops.yzysong.com/)",
+      "Bash(curl -s https://api.cleanops.yzysong.com/auth/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"admin@testclean.ie\",\"pass\":\"test123456\"}')",
+      "Bash(Select-String \"LISTENING\")",
+      "Bash(Select-String \"3000|3001|3002\")"
     ],
     "additionalDirectories": [
       "d:\\workspace\\yzy_React\\cleanops\\apps\\web\\src\\app\\(dashboard)\\customers",
