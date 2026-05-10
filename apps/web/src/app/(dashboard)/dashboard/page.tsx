@@ -343,11 +343,11 @@ export default function DashboardPage() {
             )}
             <div className="flex justify-around mt-2 text-sm">
               <div className="text-center">
-                <p className="font-bold text-lg text-teal-600">{pieData[0].value}</p>
+                <p className="font-bold text-lg text-teal-600">{pieData[0]?.value ?? 0}</p>
                 <p className="text-xs text-muted-foreground">Paid</p>
               </div>
               <div className="text-center">
-                <p className="font-bold text-lg text-amber-600">{pieData[1].value}</p>
+                <p className="font-bold text-lg text-amber-600">{pieData[1]?.value ?? 0}</p>
                 <p className="text-xs text-muted-foreground">Unpaid</p>
               </div>
               <div className="text-center">
