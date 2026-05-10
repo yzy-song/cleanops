@@ -39,7 +39,12 @@
       "Bash(git fsck *)",
       "Bash(ps -p 3760 -o comm=)",
       "Bash(tasklist /FI \"PID eq 3760\")",
-      "PowerShell(Get-Process *)"
+      "PowerShell(Get-Process *)",
+      "Bash(Get-Process -Name \"node\" -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object Id, ProcessName, MainWindowTitle)",
+      "Bash(Format-Table)",
+      "Bash(pnpm --filter @cleanops/web build)",
+      "mcp__chrome-devtools__evaluate_script"
     ],
     "additionalDirectories": [
       "d:\\workspace\\yzy_React\\cleanops\\apps\\web\\src\\app\\(worker)\\job"
