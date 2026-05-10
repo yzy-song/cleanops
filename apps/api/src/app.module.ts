@@ -24,6 +24,7 @@ import { TrialGuard } from './billing/trial.guard';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: [".env.local", ".env"],
     }),
     ThrottlerModule.forRoot([
       {
