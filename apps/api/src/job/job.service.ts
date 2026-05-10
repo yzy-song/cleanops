@@ -400,10 +400,14 @@ export class JobService {
     const job = await this.findOne(jobId, companyId);
     const result = await this.cloudinaryService.uploadImage(file);
 
+    const validTypes = ['BEFORE', 'AFTER', 'CHECKIN'];
+    const photoType = validTypes.includes(type) ? type : 'BEFORE';
+
     return this.prisma.client.jobPhoto.create({
       data: {
         url: result.secure_url,
-        type: type === 'AFTER' ? 'AFTER' : 'BEFORE',
+        publicId: result.public_id,
+        type: photoType,
         job: { connect: { id: jobId } },
       },
     });
@@ -419,6 +423,11 @@ export class JobService {
 
   async deletePhoto(jobId: string, photoId: string, companyId: string) {
     await this.findOne(jobId, companyId);
+    const photo = await this.prisma.client.jobPhoto.findUnique({ where: { id: photoId } });
+    if (!photo) throw new NotFoundException('Photo not found');
+    if (photo.publicId) {
+      await this.cloudinaryService.deleteImage(photo.publicId);
+    }
     return this.prisma.client.jobPhoto.delete({ where: { id: photoId } });
   }
 

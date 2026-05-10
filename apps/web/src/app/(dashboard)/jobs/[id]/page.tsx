@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useJob, useCancelJob, useAssignWorkers, useUnassignWorker, useMarkDepositPaid, useGenerateDepositLink } from "@/hooks/use-jobs";
 import { useWorkers } from "@/hooks/use-workers";
@@ -7,7 +8,8 @@ import { useGenerateInvoice } from "@/hooks/use-invoices";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Calendar, Clock, MapPin, User, FileText, MessageCircle, Wallet, CheckCircle } from "lucide-react";
+import { api } from "@/lib/api";
+import { ArrowLeft, Calendar, Clock, MapPin, User, FileText, MessageCircle, Wallet, CheckCircle, Camera, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -29,6 +31,27 @@ export default function JobDetailPage() {
   const generateInvoice = useGenerateInvoice();
   const markDepositPaid = useMarkDepositPaid();
   const generateDepositLink = useGenerateDepositLink();
+
+  const [photos, setPhotos] = useState<any[]>([]);
+
+  const fetchPhotos = async () => {
+    try {
+      const res = await api.get(`/jobs/${id}/photos`);
+      setPhotos(res.data.data || []);
+    } catch {}
+  };
+
+  useEffect(() => { if (id) fetchPhotos(); }, [id]);
+
+  const handleDeletePhoto = async (photoId: string) => {
+    try {
+      await api.delete(`/jobs/${id}/photos/${photoId}`);
+      toast.success("Photo deleted");
+      fetchPhotos();
+    } catch (err: any) {
+      toast.error(err?.message || "Delete failed");
+    }
+  };
 
   if (isLoading) {
     return (
@@ -266,6 +289,51 @@ export default function JobDetailPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Photos */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Camera className="h-4 w-4" />
+            Job Photos
+            {photos.length > 0 && (
+              <span className="text-sm font-normal text-muted-foreground">({photos.length})</span>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {photos.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No photos uploaded yet.</p>
+          ) : (
+            <div className="grid grid-cols-3 gap-3">
+              {photos.map((photo: any) => (
+                <div key={photo.id} className="relative group">
+                  <img
+                    src={photo.url}
+                    alt={`${photo.type} photo`}
+                    className="w-full h-28 object-cover rounded-lg cursor-pointer"
+                    onClick={() => window.open(photo.url, "_blank")}
+                  />
+                  <span className={cn(
+                    "absolute top-1 left-1 rounded px-1.5 py-0.5 text-[10px] font-medium text-white",
+                    photo.type === "BEFORE" && "bg-blue-500",
+                    photo.type === "AFTER" && "bg-emerald-500",
+                    photo.type === "CHECKIN" && "bg-purple-500",
+                  )}>
+                    {photo.type || "BEFORE"}
+                  </span>
+                  <button
+                    onClick={() => handleDeletePhoto(photo.id)}
+                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="flex gap-3">
         {job.status === "PENDING" && (
