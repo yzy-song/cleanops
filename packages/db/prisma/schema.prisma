@@ -165,7 +165,8 @@ model JobAssignment {
 model JobPhoto {
   id        String   @id @default(uuid())
   url       String
-  type      String   @default("BEFORE") // BEFORE 或 AFTER
+  publicId  String   @default("") // Cloudinary public_id for deletion
+  type      String   @default("BEFORE") // BEFORE | AFTER | CHECKIN
   createdAt DateTime @default(now())
 
   jobId     String

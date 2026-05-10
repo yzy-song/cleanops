@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UploadedFile, UseInterceptors, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JobService } from './job.service';
@@ -173,6 +173,10 @@ export class JobController {
     @UploadedFile() file: Express.Multer.File,
     @Body('type') type?: string,
   ) {
+    const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+    if (!ALLOWED_MIME.includes(file.mimetype)) {
+      throw new BadRequestException('Only image files are allowed (JPEG, PNG, WebP, HEIC, HEIF)');
+    }
     return this.jobService.uploadPhoto(jobId, companyId, file, type || 'BEFORE');
   }
 

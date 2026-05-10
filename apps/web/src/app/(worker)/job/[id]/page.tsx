@@ -21,6 +21,9 @@ const statusColors: Record<string, string> = {
   CANCELLED: "bg-red-100 text-red-800",
 };
 
+const MAX_BEFORE = 5;
+const MAX_AFTER = 5;
+
 export default function WorkerJobDetailPage() {
   const { id } = useParams<{ id: string }>();
   const qc = useQueryClient();
@@ -35,8 +38,10 @@ export default function WorkerJobDetailPage() {
   });
 
   const [photos, setPhotos] = useState<any[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploadingBefore, setUploadingBefore] = useState(false);
+  const [uploadingAfter, setUploadingAfter] = useState(false);
+  const fileRefBefore = useRef<HTMLInputElement>(null);
+  const fileRefAfter = useRef<HTMLInputElement>(null);
 
   const fetchPhotos = async () => {
     try {
@@ -47,25 +52,56 @@ export default function WorkerJobDetailPage() {
 
   useEffect(() => { fetchPhotos(); }, [id]);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const form = new FormData();
-      form.append("file", file);
-      form.append("type", "BEFORE");
-      await api.post(`/jobs/${id}/photos`, form, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      toast.success("Photo uploaded");
-      fetchPhotos();
-    } catch (err: any) {
-      toast.error(err?.message || "Upload failed");
-    } finally {
-      setUploading(false);
-      if (fileRef.current) fileRef.current.value = "";
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const maxFiles = type === 'AFTER' ? MAX_AFTER : MAX_BEFORE;
+    const existingCount = photos.filter((p) => p.type === type || (!p.type && type === 'BEFORE')).length;
+    const available = maxFiles - existingCount;
+
+    if (available <= 0) {
+      toast.error(`Maximum ${maxFiles} ${type.toLowerCase()} photos already uploaded`);
+      return;
     }
+
+    const toUpload = files.slice(0, available);
+    if (files.length > available) {
+      toast.warning(`Only ${available} more ${type.toLowerCase()} photo(s) allowed. Uploading first ${available}.`);
+    }
+
+    if (type === 'AFTER') setUploadingAfter(true);
+    else setUploadingBefore(true);
+
+    let success = 0;
+    let failed = 0;
+
+    for (const file of toUpload) {
+      try {
+        const form = new FormData();
+        form.append("file", file);
+        form.append("type", type);
+        await api.post(`/jobs/${id}/photos`, form, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        success++;
+      } catch {
+        failed++;
+      }
+    }
+
+    if (success > 0) {
+      toast.success(`${success} photo(s) uploaded`);
+      fetchPhotos();
+    }
+    if (failed > 0) {
+      toast.error(`${failed} photo(s) failed`);
+    }
+
+    setUploadingBefore(false);
+    setUploadingAfter(false);
+    if (fileRefBefore.current) fileRefBefore.current.value = "";
+    if (fileRefAfter.current) fileRefAfter.current.value = "";
   };
 
   const handleDeletePhoto = async (photoId: string) => {
@@ -147,39 +183,40 @@ export default function WorkerJobDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Photos */}
+      {/* Before Photos */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Job Photos</CardTitle>
+          <CardTitle className="text-base">Before Photos</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => fileRef.current?.click()}
-              disabled={uploading}
+              onClick={() => fileRefBefore.current?.click()}
+              disabled={uploadingBefore || photos.filter((p) => p.type === "BEFORE" || !p.type).length >= MAX_BEFORE}
               className="touch-manipulation"
             >
               <Camera className="mr-2 h-4 w-4" />
-              {uploading ? "Uploading..." : "Upload Photo"}
+              {uploadingBefore ? "Uploading..." : `Upload Before (${photos.filter((p) => p.type === "BEFORE" || !p.type).length}/${MAX_BEFORE})`}
             </Button>
             <input
-              ref={fileRef}
+              ref={fileRefBefore}
               type="file"
               accept="image/*"
               capture="environment"
+              multiple
               className="hidden"
-              onChange={handleUpload}
+              onChange={(e) => handleUpload(e, "BEFORE")}
             />
           </div>
-          {photos.length > 0 && (
+          {photos.filter((p) => p.type === "BEFORE" || !p.type).length > 0 ? (
             <div className="grid grid-cols-3 gap-2">
-              {photos.map((photo: any) => (
+              {photos.filter((p) => p.type === "BEFORE" || !p.type).map((photo: any) => (
                 <div key={photo.id} className="relative group">
                   <img
                     src={photo.url}
-                    alt="Job photo"
+                    alt="Before photo"
                     className="w-full h-24 object-cover rounded-lg"
                     onClick={() => window.open(photo.url, "_blank")}
                   />
@@ -192,12 +229,65 @@ export default function WorkerJobDetailPage() {
                 </div>
               ))}
             </div>
-          )}
-          {photos.length === 0 && (
-            <p className="text-xs text-muted-foreground">No photos yet. Take photos of your work!</p>
+          ) : (
+            <p className="text-xs text-muted-foreground">Take photos before starting work.</p>
           )}
         </CardContent>
       </Card>
+
+      {/* After Photos */}
+      {(job.status === "IN_PROGRESS" || job.status === "COMPLETED") && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">After Photos</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fileRefAfter.current?.click()}
+                disabled={uploadingAfter || photos.filter((p) => p.type === "AFTER").length >= MAX_AFTER}
+                className="touch-manipulation"
+              >
+                <Camera className="mr-2 h-4 w-4" />
+                {uploadingAfter ? "Uploading..." : `Upload After (${photos.filter((p) => p.type === "AFTER").length}/${MAX_AFTER})`}
+              </Button>
+              <input
+                ref={fileRefAfter}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                multiple
+                className="hidden"
+                onChange={(e) => handleUpload(e, "AFTER")}
+              />
+            </div>
+            {photos.filter((p) => p.type === "AFTER").length > 0 ? (
+              <div className="grid grid-cols-3 gap-2">
+                {photos.filter((p) => p.type === "AFTER").map((photo: any) => (
+                  <div key={photo.id} className="relative group">
+                    <img
+                      src={photo.url}
+                      alt="After photo"
+                      className="w-full h-24 object-cover rounded-lg"
+                      onClick={() => window.open(photo.url, "_blank")}
+                    />
+                    <button
+                      onClick={() => handleDeletePhoto(photo.id)}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">Take photos after completing work.</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {job.customer?.phone && (
         <Card>
