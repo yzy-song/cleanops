@@ -9,8 +9,8 @@ module.exports = {
       script: "./current/main.js",
       // 确保 PM2 从部署根目录执行，以便正确解析相对路径
       cwd: "/var/www/cleanops",
-      instances: 2,
-      exec_mode: "cluster",
+      instances: 1,
+      exec_mode: "fork",
       env: {
         NODE_ENV: "development",
         PORT: 4000,
