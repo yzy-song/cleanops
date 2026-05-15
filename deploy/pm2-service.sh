@@ -4,7 +4,7 @@ set -euo pipefail
 PROJECT_NAME="cleanops"
 DEPLOY_ROOT="/var/www/${PROJECT_NAME}"
 ECOSYSTEM_CONFIG_FILE="${DEPLOY_ROOT}/ecosystem.config.js"
-APP_USER="root"
+APP_USER="cleanops"
 APP_HOME="/home/${APP_USER}"
 
 usage() {
