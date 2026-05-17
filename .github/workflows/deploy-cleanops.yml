@@ -37,7 +37,7 @@ jobs:
       - name: Build API
         run: cd apps/api && npx nest build
 
-      - name: Deploy to server
+      - name: Deploy to server (via SSH)
         env:
           SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
