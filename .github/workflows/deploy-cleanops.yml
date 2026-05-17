@@ -1,0 +1,77 @@
+name: Deploy CleanOps API
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/**"
+      - "packages/db/**"
+      - ".github/workflows/deploy-cleanops.yml"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: cd packages/db && npx prisma generate
+
+      - name: Build @cleanops/db
+        run: cd packages/db && pnpm build
+
+      - name: Build API
+        run: cd apps/api && npx nest build
+
+      - name: Deploy to server
+        env:
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          set -e
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          SSH="ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new"
+          SCP="scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new"
+
+          RELEASE_DIR="/var/www/cleanops/releases/$GITHUB_SHA"
+          $SSH $SSH_USER@$SSH_HOST "mkdir -p $RELEASE_DIR"
+
+          cd apps/api
+          tar czf /tmp/dist.tar.gz dist
+          $SCP /tmp/dist.tar.gz $SSH_USER@$SSH_HOST:$RELEASE_DIR/
+
+          $SSH $SSH_USER@$SSH_HOST << 'REMOTE'
+            set -e
+            RELEASE_DIR="/var/www/cleanops/releases/$GITHUB_SHA"
+            cd "$RELEASE_DIR"
+            tar xzf dist.tar.gz && rm dist.tar.gz
+            ln -nfs "$RELEASE_DIR/dist" /var/www/cleanops/current
+
+            export DATABASE_URL="postgresql://cleanops:310521@localhost:5432/db-cleanops"
+            cd /var/www/cleanops/repo
+            cd packages/db && npx prisma migrate deploy
+
+            su - cleanops -c "pm2 restart cleanops"
+
+            # Keep only last 5 releases
+            ls -dt /var/www/cleanops/releases/*/ 2>/dev/null | tail -n +6 | xargs rm -rf 2>/dev/null || true
+          REMOTE
