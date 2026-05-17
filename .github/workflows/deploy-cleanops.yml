@@ -61,6 +61,7 @@ jobs:
             set -e
             cd $RELEASE_DIR
             tar xzf dist.tar.gz && rm dist.tar.gz
+            ln -sf /var/www/cleanops/repo/apps/api/node_modules dist/node_modules
             sudo ln -nfs $RELEASE_DIR/dist /var/www/cleanops/current
             cd /var/www/cleanops/repo
             cd packages/db && sudo DATABASE_URL='postgresql://cleanops:310521@localhost:5432/db-cleanops' npx prisma migrate deploy
