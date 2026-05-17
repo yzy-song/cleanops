@@ -31,7 +31,7 @@ async function bootstrap() {
   // 4. Swagger 配置 - 合并了两个项目的描述
   const config = new DocumentBuilder()
     .setTitle('CleanOps API')
-    .setDescription('The CleanOps 2026 Management API - 专业清洁业务管理系统')
+    .setDescription('CleanOps 2026 — Professional cleaning business management API')
     .setVersion('1.0')
     .addBearerAuth()
     .addServer('http://localhost:3000', 'Local development')
