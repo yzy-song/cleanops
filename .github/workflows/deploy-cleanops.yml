@@ -57,19 +57,14 @@ jobs:
           tar czf /tmp/dist.tar.gz dist
           $SCP /tmp/dist.tar.gz $SSH_USER@$SSH_HOST:$RELEASE_DIR/
 
-          $SSH $SSH_USER@$SSH_HOST << 'REMOTE'
+          $SSH $SSH_USER@$SSH_HOST "
             set -e
-            RELEASE_DIR="/var/www/cleanops/releases/$GITHUB_SHA"
-            cd "$RELEASE_DIR"
+            cd $RELEASE_DIR
             tar xzf dist.tar.gz && rm dist.tar.gz
-            sudo ln -nfs "$RELEASE_DIR/dist" /var/www/cleanops/current
-
-            export DATABASE_URL="postgresql://cleanops:310521@localhost:5432/db-cleanops"
+            sudo ln -nfs $RELEASE_DIR/dist /var/www/cleanops/current
+            export DATABASE_URL='postgresql://cleanops:310521@localhost:5432/db-cleanops'
             cd /var/www/cleanops/repo
             cd packages/db && sudo npx prisma migrate deploy
-
             sudo -u cleanops pm2 restart cleanops
-
-            # Keep only last 5 releases
             ls -dt /var/www/cleanops/releases/*/ 2>/dev/null | tail -n +6 | sudo xargs rm -rf 2>/dev/null || true
-          REMOTE
+          "
