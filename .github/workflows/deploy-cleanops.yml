@@ -62,9 +62,8 @@ jobs:
             cd $RELEASE_DIR
             tar xzf dist.tar.gz && rm dist.tar.gz
             sudo ln -nfs $RELEASE_DIR/dist /var/www/cleanops/current
-            export DATABASE_URL='postgresql://cleanops:310521@localhost:5432/db-cleanops'
             cd /var/www/cleanops/repo
-            cd packages/db && sudo npx prisma migrate deploy
+            cd packages/db && sudo DATABASE_URL='postgresql://cleanops:310521@localhost:5432/db-cleanops' npx prisma migrate deploy
             sudo -u cleanops pm2 restart cleanops
             ls -dt /var/www/cleanops/releases/*/ 2>/dev/null | tail -n +6 | sudo xargs rm -rf 2>/dev/null || true
           "
