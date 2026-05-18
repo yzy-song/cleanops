@@ -6,6 +6,7 @@ on:
     paths:
       - "apps/api/**"
       - "packages/db/**"
+      - "ecosystem.config.cjs"
       - ".github/workflows/deploy-cleanops.yml"
 
 jobs:
@@ -55,7 +56,8 @@ jobs:
 
           cd apps/api
           tar czf /tmp/dist.tar.gz dist
-          $SCP /tmp/dist.tar.gz $SSH_USER@$SSH_HOST:$RELEASE_DIR/
+          cp ../../ecosystem.config.cjs /tmp/ecosystem.config.cjs
+          $SCP /tmp/dist.tar.gz /tmp/ecosystem.config.cjs $SSH_USER@$SSH_HOST:$RELEASE_DIR/
 
           $SSH $SSH_USER@$SSH_HOST "
             set -e
@@ -65,6 +67,7 @@ jobs:
             sudo ln -nfs $RELEASE_DIR/dist /var/www/cleanops/current
             cd /var/www/cleanops/repo
             cd packages/db && sudo DATABASE_URL='postgresql://cleanops:310521@localhost:5432/db-cleanops' npx prisma migrate deploy
-            sudo -u cleanops pm2 restart cleanops
+            sudo cp $RELEASE_DIR/ecosystem.config.cjs /var/www/cleanops/ecosystem.config.cjs
+            sudo -u cleanops pm2 start /var/www/cleanops/ecosystem.config.cjs
             ls -dt /var/www/cleanops/releases/*/ 2>/dev/null | tail -n +6 | sudo xargs rm -rf 2>/dev/null || true
           "
