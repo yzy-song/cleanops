@@ -66,7 +66,7 @@ jobs:
             ln -sf /var/www/cleanops/repo/apps/api/node_modules dist/node_modules
             sudo ln -nfs $RELEASE_DIR/dist /var/www/cleanops/current
             cd /var/www/cleanops/repo
-            cd packages/db && sudo DATABASE_URL='postgresql://cleanops:REDACTED_PASSWORD@localhost:5432/db-cleanops' npx prisma migrate deploy
+            export $(grep -v '^#' /var/www/cleanops/.env | xargs) && cd packages/db && npx prisma migrate deploy
             sudo cp $RELEASE_DIR/ecosystem.config.cjs /var/www/cleanops/ecosystem.config.cjs
             sudo -u cleanops pm2 start /var/www/cleanops/ecosystem.config.cjs
             ls -dt /var/www/cleanops/releases/*/ 2>/dev/null | tail -n +6 | sudo xargs rm -rf 2>/dev/null || true

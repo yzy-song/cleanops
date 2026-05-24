@@ -178,6 +178,9 @@ pnpm install --frozen-lockfile || { log_error "install_failed"; rollback_deploym
 # ---- 5. Prisma ----
 echo -e "${YELLOW}prisma generate...${NC}"
 pnpm --filter @cleanops/db exec prisma generate || { log_error "prisma_failed"; rollback_deployment; }
+# ---- 5a. Database migrations ----
+	echo -e "${YELLOW}prisma migrate deploy...${NC}"
+	pnpm --filter @cleanops/db exec prisma migrate deploy || { log_error "prisma_migrate_failed"; rollback_deployment; }
 
 # ---- 6. 编译 packages/db ----
 echo -e "${YELLOW}build @cleanops/db...${NC}"
