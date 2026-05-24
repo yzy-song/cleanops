@@ -30,7 +30,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: cd packages/db && npx prisma generate
+        run: cd packages/db && DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy npx prisma generate
 
       - name: Build @cleanops/db
         run: cd packages/db && pnpm build
