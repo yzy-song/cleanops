@@ -5,6 +5,7 @@ import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { QueryInvoiceDto } from './dto/query-invoice.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { StripeService } from '../common/services/stripe.service';
+import { XeroService } from '../common/services/xero.service';
 import { EmailService } from '../email/email.service';
 import { CompanyService } from '../company/company.service';
 import { paginate } from '../common/utils/pagination.util';
@@ -26,6 +27,7 @@ export class InvoiceService {
   constructor(
     private prisma: PrismaService,
     private stripeService: StripeService,
+    private xeroService: XeroService,
     private configService: ConfigService,
     private emailService: EmailService,
     private companyService: CompanyService,
@@ -354,6 +356,140 @@ export class InvoiceService {
       pdfDoc.on('error', reject);
       pdfDoc.end();
     });
+  }
+
+  async syncToXero(id: string, companyId: string) {
+    const invoice = await this.findOne(id, companyId);
+
+    if (invoice.xeroInvoiceId) {
+      throw new BadRequestException('Invoice already synced to Xero');
+    }
+
+    const xero = await this.xeroService.getClient(companyId);
+    if (!xero) throw new BadRequestException('Xero is not connected');
+
+    const company = await this.prisma.client.company.findUnique({
+      where: { id: companyId },
+      select: { xeroTenantId: true },
+    });
+    if (!company?.xeroTenantId) throw new BadRequestException('Xero tenant not found');
+
+    const customer = invoice.job.customer;
+    const workerNames = invoice.job.assignments
+      ?.map((a: any) => `${a.worker.firstName} ${a.worker.lastName}`)
+      .join(', ') || '';
+
+    // 1. Find or create Xero contact
+    const contactId = await this.findOrCreateXeroContact(xero, company.xeroTenantId, customer);
+
+    // 2. Build invoice line item
+    const cleanopsServiceDescription = workerNames
+      ? `Cleaning service — ${workerNames}`
+      : `Cleaning service — ${customer.address}`;
+
+    const vatAmount = invoice.vatAmount / 100;
+    const subtotal = (invoice.amount - invoice.vatAmount) / 100;
+
+    const taxType = customer.isCommercial
+      ? this.configService.get('XERO_TAX_TYPE_COMMERCIAL') || 'OUTPUT2'
+      : this.configService.get('XERO_TAX_TYPE_RESIDENTIAL') || 'OUTPUT';
+
+    const accountCode = this.configService.get('XERO_ACCOUNT_CODE') || '200';
+
+    const xeroInvoice = {
+      type: 'ACCREC' as const,
+      contact: { contactID: contactId },
+      lineItems: [
+        {
+          description: cleanopsServiceDescription,
+          quantity: 1.0,
+          unitAmount: subtotal,
+          accountCode,
+          taxType,
+        },
+      ],
+      date: invoice.createdAt.toISOString().split('T')[0],
+      dueDate: new Date().toISOString().split('T')[0],
+      reference: formatInvoiceNumber(invoice),
+      status: 'AUTHORISED' as const,
+    };
+
+    try {
+      const response = await (xero as any).accountingApi.createInvoices(
+        company.xeroTenantId,
+        { invoices: [xeroInvoice] },
+        true, // summarizeErrors
+        4,    // unitdp
+      );
+
+      const createdInvoices = response?.body?.invoices || response?.body?.Invoices || [];
+      const created = createdInvoices[0];
+
+      if (created?.invoiceID) {
+        await this.prisma.client.invoice.update({
+          where: { id },
+          data: { xeroInvoiceId: created.invoiceID, xeroSyncedAt: new Date() },
+        });
+      }
+
+      return { success: true, xeroInvoiceId: created?.invoiceID || null };
+    } catch (err: any) {
+      const errorBody = err?.response?.body || err.message;
+      this.logger.error(`Xero sync failed for invoice ${id}: ${JSON.stringify(errorBody)}`);
+      throw new BadRequestException(
+        `Failed to sync to Xero: ${err?.response?.body?.title || err.message}`,
+      );
+    }
+  }
+
+  private async findOrCreateXeroContact(
+    xero: any,
+    tenantId: string,
+    customer: { name: string; email?: string | null; phone?: string | null; address: string },
+  ): Promise<string> {
+    // Search by name
+    try {
+      const searchResult = await xero.accountingApi.getContacts(
+        tenantId,
+        null, // ifModifiedSince
+        `Name=="${customer.name.replace(/"/g, '\\"')}"`, // where
+        null, // order
+        null, // page
+      );
+
+      const existing = searchResult?.body?.contacts || [];
+      if (existing.length > 0) {
+        return existing[0].contactID;
+      }
+    } catch (err: any) {
+      this.logger.warn(`Xero contact search failed: ${err.message}`);
+    }
+
+    // Create new contact
+    const newContact = {
+      name: customer.name,
+      emailAddress: customer.email || '',
+      phones: customer.phone
+        ? [{ phoneType: 'MOBILE' as const, phoneNumber: customer.phone }]
+        : [],
+      isCustomer: true,
+    };
+
+    try {
+      const createResult = await xero.accountingApi.createContacts(
+        tenantId,
+        { contacts: [newContact] },
+        true,
+      );
+      const contacts = createResult?.body?.contacts || createResult?.body?.Contacts || [];
+      if (contacts.length > 0) {
+        return contacts[0].contactID;
+      }
+    } catch (err: any) {
+      this.logger.warn(`Xero contact creation failed: ${err.message}`);
+    }
+
+    throw new BadRequestException('Failed to find or create Xero contact');
   }
 
   async sendReminder(id: string, companyId: string) {

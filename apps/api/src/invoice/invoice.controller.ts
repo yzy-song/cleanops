@@ -71,6 +71,13 @@ export class InvoiceController {
     return this.invoiceService.voidInvoice(id, companyId);
   }
 
+  @Post(':id/sync-xero')
+  @Auth(Role.ADMIN)
+  @ApiOperation({ summary: 'Sync invoice to Xero' })
+  syncToXero(@Param('id') id: string, @CurrentUser('companyId') companyId: string) {
+    return this.invoiceService.syncToXero(id, companyId);
+  }
+
   @Post(':id/send-reminder')
   @Auth(Role.ADMIN)
   @ApiOperation({ summary: '发送催款邮件' })

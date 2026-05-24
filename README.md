@@ -47,7 +47,9 @@ cleanops/
 
 ## 文档
 
+- [功能清单](docs/FEATURES.md) — 所有模块、API 端点、前端页面
 - [开发指南](docs/CONTRIB.md) — 环境配置、脚本参考、工作流
+- [运维手册](docs/RUNBOOK.md) — 部署、监控、故障处理
 - [运维手册](docs/RUNBOOK.md) — 部署流程、故障排查、回滚
 
 ## Claude Code 技能与命令 / Skills & Commands

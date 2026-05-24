@@ -15,6 +15,8 @@ export interface Invoice {
   paidAt: string | null;
   reminderSentAt: string | null;
   reminderCount: number;
+  xeroInvoiceId?: string | null;
+  xeroSyncedAt?: string | null;
   createdAt: string;
   company?: { name: string; vatNumber?: string };
   job?: {
@@ -110,6 +112,19 @@ export function useSendReminder() {
   return useMutation({
     mutationFn: async (id: string) => {
       const res = await api.post(`/invoice/${id}/send-reminder`);
+      return res.data.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["invoices"] });
+    },
+  });
+}
+
+export function useSyncToXero() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.post(`/invoice/${id}/sync-xero`);
       return res.data.data;
     },
     onSuccess: () => {

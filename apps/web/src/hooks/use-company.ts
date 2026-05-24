@@ -79,3 +79,52 @@ export function useStripeConnectStatus() {
     enabled: !!user?.companyId,
   });
 }
+
+export interface XeroConnectionStatus {
+  connected: boolean;
+  tenantId: string | null;
+  tenantName: string | null;
+  connectedAt: string | null;
+  tokenExpiresAt: string | null;
+}
+
+export function useConnectXeroUrl() {
+  const user = useAuthStore((s) => s.user);
+
+  return useQuery({
+    queryKey: ["company", "xero", "connect-url"],
+    queryFn: async () => {
+      const res = await api.get("/xero/connect");
+      return res.data.data as { url: string };
+    },
+    enabled: false,
+  });
+}
+
+export function useXeroConnectionStatus() {
+  const user = useAuthStore((s) => s.user);
+
+  return useQuery({
+    queryKey: ["company", "xero", "status"],
+    queryFn: async () => {
+      const res = await api.get("/xero/status");
+      return res.data.data as XeroConnectionStatus;
+    },
+    enabled: !!user?.companyId,
+  });
+}
+
+export function useDisconnectXero() {
+  const qc = useQueryClient();
+  const user = useAuthStore((s) => s.user);
+
+  return useMutation({
+    mutationFn: async () => {
+      const res = await api.post("/xero/disconnect");
+      return res.data.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["company", "xero"] });
+    },
+  });
+}

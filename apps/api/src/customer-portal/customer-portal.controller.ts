@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Request } from 'express';
 import { CustomerPortalService } from './customer-portal.service';
 import { CustomerAuthGuard } from './customer-auth.guard';
+import { TrialBypass } from '../billing/decorators/trial-bypass.decorator';
 
 @ApiTags('Customer Portal')
 @Controller('portal')
@@ -65,5 +66,70 @@ export class CustomerPortalController {
     companyId?: string;
   }) {
     return this.portalService.createBooking(body);
+  }
+
+  @Post('quote/calculate')
+  @TrialBypass()
+  @ApiOperation({ summary: '根据服务参数计算定价（公开）' })
+  calculateQuotePrice(@Body() body: {
+    serviceType: string;
+    propertySize: string;
+    bathrooms?: number;
+    frequency: string;
+    isCommercial: boolean;
+    companyId?: string;
+  }) {
+    return this.portalService.calculateQuotePrice(body);
+  }
+
+  @Post('quote')
+  @TrialBypass()
+  @ApiOperation({ summary: '从公开表单创建报价' })
+  createQuoteFromPortal(@Body() body: {
+    serviceType: string;
+    propertySize: string;
+    bathrooms?: number;
+    frequency: string;
+    isCommercial: boolean;
+    notes?: string;
+    name: string;
+    email: string;
+    phone?: string;
+    address: string;
+    eircode?: string;
+    accessCode?: string;
+    lat?: number;
+    lng?: number;
+    companyId?: string;
+  }) {
+    return this.portalService.createQuoteFromPortal(body);
+  }
+
+  @Get('quote/:token')
+  @TrialBypass()
+  @ApiOperation({ summary: '通过公开 token 查看报价' })
+  viewQuoteByToken(@Param('token') token: string) {
+    return this.portalService.viewQuoteByToken(token);
+  }
+
+  @Post('quote/:token/accept')
+  @TrialBypass()
+  @ApiOperation({ summary: '接受报价并创建任务（如需定金则返回支付链接）' })
+  acceptQuote(@Param('token') token: string) {
+    return this.portalService.acceptQuote(token);
+  }
+
+  @Post('quote/:token/decline')
+  @TrialBypass()
+  @ApiOperation({ summary: '拒绝报价' })
+  declineQuote(@Param('token') token: string, @Body('reason') reason?: string) {
+    return this.portalService.declineQuote(token, reason);
+  }
+
+  @Get('quotes')
+  @UseGuards(CustomerAuthGuard)
+  @ApiOperation({ summary: '获取已认证客户的报价列表' })
+  getMyQuotes(@Req() req: any) {
+    return this.portalService.getMyQuotes(req.customer.id);
   }
 }

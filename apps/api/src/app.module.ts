@@ -17,8 +17,12 @@ import { ReportModule } from './report/report.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { CustomerPortalModule } from './customer-portal/customer-portal.module';
 import { StripeModule } from './common/services/stripe.module';
+import { XeroModule } from './common/services/xero.module';
+import { ScheduleModule } from '@nestjs/schedule';
 import { BillingModule } from './billing/billing.module';
 import { TrialGuard } from './billing/trial.guard';
+import { XeroModule as XeroFeatureModule } from './xero/xero.module';
+import { QuoteModule } from './quote/quote.module';
 
 @Module({
   imports: [
@@ -33,6 +37,8 @@ import { TrialGuard } from './billing/trial.guard';
       },
     ]),
     StripeModule,
+    XeroModule,
+    ScheduleModule.forRoot(),
     PrismaModule,
     CompanyModule,
     EmailModule,
@@ -44,7 +50,9 @@ import { TrialGuard } from './billing/trial.guard';
     ReportModule,
     CloudinaryModule,
     CustomerPortalModule,
+    QuoteModule,
     BillingModule,
+    XeroFeatureModule,
   ],
   controllers: [AppController],
   providers: [

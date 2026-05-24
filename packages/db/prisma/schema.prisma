@@ -16,10 +16,47 @@ enum Role {
   WORKER   // 普通员工
 }
 
+enum QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+enum ServiceType {
+  REGULAR         // 常规家居清洁
+  DEEP_CLEAN      // 深度/开荒清洁
+  END_OF_TENANCY  // 退租清洁
+  COMMERCIAL      // 商业/办公室清洁
+  WINDOW          // 窗户清洁
+  CARPET          // 地毯清洁
+  OVEN            // 烤箱清洁
+}
+
+enum PropertySize {
+  STUDIO
+  ONE_BED
+  TWO_BED
+  THREE_BED
+  FOUR_BED
+  FIVE_PLUS_BED
+  COMMERCIAL_SMALL
+  COMMERCIAL_LARGE
+}
+
+enum ServiceFrequency {
+  ONE_OFF
+  WEEKLY
+  BI_WEEKLY
+  MONTHLY
+}
+
 // 1. 公司 (租户隔离核心)
 model Company {
   id                String   @id @default(uuid())
   name              String
+  slug              String?  @unique // 公开预订页面用 (e.g. "dublin-cleaning-co")
   vatNumber         String?  // 爱尔兰 VAT 号码
   baseHourlyRate    Int      @default(1480) // 默认起薪 14.80 欧元 (以分存储)
   pensionEnrollment Boolean  @default(true) // 是否开启 2026 自动养老金计划 (1.5%)
@@ -36,6 +73,14 @@ model Company {
   stripeAccountStatus   String?   // enabled | restricted | pending
   stripeAccountEmail    String?   // Stripe 账户关联邮箱
 
+  // Xero integration
+  xeroTenantId          String?
+  xeroTenantName        String?
+  xeroAccessToken       String?
+  xeroRefreshToken      String?
+  xeroTokenExpiresAt    DateTime?
+  xeroConnectedAt       DateTime?
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -45,6 +90,7 @@ model Company {
   customers         Customer[]  // 客户库
   jobs              Job[]       // 任务库
   invoices          Invoice[]   // 账单库
+  quotes            Quote[]     // 报价库
 }
 
 // 2. 后台管理用户
@@ -102,9 +148,78 @@ model Customer {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   jobs          Job[]
+  quotes        Quote[]
 }
 
-// 5. 任务 (工单)
+// 5. 报价
+model Quote {
+  id                String        @id @default(uuid())
+  status            QuoteStatus   @default(DRAFT)
+  publicToken       String?       @unique // 公开查看 token
+
+  // 服务详情
+  serviceType       ServiceType
+  propertySize      PropertySize
+  bathrooms         Int?
+  frequency         ServiceFrequency @default(ONE_OFF)
+  isCommercial      Boolean       @default(false)
+  estimatedDuration Int           // 预估时长（分钟）
+  notes             String?       @db.Text
+
+  // 定价 (cents)
+  subtotal          Int
+  vatAmount         Int
+  grandTotal        Int
+  depositRequired   Boolean       @default(false)
+  depositAmount     Int?
+
+  // 客户信息
+  customerName      String
+  customerEmail     String
+  customerPhone     String?
+  customerAddress   String
+  customerEircode   String?
+  customerAccessCode String?
+
+  // 生命周期
+  validUntil        DateTime
+  sentAt            DateTime?
+  acceptedAt        DateTime?
+  declinedAt        DateTime?
+  declinedReason    String?       @db.Text
+
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // 关联
+  companyId         String
+  company           Company       @relation(fields: [companyId], references: [id])
+
+  customerId        String?
+  customer          Customer?     @relation(fields: [customerId], references: [id])
+
+  jobId             String?       @unique
+  job               Job?          @relation(fields: [jobId], references: [id])
+
+  lineItems         QuoteLineItem[]
+}
+
+// 6. 报价明细行项
+model QuoteLineItem {
+  id              String   @id @default(uuid())
+  description     String
+  quantity        Int      // 小时数或单位数
+  unitPrice       Int      // 单价 (cents)
+  totalPrice      Int      // 合计 (cents)
+  sortOrder       Int      @default(0)
+
+  quoteId         String
+  quote           Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@index([quoteId])
+}
+
+// 7. 任务 (工单)
 model Job {
   id              String    @id @default(uuid())
   title           String?
@@ -148,6 +263,7 @@ model Job {
   assignments     JobAssignment[]
   photos          JobPhoto[]
   invoice         Invoice?
+  quote           Quote?
 }
 
 // 6. 任务-员工多对多中间表
@@ -186,6 +302,8 @@ model Invoice {
   paidAt          DateTime?
   reminderSentAt  DateTime? // 最近催款时间
   reminderCount   Int       @default(0) // 催款次数
+  xeroInvoiceId   String?   // 同步到 Xero 后的 Invoice ID
+  xeroSyncedAt    DateTime? // 同步时间
   createdAt       DateTime  @default(now())
 
   jobId           String    @unique

@@ -3,9 +3,10 @@ import { CustomerPortalController } from './customer-portal.controller';
 import { CustomerPortalService } from './customer-portal.service';
 import { CustomerAuthGuard } from './customer-auth.guard';
 import { EmailModule } from 'src/email/email.module';
+import { QuoteModule } from '../quote/quote.module';
 
 @Module({
-  imports: [EmailModule],
+  imports: [EmailModule, QuoteModule],
   controllers: [CustomerPortalController],
   providers: [CustomerPortalService, CustomerAuthGuard],
   exports: [CustomerPortalService],

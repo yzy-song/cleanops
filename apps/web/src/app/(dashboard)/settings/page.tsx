@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useCompany, useUpdateCompany, useStripeConnectStatus } from "@/hooks/use-company";
+import { useCompany, useUpdateCompany, useStripeConnectStatus, useXeroConnectionStatus, useConnectXeroUrl, useDisconnectXero } from "@/hooks/use-company";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,8 +18,12 @@ export default function SettingsPage() {
   const { data: company, isLoading } = useCompany();
   const updateCompany = useUpdateCompany();
   const { data: connectStatus, isLoading: connectLoading, refetch: refetchStatus } = useStripeConnectStatus();
+  const { data: xeroStatus, isLoading: xeroLoading, refetch: refetchXero } = useXeroConnectionStatus();
+  const { refetch: fetchXeroUrl } = useConnectXeroUrl();
+  const disconnectXero = useDisconnectXero();
   const searchParams = useSearchParams();
   const [connecting, setConnecting] = useState(false);
+  const [connectingXero, setConnectingXero] = useState(false);
 
   useEffect(() => {
     const stripeResult = searchParams.get("stripe");
@@ -31,6 +35,17 @@ export default function SettingsPage() {
     }
   }, [searchParams, refetchStatus]);
 
+  useEffect(() => {
+    const xeroResult = searchParams.get("xero");
+    if (xeroResult === "success") {
+      toast.success("Xero account connected successfully!");
+      refetchXero();
+    } else if (xeroResult === "error") {
+      const msg = searchParams.get("message");
+      toast.error(msg || "Failed to connect Xero. Please try again.");
+    }
+  }, [searchParams, refetchXero]);
+
   const handleConnectStripe = async () => {
     setConnecting(true);
     try {
@@ -39,6 +54,19 @@ export default function SettingsPage() {
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to start Stripe connection");
       setConnecting(false);
+    }
+  };
+
+  const handleConnectXero = async () => {
+    setConnectingXero(true);
+    try {
+      const result = await fetchXeroUrl();
+      if (result.data?.url) {
+        window.location.href = result.data.url;
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to start Xero connection");
+      setConnectingXero(false);
     }
   };
 
@@ -150,6 +178,70 @@ export default function SettingsPage() {
               </p>
               <Button onClick={handleConnectStripe} disabled={connecting}>
                 {connecting ? "Redirecting..." : "Connect Stripe Account"}
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Xero Connect */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Link2 className="h-5 w-5" />
+            Xero Accounting
+          </CardTitle>
+          <CardDescription>
+            Connect your Xero account to automatically sync invoices
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {xeroLoading ? (
+            <Skeleton className="h-10 w-full" />
+          ) : xeroStatus?.connected ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                <span className="font-medium">Connected</span>
+                {xeroStatus.tenantName && (
+                  <span className="text-muted-foreground">· {xeroStatus.tenantName}</span>
+                )}
+              </div>
+              {xeroStatus.connectedAt && (
+                <p className="text-xs text-muted-foreground">
+                  Connected since {new Date(xeroStatus.connectedAt).toLocaleDateString()}
+                </p>
+              )}
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={handleConnectXero} disabled={connectingXero}>
+                  <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                  {connectingXero ? "Redirecting..." : "Reconnect Xero"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    try {
+                      await disconnectXero.mutateAsync();
+                      refetchXero();
+                      toast.success("Xero disconnected");
+                    } catch (err: any) {
+                      toast.error(err?.message || "Failed to disconnect");
+                    }
+                  }}
+                  disabled={disconnectXero.isPending}
+                >
+                  {disconnectXero.isPending ? "Disconnecting..." : "Disconnect"}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Sync paid invoices directly to your Xero accounting. Invoices are created as authorised sales invoices.
+              </p>
+              <Button onClick={handleConnectXero} disabled={connectingXero}>
+                {connectingXero ? "Redirecting..." : "Connect Xero"}
               </Button>
             </div>
           )}

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { useInvoice, useMarkAsPaid, useVoidInvoice, usePaymentLink, useSendReminder, formatInvoiceNumber } from "@/hooks/use-invoices";
+import { useInvoice, useMarkAsPaid, useVoidInvoice, usePaymentLink, useSendReminder, useSyncToXero, formatInvoiceNumber } from "@/hooks/use-invoices";
+import { useXeroConnectionStatus } from "@/hooks/use-company";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +38,8 @@ export default function InvoiceDetailPage() {
   const voidInvoice = useVoidInvoice();
   const paymentLink = usePaymentLink();
   const sendReminder = useSendReminder();
+  const syncToXero = useSyncToXero();
+  const { data: xeroStatus } = useXeroConnectionStatus();
   const [markPaidMethod, setMarkPaidMethod] = useState<string>("STRIPE");
 
   if (isLoading) {
@@ -104,6 +107,15 @@ export default function InvoiceDetailPage() {
       toast.success("Reminder sent");
     } catch (err: any) {
       toast.error(err?.message || "Failed to send reminder");
+    }
+  };
+
+  const handleSyncToXero = async () => {
+    try {
+      await syncToXero.mutateAsync(id);
+      toast.success("Synced to Xero");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to sync to Xero");
     }
   };
 
@@ -225,6 +237,19 @@ export default function InvoiceDetailPage() {
               <ExternalLink className="mr-2 h-4 w-4" />
               Open Payment Link
             </Button>
+          )}
+
+          {!invoice.xeroInvoiceId && xeroStatus?.connected && (
+            <Button variant="outline" className="w-full" onClick={handleSyncToXero} disabled={syncToXero.isPending}>
+              <Building2 className="mr-2 h-4 w-4" />
+              {syncToXero.isPending ? "Syncing..." : "Sync to Xero"}
+            </Button>
+          )}
+
+          {invoice.xeroInvoiceId && (
+            <p className="text-xs text-muted-foreground text-center">
+              Synced to Xero {invoice.xeroSyncedAt ? format(parseISO(invoice.xeroSyncedAt), "PP") : ""}
+            </p>
           )}
 
           {invoice.job?.customer?.phone && (
