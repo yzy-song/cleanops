@@ -12,6 +12,11 @@ export interface Worker {
   ppsn: string | null;
   hourlyRate: number | null;
   isActive: boolean;
+  postalCode?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  skills?: string[];
+  workDays?: number[];
   user?: {
     id: string;
     email: string;
@@ -50,6 +55,11 @@ export function useCreateWorker() {
       email: string;
       ppsn?: string;
       hourlyRate?: number;
+      postalCode?: string;
+      lat?: number;
+      lng?: number;
+      skills?: string[];
+      workDays?: number[];
     }) => {
       const res = await api.post("/worker", data);
       return res.data.data;
@@ -71,6 +81,11 @@ export function useUpdateWorker() {
       email?: string;
       ppsn?: string;
       hourlyRate?: number;
+      postalCode?: string;
+      lat?: number;
+      lng?: number;
+      skills?: string[];
+      workDays?: number[];
     }) => {
       const res = await api.patch(`/worker/${id}`, data);
       return res.data.data;

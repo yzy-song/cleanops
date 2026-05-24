@@ -51,14 +51,14 @@ export class QuoteService {
       customerEmail = cust.email || '';
       customerPhone = cust.phone || undefined;
       customerAddress = cust.address;
-      customerEircode = cust.eircode || undefined;
+      customerEircode = cust.postalCode || undefined;
       customerAccessCode = cust.accessCode || undefined;
     } else if (dto.customerName && dto.customerEmail && dto.customerAddress) {
       customerName = dto.customerName;
       customerEmail = dto.customerEmail;
       customerPhone = dto.customerPhone;
       customerAddress = dto.customerAddress;
-      customerEircode = dto.customerEircode;
+      customerEircode = dto.customerPostalCode;
       customerAccessCode = dto.customerAccessCode;
     } else {
       throw new BadRequestException('Either customerId or customerName+email+address is required');
@@ -84,7 +84,7 @@ export class QuoteService {
         customerEmail,
         customerPhone,
         customerAddress,
-        customerEircode,
+        customerPostalCode: customerEircode,
         customerAccessCode,
         validUntil: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
         companyId,
@@ -205,7 +205,7 @@ export class QuoteService {
             email: quote.customerEmail,
             phone: quote.customerPhone,
             address: quote.customerAddress,
-            eircode: quote.customerEircode,
+            postalCode: quote.customerPostalCode,
             accessCode: quote.customerAccessCode,
             lat: 53.3498,
             lng: -6.2603,

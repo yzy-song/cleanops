@@ -12,10 +12,10 @@ export class CreateCustomerDto {
   @IsNotEmpty()
   address: string;
 
-  @ApiProperty({ example: 'D02 X123', description: '爱尔兰 Eircode' })
+  @ApiProperty({ example: 'D02 X123', description: '爱尔兰 Eircode 或类似邮编' })
   @IsOptional()
   @IsString()
-  eircode?: string;
+  postalCode?: string;
 
   @ApiProperty({ example: 'Key under the mat / Code: 1234', description: '入户方式' })
   @IsOptional()

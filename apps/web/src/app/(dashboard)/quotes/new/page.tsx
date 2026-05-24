@@ -62,7 +62,7 @@ export default function NewQuotePage() {
     customerEmail: "",
     customerPhone: "",
     customerAddress: "",
-    customerEircode: "",
+    customerPostalCode: "",
     customerAccessCode: "",
   });
 
@@ -116,7 +116,7 @@ export default function NewQuotePage() {
         payload.customerEmail = form.customerEmail;
         payload.customerPhone = form.customerPhone || undefined;
         payload.customerAddress = form.customerAddress;
-        payload.customerEircode = form.customerEircode || undefined;
+        payload.customerPostalCode = form.customerPostalCode || undefined;
         payload.customerAccessCode = form.customerAccessCode || undefined;
       }
 
@@ -310,11 +310,11 @@ export default function NewQuotePage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="customerEircode">Eircode</Label>
+                <Label htmlFor="customerPostalCode">Eircode</Label>
                 <Input
-                  id="customerEircode"
-                  value={form.customerEircode}
-                  onChange={(e) => set("customerEircode", e.target.value)}
+                  id="customerPostalCode"
+                  value={form.customerPostalCode}
+                  onChange={(e) => set("customerPostalCode", e.target.value)}
                 />
               </div>
               <div className="space-y-2">

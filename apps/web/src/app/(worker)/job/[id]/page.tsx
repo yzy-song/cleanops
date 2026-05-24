@@ -156,7 +156,7 @@ export default function WorkerJobDetailPage() {
             <MapPin className="mt-0.5 h-4 w-4 text-muted-foreground shrink-0" />
             <div>
               <p className="text-sm">{job.customer?.address}</p>
-              {job.customer?.eircode && <p className="text-xs text-muted-foreground">{job.customer.eircode}</p>}
+              {job.customer?.postalCode && <p className="text-xs text-muted-foreground">{job.customer.postalCode}</p>}
             </div>
           </div>
           <div className="flex items-center gap-2">

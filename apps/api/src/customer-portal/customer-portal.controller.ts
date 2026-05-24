@@ -57,7 +57,7 @@ export class CustomerPortalController {
     email: string;
     phone?: string;
     address: string;
-    eircode?: string;
+    postalCode?: string;
     accessCode?: string;
     lat?: number;
     lng?: number;
@@ -96,7 +96,7 @@ export class CustomerPortalController {
     email: string;
     phone?: string;
     address: string;
-    eircode?: string;
+    postalCode?: string;
     accessCode?: string;
     lat?: number;
     lng?: number;

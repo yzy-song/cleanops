@@ -30,7 +30,7 @@ export interface Quote {
   customerEmail: string;
   customerPhone?: string | null;
   customerAddress: string;
-  customerEircode?: string | null;
+  customerPostalCode?: string | null;
   customerAccessCode?: string | null;
   validUntil: string;
   sentAt?: string | null;

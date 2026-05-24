@@ -102,7 +102,7 @@ export class CustomerPortalService {
     email: string;
     phone?: string;
     address: string;
-    eircode?: string;
+    postalCode?: string;
     accessCode?: string;
     lat?: number;
     lng?: number;
@@ -128,7 +128,7 @@ export class CustomerPortalService {
           email: data.email,
           phone: data.phone,
           address: data.address,
-          eircode: data.eircode,
+          postalCode: data.postalCode,
           accessCode: data.accessCode,
           isCommercial: data.isCommercial ?? false,
           lat: data.lat ?? 53.3498,
@@ -184,7 +184,7 @@ export class CustomerPortalService {
     email: string;
     phone?: string;
     address: string;
-    eircode?: string;
+    postalCode?: string;
     accessCode?: string;
     lat?: number;
     lng?: number;
@@ -223,7 +223,7 @@ export class CustomerPortalService {
         customerEmail: body.email,
         customerPhone: body.phone,
         customerAddress: body.address,
-        customerEircode: body.eircode,
+        customerPostalCode: body.postalCode,
         customerAccessCode: body.accessCode,
         validUntil: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
         sentAt: new Date(),
@@ -274,7 +274,7 @@ export class CustomerPortalService {
           email: quote.customerEmail,
           phone: quote.customerPhone,
           address: quote.customerAddress,
-          eircode: quote.customerEircode,
+          postalCode: quote.customerPostalCode,
           accessCode: quote.customerAccessCode,
           isCommercial: quote.isCommercial,
           lat: 53.3498,

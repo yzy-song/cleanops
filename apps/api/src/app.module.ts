@@ -18,6 +18,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { CustomerPortalModule } from './customer-portal/customer-portal.module';
 import { StripeModule } from './common/services/stripe.module';
 import { XeroModule } from './common/services/xero.module';
+import { GeocodingModule } from './common/services/geocoding.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { BillingModule } from './billing/billing.module';
 import { TrialGuard } from './billing/trial.guard';
@@ -38,6 +39,7 @@ import { QuoteModule } from './quote/quote.module';
     ]),
     StripeModule,
     XeroModule,
+    GeocodingModule,
     ScheduleModule.forRoot(),
     PrismaModule,
     CompanyModule,

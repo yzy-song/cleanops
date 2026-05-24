@@ -119,6 +119,11 @@ model Worker {
   ppsn          String?  // 爱尔兰个人税号 (用于报税)
   hourlyRate    Int?     // 个体时薪 (分)，为空则使用 Company 默认值
   isActive      Boolean  @default(true)
+  postalCode    String?  // Eircode 或类似邮编
+  lat           Float?   // 地理编码：纬度
+  lng           Float?   // 地理编码：经度
+  skills        ServiceType[]  // 技能标签
+  workDays      Int[]    @default([1,2,3,4,5]) // 0=周日...6=周六
   
   companyId     String
   company       Company  @relation(fields: [companyId], references: [id])
@@ -135,7 +140,7 @@ model Customer {
   email         String?
   phone         String?
   address       String   // 物理地址
-  eircode       String?  // 爱尔兰 Eircode 邮编
+  postalCode    String?  // 爱尔兰 Eircode 邮编
   accessCode    String?  // 附加信息：如公寓大门密码 (都柏林刚需)
   lat           Float    // 纬度：用于地缘围栏打卡校验
   lng           Float    // 经度：用于地缘围栏打卡校验
@@ -178,7 +183,7 @@ model Quote {
   customerEmail     String
   customerPhone     String?
   customerAddress   String
-  customerEircode   String?
+  customerPostalCode String?
   customerAccessCode String?
 
   // 生命周期
@@ -232,6 +237,7 @@ model Job {
   internalNotes   String?   @db.Text // 用于记录意外状况或纠纷备注
   notes           String?   // 创建任务时的备注信息
   estimatedDuration Int?     // 预计耗时（分钟）
+  timeWindow    String    @default("ANY") // MORNING | AFTERNOON | ANY
 
   // 地缘围栏打卡数据
   actualStart     DateTime?

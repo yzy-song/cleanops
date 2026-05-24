@@ -201,6 +201,38 @@
 
 ---
 
+### 12. 智能排班引擎 (Auto Scheduling)
+
+- 贪心多因子评分算法：距离分 + 聚类分 + 负载均衡分
+- 硬约束：Worker workDays + skills 匹配
+- 容量：480min/天 (8h)，含工单间路程缓冲 (距离÷30km/h)
+- 每个工人当天任务按最近邻排序 (nearest-neighbor TSP)
+- 预览方案不写库，确认后批量写入 JobAssignment
+- Worker 新字段：postalCode / lat / lng / skills / workDays
+- Google Geocoding API 自动解析 postalCode → lat/lng
+
+| 端点 | 说明 |
+|------|------|
+| `POST /jobs/auto-schedule` | 预览排班方案（不写库） |
+| `POST /jobs/auto-schedule/apply` | 确认应用排班 |
+| `POST /jobs/reassign` | 释放某工人当天任务并重排 |
+
+**关键文件**: `apps/api/src/job/scheduling.service.ts`, `apps/api/src/common/services/geocoding.service.ts`
+
+---
+
+### 13. 地图调度台 (Map Dispatch Board)
+
+- `/map` 日期导航：← 前一天 / 今天 / 后一天 → + 日期选择器
+- 自定义标记：蓝色 = 已指派 / 灰色 = 待派
+- 点击已指派标记 → InfoWindow 显示工人信息
+- 点击待派标记 → 下拉菜单选工人指派
+- 底部工人卡片栏：头像/姓名/当天任务数，蓝色=有任务/绿色=空闲/灰色=休息
+
+**关键文件**: `apps/web/src/app/(dashboard)/map/page.tsx`
+
+---
+
 ## 待开发
 
 | 功能 | 优先级 | 备注 |
@@ -209,7 +241,6 @@
 | 循环任务 (Recurring Jobs) | 高 | 按 WEEKLY / BI-WEEKLY 自动排班 |
 | 客户门户发票支付 | 中 | 暴露支付链接到客户门户 |
 | Stripe Elements 前端 | 低 | 目前用 Stripe 托管结账页，已可用 |
-| 自动排班引擎 | 低 | 基于 Workers × Skills × Availability × Distance |
 
 ---
 

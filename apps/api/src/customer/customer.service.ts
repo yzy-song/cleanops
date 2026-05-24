@@ -2,19 +2,33 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { GeocodingService } from 'src/common/services/geocoding.service';
 
 @Injectable()
 export class CustomerService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private geocodingService: GeocodingService,
+  ) {}
   async create(dto: CreateCustomerDto) {
+    let lat = dto.lat;
+    let lng = dto.lng;
+    if (dto.postalCode && (lat == null || lng == null)) {
+      const geo = await this.geocodingService.geocode(dto.postalCode);
+      if (geo) {
+        lat = geo.lat;
+        lng = geo.lng;
+      }
+    }
+
     return this.prisma.client.customer.create({
       data: {
         name: dto.name,
         address: dto.address,
-        eircode: dto.eircode,
+        postalCode: dto.postalCode,
         accessCode: dto.accessCode,
-        lat: dto.lat,
-        lng: dto.lng,
+        lat,
+        lng,
         isCommercial: dto.isCommercial ?? false,
         company: {
           connect: { id: dto.companyId },
@@ -40,7 +54,15 @@ export class CustomerService {
   }
 
   async update(id: string, dto: UpdateCustomerDto) {
-    return this.prisma.client.customer.update({ where: { id }, data: dto });
+    const data: any = { ...dto };
+    if (dto.postalCode && (dto.lat == null || dto.lng == null)) {
+      const geo = await this.geocodingService.geocode(dto.postalCode);
+      if (geo) {
+        data.lat = geo.lat;
+        data.lng = geo.lng;
+      }
+    }
+    return this.prisma.client.customer.update({ where: { id }, data });
   }
 
   async remove(id: string) {
@@ -107,7 +129,7 @@ export class CustomerService {
         id: c.id,
         name: c.name,
         address: c.address,
-        eircode: c.eircode,
+        postalCode: c.postalCode,
         isCommercial: c.isCommercial,
         totalUnpaid,
         unpaidCount: unpaidInvoices.length,

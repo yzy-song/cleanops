@@ -17,7 +17,7 @@ export interface Job {
   isDepositPaid: boolean;
   createdAt: string;
   updatedAt: string;
-  customer?: { id: string; name: string; phone?: string; address: string; lat?: number; lng?: number; eircode?: string };
+  customer?: { id: string; name: string; phone?: string; address: string; lat?: number; lng?: number; postalCode?: string };
   invoice?: { id: string; amount: number; status: string; paymentLink?: string | null };
   assignments?: {
     id: string;

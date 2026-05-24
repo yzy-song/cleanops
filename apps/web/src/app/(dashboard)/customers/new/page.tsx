@@ -22,7 +22,7 @@ export default function NewCustomerPage() {
     lat: "",
     lng: "",
     isCommercial: false,
-    eircode: "",
+    postalCode: "",
   });
 
   const set = (k: string, v: string | boolean) => setForm((p) => ({ ...p, [k]: v }));
@@ -36,7 +36,7 @@ export default function NewCustomerPage() {
         lat: parseFloat(form.lat),
         lng: parseFloat(form.lng),
         isCommercial: form.isCommercial,
-        eircode: form.eircode || undefined,
+        postalCode: form.postalCode || undefined,
       });
       toast.success("Customer added");
       router.push("/customers");
@@ -75,14 +75,14 @@ export default function NewCustomerPage() {
                   set("address", place.address);
                   set("lat", place.lat.toString());
                   set("lng", place.lng.toString());
-                  if (place.eircode) set("eircode", place.eircode);
+                  if (place.postalCode) set("postalCode", place.postalCode);
                 }}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="eircode">Eircode</Label>
-              <Input id="eircode" value={form.eircode} onChange={(e) => set("eircode", e.target.value)} placeholder="Auto-detected from address" />
+              <Label htmlFor="postalCode">Eircode</Label>
+              <Input id="postalCode" value={form.postalCode} onChange={(e) => set("postalCode", e.target.value)} placeholder="Auto-detected from address" />
             </div>
             <div className="flex items-center gap-2">
               <Checkbox

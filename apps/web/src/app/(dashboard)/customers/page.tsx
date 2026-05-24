@@ -72,8 +72,8 @@ export default function CustomersPage() {
                       {!c.isCommercial && (
                         <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-xs text-emerald-700">Residential</span>
                       )}
-                      {c.eircode && (
-                        <span className="rounded bg-muted px-1.5 py-0.5 text-xs">{c.eircode}</span>
+                      {c.postalCode && (
+                        <span className="rounded bg-muted px-1.5 py-0.5 text-xs">{c.postalCode}</span>
                       )}
                       {riskMap.has(c.id) && (
                         (() => {

@@ -4,11 +4,15 @@ import Link from "next/link";
 import { useState } from "react";
 import { useJobs, useCancelJob, useSendInvoice, type JobQuery } from "@/hooks/use-jobs";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Calendar, MapPin, Clock, XCircle, Mail, RefreshCw, Wallet } from "lucide-react";
+import { Plus, Calendar, MapPin, Clock, XCircle, Mail, RefreshCw, Wallet, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { api } from "@/lib/api";
+import { format, addDays, startOfWeek } from "date-fns";
 
 const statusColors: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-800",
@@ -20,9 +24,53 @@ const statusColors: Record<string, string> = {
 export default function JobsPage() {
   const [filter, setFilter] = useState<string>("");
   const query: JobQuery = filter ? { status: filter } : {};
-  const { data, isLoading } = useJobs(query);
+  const { data, isLoading, refetch } = useJobs(query);
   const cancelJob = useCancelJob();
   const sendInvoice = useSendInvoice();
+
+  // Auto-schedule state
+  const nextMonday = format(startOfWeek(addDays(new Date(), 7), { weekStartsOn: 1 }), "yyyy-MM-dd");
+  const nextSunday = format(addDays(new Date(nextMonday + "T00:00:00"), 6), "yyyy-MM-dd");
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [scheduleStart, setScheduleStart] = useState(nextMonday);
+  const [scheduleEnd, setScheduleEnd] = useState(nextSunday);
+  const [scheduleResult, setScheduleResult] = useState<any[] | null>(null);
+  const [scheduling, setScheduling] = useState(false);
+  const [applying, setApplying] = useState(false);
+
+  const handlePreview = async () => {
+    setScheduling(true);
+    setScheduleResult(null);
+    try {
+      const res = await api.post("/jobs/auto-schedule", {
+        startDate: scheduleStart,
+        endDate: scheduleEnd,
+      });
+      setScheduleResult(res.data);
+    } catch (err: any) {
+      toast.error(err?.message || "Scheduling failed");
+    } finally {
+      setScheduling(false);
+    }
+  };
+
+  const handleApply = async () => {
+    setApplying(true);
+    try {
+      const res = await api.post("/jobs/auto-schedule/apply", {
+        startDate: scheduleStart,
+        endDate: scheduleEnd,
+      });
+      toast.success(`${res.data.applied} job(s) assigned`);
+      setScheduleOpen(false);
+      setScheduleResult(null);
+      refetch();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to apply");
+    } finally {
+      setApplying(false);
+    }
+  };
 
   const jobs = data?.data ?? [];
 
@@ -50,6 +98,10 @@ export default function JobsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Jobs</h1>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => { setScheduleOpen(true); setScheduleResult(null); }}>
+            <Wand2 className="mr-1 h-4 w-4" />
+            Auto Schedule
+          </Button>
           <Button variant="outline" size="sm" asChild>
             <Link href="/jobs/calendar">
               <Calendar className="mr-1 h-4 w-4" />
@@ -165,6 +217,89 @@ export default function JobsPage() {
               No jobs found. <Link href="/jobs/new" className="text-primary hover:underline">Create your first job</Link>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Auto Schedule Modal */}
+      {scheduleOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setScheduleOpen(false)}>
+          <div className="bg-background rounded-xl shadow-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold">Auto Schedule</h2>
+              <Button variant="ghost" size="icon" onClick={() => setScheduleOpen(false)}>
+                <XCircle className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="flex items-end gap-3 mb-4">
+              <div className="space-y-1">
+                <Label className="text-xs">Start Date</Label>
+                <Input type="date" value={scheduleStart} onChange={(e) => setScheduleStart(e.target.value)} className="h-9" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">End Date</Label>
+                <Input type="date" value={scheduleEnd} onChange={(e) => setScheduleEnd(e.target.value)} className="h-9" />
+              </div>
+              <Button onClick={handlePreview} disabled={scheduling}>
+                {scheduling ? "Calculating..." : "Preview"}
+              </Button>
+            </div>
+
+            {scheduleResult && (
+              <div className="space-y-4">
+                {scheduleResult.map((day: any) => (
+                  <Card key={day.date}>
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold text-sm mb-2">
+                        {format(new Date(day.date + "T00:00:00"), "EEE, MMM d")}
+                      </h3>
+
+                      {day.assigned?.length > 0 && (
+                        <div className="space-y-2 mb-2">
+                          {day.assigned.map((a: any) => (
+                            <div key={a.workerId} className="bg-muted/50 rounded-lg p-3">
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium text-sm">{a.workerName}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {a.totalDuration}min work + {a.travelMinutes}min travel = {a.totalMinutes}min
+                                </span>
+                              </div>
+                              <div className="mt-1 flex flex-wrap gap-1">
+                                {a.jobs.map((j: any) => (
+                                  <span key={j.jobId} className="text-xs bg-background rounded px-2 py-0.5 border">
+                                    {j.order}. {j.customerName}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {day.unassigned?.length > 0 && (
+                        <div className="text-xs text-orange-600 bg-orange-50 rounded p-2">
+                          Unassigned: {day.unassigned.map((u: any) => u.customerName).join(", ")}
+                        </div>
+                      )}
+
+                      {!day.assigned?.length && !day.unassigned?.length && (
+                        <p className="text-xs text-muted-foreground">No jobs this day</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+
+                <div className="flex gap-2 justify-end">
+                  <Button variant="outline" onClick={() => { setScheduleResult(null); setScheduleOpen(false); }}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleApply} disabled={applying}>
+                    {applying ? "Applying..." : "Confirm & Apply"}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

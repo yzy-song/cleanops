@@ -2,6 +2,7 @@ import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UploadedFile,
 import { ApiTags, ApiOperation, ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JobService } from './job.service';
+import { SchedulingService } from './scheduling.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 import { QueryJobDto } from './dto/query-job.dto';
@@ -12,7 +13,10 @@ import { Role } from '@cleanops/db';
 @ApiTags('Jobs')
 @Controller('jobs')
 export class JobController {
-  constructor(private readonly jobService: JobService) {}
+  constructor(
+    private readonly jobService: JobService,
+    private readonly schedulingService: SchedulingService,
+  ) {}
 
   @Post()
   @Auth(Role.ADMIN, Role.MANAGER)
@@ -196,5 +200,68 @@ export class JobController {
     @CurrentUser('companyId') companyId: string,
   ) {
     return this.jobService.deletePhoto(jobId, photoId, companyId);
+  }
+
+  @Post('auto-schedule')
+  @Auth(Role.ADMIN, Role.MANAGER)
+  @ApiOperation({ summary: '预览自动排班方案（不写入数据库）' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        startDate: { type: 'string', example: '2026-05-26' },
+        endDate: { type: 'string', example: '2026-06-01' },
+      },
+      required: ['startDate', 'endDate'],
+    },
+  })
+  previewSchedule(
+    @CurrentUser('companyId') companyId: string,
+    @Body('startDate') startDate: string,
+    @Body('endDate') endDate: string,
+  ) {
+    return this.schedulingService.preview({ startDate, endDate, companyId });
+  }
+
+  @Post('auto-schedule/apply')
+  @Auth(Role.ADMIN, Role.MANAGER)
+  @ApiOperation({ summary: '确认应用自动排班方案' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        startDate: { type: 'string', example: '2026-05-26' },
+        endDate: { type: 'string', example: '2026-06-01' },
+      },
+      required: ['startDate', 'endDate'],
+    },
+  })
+  applySchedule(
+    @CurrentUser('companyId') companyId: string,
+    @Body('startDate') startDate: string,
+    @Body('endDate') endDate: string,
+  ) {
+    return this.schedulingService.apply({ startDate, endDate, companyId });
+  }
+
+  @Post('reassign')
+  @Auth(Role.ADMIN, Role.MANAGER)
+  @ApiOperation({ summary: '释放某工人当天的任务并重新排班' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        date: { type: 'string', example: '2026-05-26' },
+        workerId: { type: 'string' },
+      },
+      required: ['date', 'workerId'],
+    },
+  })
+  reassignDay(
+    @CurrentUser('companyId') companyId: string,
+    @Body('date') date: string,
+    @Body('workerId') workerId: string,
+  ) {
+    return this.schedulingService.reassignDay(date, workerId, companyId);
   }
 }

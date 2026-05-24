@@ -98,7 +98,7 @@ export class CreateQuoteDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
-  customerEircode?: string;
+  customerPostalCode?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()

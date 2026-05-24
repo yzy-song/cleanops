@@ -8,7 +8,7 @@ interface PlaceData {
   address: string;
   lat: number;
   lng: number;
-  eircode?: string;
+  postalCode?: string;
 }
 
 interface AddressInputProps {
@@ -92,7 +92,7 @@ export function AddressInput({
         }
       }
 
-      onPlaceSelect?.({ address, lat, lng, eircode });
+      onPlaceSelect?.({ address, lat, lng, postalCode: eircode });
 
       if (onChange) {
         const synthetic = {

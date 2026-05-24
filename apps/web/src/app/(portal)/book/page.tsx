@@ -20,7 +20,7 @@ export default function BookPage() {
     email: "",
     phone: "",
     address: "",
-    eircode: "",
+    postalCode: "",
     accessCode: "",
     scheduledDate: "",
     notes: "",
@@ -125,11 +125,11 @@ export default function BookPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="eircode">Eircode</Label>
+                <Label htmlFor="postalCode">Eircode</Label>
                 <Input
-                  id="eircode"
-                  value={form.eircode}
-                  onChange={(e) => setForm({ ...form, eircode: e.target.value })}
+                  id="postalCode"
+                  value={form.postalCode}
+                  onChange={(e) => setForm({ ...form, postalCode: e.target.value })}
                 />
               </div>
               <div className="space-y-2">

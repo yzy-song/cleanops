@@ -9,7 +9,7 @@ export interface Customer {
   lat: number;
   lng: number;
   isCommercial: boolean;
-  eircode: string | null;
+  postalCode: string | null;
   accessCode: string | null;
   jobs?: { id: string; status: string; scheduledStart: string }[];
 }
@@ -18,7 +18,7 @@ export interface CustomerCreditRisk {
   id: string;
   name: string;
   address: string;
-  eircode: string | null;
+  postalCode: string | null;
   isCommercial: boolean;
   totalUnpaid: number;
   unpaidCount: number;
@@ -64,7 +64,7 @@ export function useCreateCustomer() {
       lat: number;
       lng: number;
       isCommercial?: boolean;
-      eircode?: string;
+      postalCode?: string;
       accessCode?: string;
     }) => {
       const res = await api.post("/customer", data);
@@ -86,7 +86,7 @@ export function useUpdateCustomer() {
       lat?: number;
       lng?: number;
       isCommercial?: boolean;
-      eircode?: string;
+      postalCode?: string;
       accessCode?: string;
     }) => {
       const res = await api.patch(`/customer/${id}`, data);

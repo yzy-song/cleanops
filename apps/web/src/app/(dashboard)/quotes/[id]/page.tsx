@@ -212,8 +212,8 @@ export default function QuoteDetailPage() {
           <p className="text-muted-foreground">{quote.customerEmail}</p>
           <p className="text-muted-foreground">{quote.customerAddress}</p>
           {quote.customerPhone && <p className="text-muted-foreground">{quote.customerPhone}</p>}
-          {quote.customerEircode && (
-            <p className="text-muted-foreground">Eircode: {quote.customerEircode}</p>
+          {quote.customerPostalCode && (
+            <p className="text-muted-foreground">Eircode: {quote.customerPostalCode}</p>
           )}
         </CardContent>
       </Card>

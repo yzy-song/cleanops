@@ -3,6 +3,7 @@ import { CreateWorkerDto } from './dto/create-worker.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateWorkerDto } from './dto/update-worker.dto';
 import { EmailService } from 'src/email/email.service';
+import { GeocodingService } from 'src/common/services/geocoding.service';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -10,6 +11,7 @@ export class WorkerService {
   constructor(
     private prisma: PrismaService,
     private emailService: EmailService,
+    private geocodingService: GeocodingService,
   ) {}
 
   // apps/api/src/modules/worker/worker.service.ts
@@ -32,14 +34,29 @@ export class WorkerService {
         },
       });
 
-      // 2. 创建档案
+      // 2. 解析地理坐标
+      let lat: number | undefined = dto.lat;
+      let lng: number | undefined = dto.lng;
+      if (dto.postalCode && (lat == null || lng == null)) {
+        const geo = await this.geocodingService.geocode(dto.postalCode);
+        if (geo) {
+          lat = geo.lat;
+          lng = geo.lng;
+        }
+      }
+
+      // 3. 创建档案
       const worker = await tx.worker.create({
         data: {
           firstName: dto.firstName,
           lastName: dto.lastName,
           phone: dto.phone,
           hourlyRate: dto.hourlyRate,
-          // 使用关联写法，Prisma 会自动处理 userId
+          postalCode: dto.postalCode,
+          lat,
+          lng,
+          skills: dto.skills ?? [],
+          workDays: dto.workDays ?? [1, 2, 3, 4, 5],
           user: {
             connect: { id: user.id },
           },
@@ -74,6 +91,16 @@ export class WorkerService {
 
   async update(id: string, dto: UpdateWorkerDto) {
     const data: any = { ...dto };
+
+    // 如果更新了 postalCode 但没传 lat/lng，自动 geocode
+    if (dto.postalCode && (dto.lat == null || dto.lng == null)) {
+      const geo = await this.geocodingService.geocode(dto.postalCode);
+      if (geo) {
+        data.lat = geo.lat;
+        data.lng = geo.lng;
+      }
+    }
+
     // 如果更新了 email，同步更新 User
     if (dto.email) {
       const worker = await this.prisma.client.worker.findUnique({ where: { id } });
