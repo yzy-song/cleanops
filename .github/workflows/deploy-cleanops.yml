@@ -68,10 +68,12 @@ jobs:
             set -e
             cd $RELEASE_DIR
             tar xzf dist.tar.gz && rm dist.tar.gz
-            ln -sf /var/www/cleanops/repo/apps/api/node_modules dist/node_modules
+            cd /var/www/cleanops/repo && git fetch origin main && git reset --hard origin/main
+            CI=true pnpm install
+            sudo mkdir -p /var/www/cleanops/logs && sudo chown cleanops:cleanops /var/www/cleanops/logs
+            ln -sf /var/www/cleanops/repo/apps/api/node_modules $RELEASE_DIR/dist/node_modules
             sudo ln -nfs $RELEASE_DIR/dist /var/www/cleanops/current
-            cd /var/www/cleanops/repo
-            export DATABASE_URL=\$(grep "^DATABASE_URL=" /var/www/cleanops/.env | cut -d= -f2-) && cd packages/db && npx prisma migrate deploy
+            export DATABASE_URL=\$(grep '^DATABASE_URL=' /var/www/cleanops/.env | cut -d= -f2-) && cd packages/db && npx prisma generate && npx prisma migrate deploy
             sudo cp $RELEASE_DIR/ecosystem.config.cjs /var/www/cleanops/ecosystem.config.cjs
             sudo -u cleanops pm2 delete cleanops 2>/dev/null || true
             sudo -u cleanops pm2 start /var/www/cleanops/ecosystem.config.cjs
