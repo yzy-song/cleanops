@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Patch, Param, Body, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Request } from 'express';
+import { Throttle } from '@nestjs/throttler';
 import { CustomerPortalService } from './customer-portal.service';
 import { CustomerAuthGuard } from './customer-auth.guard';
 import { TrialBypass } from '../billing/decorators/trial-bypass.decorator';
@@ -11,6 +12,7 @@ export class CustomerPortalController {
   constructor(private readonly portalService: CustomerPortalService) {}
 
   @Post('send-link')
+  @Throttle({ default: { ttl: 60000, limit: 3 } })
   @ApiOperation({ summary: '发送 magic link 到客户邮箱' })
   sendMagicLink(@Body('email') email: string) {
     return this.portalService.sendMagicLink(email);
@@ -162,5 +164,34 @@ export class CustomerPortalController {
   @ApiOperation({ summary: '生成账单的 Stripe 支付链接' })
   payInvoice(@Req() req: any, @Param('id') id: string) {
     return this.portalService.payInvoice(req.customer.id, id);
+  }
+
+  @Post('logout')
+  @UseGuards(CustomerAuthGuard)
+  @ApiOperation({ summary: '客户退出登录（清除会话）' })
+  logout(@Req() req: any) {
+    return this.portalService.logout(req.customer.id);
+  }
+
+  @Patch('jobs/:id/reschedule')
+  @UseGuards(CustomerAuthGuard)
+  @ApiOperation({ summary: '客户重新预约任务日期' })
+  rescheduleJob(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body('newDate') newDate: string,
+  ) {
+    return this.portalService.rescheduleJob(req.customer.id, id, newDate);
+  }
+
+  @Post('jobs/:id/cancel')
+  @UseGuards(CustomerAuthGuard)
+  @ApiOperation({ summary: '客户取消待执行任务' })
+  cancelJob(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body('reason') reason?: string,
+  ) {
+    return this.portalService.cancelJob(req.customer.id, id, reason);
   }
 }

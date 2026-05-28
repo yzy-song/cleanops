@@ -145,8 +145,10 @@ model Customer {
   lat           Float    // 纬度：用于地缘围栏打卡校验
   lng           Float    // 经度：用于地缘围栏打卡校验
   isCommercial        Boolean   @default(false) // 商业客户(23% VAT)还是住宅客户(13.5% VAT)
-  authToken           String?   // 客户自助门户 magic link token
+  authToken           String?   // 客户自助门户 magic link token (一次性，30min TTL)
   authTokenExpiresAt  DateTime?
+  sessionToken        String?   @unique // 门户会话 token (7天 TTL)
+  sessionTokenExpiresAt DateTime?
 
   companyId     String
   company       Company  @relation(fields: [companyId], references: [id])

@@ -23,7 +23,19 @@ export class CustomerPortalService {
     const customer = await this.prisma.client.customer.findFirst({
       where: { email },
     });
-    if (!customer) throw new NotFoundException('No customer found with this email');
+
+    // Don't reveal whether the email exists
+    if (!customer) {
+      return { message: 'If an account with that email exists, a magic link has been sent.' };
+    }
+
+    // Per-email rate limit: 1 per 5 minutes
+    if (customer.authTokenExpiresAt) {
+      const remainingMs = customer.authTokenExpiresAt.getTime() - Date.now();
+      if (remainingMs > 25 * 60 * 1000) {
+        throw new BadRequestException('A magic link was already sent recently. Please wait before requesting another.');
+      }
+    }
 
     const token = randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 min
@@ -45,7 +57,7 @@ export class CustomerPortalService {
        <p>This link expires in 30 minutes.</p>`,
     );
 
-    return { message: 'Magic link sent to your email' };
+    return { message: 'If an account with that email exists, a magic link has been sent.' };
   }
 
   async verifyToken(token: string) {
@@ -56,7 +68,36 @@ export class CustomerPortalService {
     if (customer.authTokenExpiresAt && customer.authTokenExpiresAt < new Date()) {
       throw new UnauthorizedException('Token expired');
     }
-    return { token, customerId: customer.id, name: customer.name, email: customer.email };
+
+    // Generate session token (7-day TTL) and consume the magic link token
+    const sessionToken = randomBytes(32).toString('hex');
+    const sessionExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    await this.prisma.client.customer.update({
+      where: { id: customer.id },
+      data: {
+        authToken: null,
+        authTokenExpiresAt: null,
+        sessionToken,
+        sessionTokenExpiresAt: sessionExpiresAt,
+      },
+    });
+
+    return {
+      sessionToken,
+      expiresAt: sessionExpiresAt,
+      customerId: customer.id,
+      name: customer.name,
+      email: customer.email,
+    };
+  }
+
+  async logout(customerId: string) {
+    await this.prisma.client.customer.update({
+      where: { id: customerId },
+      data: { sessionToken: null, sessionTokenExpiresAt: null },
+    });
+    return { message: 'Logged out' };
   }
 
   async getProfile(customerId: string) {
@@ -91,6 +132,49 @@ export class CustomerPortalService {
       include: { assignments: { include: { worker: true } }, invoice: true },
       orderBy: { scheduledStart: 'desc' },
       take: 50,
+    });
+  }
+
+  async rescheduleJob(customerId: string, jobId: string, newDate: string) {
+    const job = await this.prisma.client.job.findFirst({
+      where: { id: jobId, customerId },
+    });
+    if (!job) throw new NotFoundException('Job not found');
+    if (job.status !== 'PENDING') {
+      throw new BadRequestException('Only pending jobs can be rescheduled');
+    }
+    const scheduledStart = new Date(newDate);
+    if (isNaN(scheduledStart.getTime())) {
+      throw new BadRequestException('Invalid date format');
+    }
+    if (scheduledStart <= new Date()) {
+      throw new BadRequestException('New date must be in the future');
+    }
+
+    return this.prisma.client.job.update({
+      where: { id: jobId },
+      data: { scheduledStart },
+      include: { assignments: { include: { worker: true } }, invoice: true },
+    });
+  }
+
+  async cancelJob(customerId: string, jobId: string, reason?: string) {
+    const job = await this.prisma.client.job.findFirst({
+      where: { id: jobId, customerId },
+    });
+    if (!job) throw new NotFoundException('Job not found');
+    if (job.status !== 'PENDING') {
+      throw new BadRequestException('Only pending jobs can be cancelled');
+    }
+
+    const safeReason = reason?.trim().slice(0, 500) || '';
+    return this.prisma.client.job.update({
+      where: { id: jobId },
+      data: {
+        status: 'CANCELLED',
+        internalNotes: safeReason ? `Customer cancelled: ${safeReason}` : 'Customer cancelled',
+      },
+      include: { assignments: { include: { worker: true } }, invoice: true },
     });
   }
 

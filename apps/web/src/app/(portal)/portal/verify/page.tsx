@@ -22,7 +22,7 @@ function VerifyContent() {
       .then((res) => {
         const data = res.data.data;
         setAuth({
-          token: data.token,
+          token: data.sessionToken,
           customerId: data.customerId,
           name: data.name,
           email: data.email,

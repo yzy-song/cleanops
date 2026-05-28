@@ -14,12 +14,12 @@ export class CustomerAuthGuard implements CanActivate {
 
     const token = authHeader.slice(7);
     const customer = await this.prisma.client.customer.findFirst({
-      where: { authToken: token },
+      where: { sessionToken: token },
     });
 
-    if (!customer) throw new UnauthorizedException('Invalid token');
-    if (customer.authTokenExpiresAt && customer.authTokenExpiresAt < new Date()) {
-      throw new UnauthorizedException('Token expired');
+    if (!customer) throw new UnauthorizedException('Invalid or expired session');
+    if (customer.sessionTokenExpiresAt && customer.sessionTokenExpiresAt < new Date()) {
+      throw new UnauthorizedException('Session expired');
     }
 
     request.customer = customer;

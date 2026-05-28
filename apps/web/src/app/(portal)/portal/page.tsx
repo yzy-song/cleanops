@@ -7,7 +7,7 @@ import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, MapPin, LogOut, CreditCard, User, ChevronDown } from "lucide-react";
+import { Calendar, MapPin, LogOut, CreditCard, User, XCircle, RefreshCw, Clock, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
@@ -51,9 +51,14 @@ function CustomerDashboardContent() {
   const { token, name, logout } = useCustomerAuthStore();
   const [jobs, setJobs] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [quotes, setQuotes] = useState<any[]>([]);
   const [invoiceFilter, setInvoiceFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [payingInvoice, setPayingInvoice] = useState<string | null>(null);
+  const [rescheduleJobId, setRescheduleJobId] = useState<string | null>(null);
+  const [newDate, setNewDate] = useState("");
+  const [cancelConfirmJobId, setCancelConfirmJobId] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     // Show payment success toast
@@ -68,12 +73,14 @@ function CustomerDashboardContent() {
     try {
       const headers = { Authorization: `Bearer ${token}` };
       const params = invoiceFilter ? { status: invoiceFilter } : {};
-      const [jobsRes, invoicesRes] = await Promise.all([
+      const [jobsRes, invoicesRes, quotesRes] = await Promise.all([
         api.get("/portal/jobs", { headers }),
         api.get("/portal/invoices", { headers, params }),
+        api.get("/portal/quotes", { headers }),
       ]);
       setJobs(jobsRes.data.data || []);
       setInvoices(invoicesRes.data.data || []);
+      setQuotes(quotesRes.data.data || []);
     } catch (err: any) {
       if (err?.response?.status === 401) {
         logout();
@@ -113,7 +120,50 @@ function CustomerDashboardContent() {
     }
   };
 
-  const handleLogout = () => {
+  const handleReschedule = async () => {
+    if (!rescheduleJobId || !newDate) return;
+    setActionLoading(true);
+    try {
+      await api.patch(
+        `/portal/jobs/${rescheduleJobId}/reschedule`,
+        { newDate },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Service rescheduled successfully");
+      setRescheduleJobId(null);
+      setNewDate("");
+      fetchData();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || err?.message || "Failed to reschedule");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleCancelJob = async (jobId: string) => {
+    setActionLoading(true);
+    try {
+      await api.post(
+        `/portal/jobs/${jobId}/cancel`,
+        { reason: "Customer requested cancellation" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Service cancelled");
+      setCancelConfirmJobId(null);
+      fetchData();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || err?.message || "Failed to cancel");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await api.post("/portal/logout", {}, { headers: { Authorization: `Bearer ${token}` } });
+    } catch {
+      // ignore network errors during logout
+    }
     logout();
     router.push("/portal/login");
   };
@@ -130,6 +180,14 @@ function CustomerDashboardContent() {
 
   const upcoming = jobs.filter((j: any) => j.status === "PENDING" || j.status === "IN_PROGRESS");
   const past = jobs.filter((j: any) => j.status === "COMPLETED" || j.status === "CANCELLED");
+  const nextJob = upcoming.sort((a: any, b: any) => new Date(a.scheduledStart).getTime() - new Date(b.scheduledStart).getTime())[0];
+  const unpaidTotal = invoices.filter((inv: any) => inv.status === "UNPAID").reduce((sum: number, inv: any) => sum + inv.amount, 0);
+  const sentQuotes = quotes.filter((q: any) => q.status === "SENT").length;
+  const now = new Date();
+
+  const daysUntil = nextJob
+    ? Math.ceil((new Date(nextJob.scheduledStart).getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+    : null;
 
   return (
     <div className="space-y-6">
@@ -152,6 +210,62 @@ function CustomerDashboardContent() {
             Sign out
           </Button>
         </div>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid gap-4 md:grid-cols-3">
+        {/* Next Service Countdown */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
+                <Clock className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Next Service</p>
+                {nextJob ? (
+                  <p className="text-lg font-bold">
+                    {daysUntil === 0 ? "Today" : daysUntil === 1 ? "Tomorrow" : `${daysUntil} days`}
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No upcoming services</p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Unpaid Summary */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-yellow-100">
+                <AlertCircle className="h-5 w-5 text-yellow-600" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Unpaid Invoices</p>
+                <p className="text-lg font-bold">{eur(unpaidTotal)}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quote Status */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100">
+                <CreditCard className="h-5 w-5 text-emerald-600" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Pending Quotes</p>
+                <p className="text-lg font-bold">
+                  {sentQuotes > 0 ? `${sentQuotes} open` : "None"}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Upcoming jobs */}
@@ -185,6 +299,26 @@ function CustomerDashboardContent() {
                       </p>
                     )}
                   </div>
+                  {job.status === "PENDING" && (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => { setRescheduleJobId(job.id); setNewDate(""); }}
+                        title="Reschedule"
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setCancelConfirmJobId(job.id)}
+                        title="Cancel"
+                      >
+                        <XCircle className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -278,6 +412,56 @@ function CustomerDashboardContent() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Reschedule Modal */}
+      {rescheduleJobId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm shadow-xl">
+            <h3 className="text-lg font-semibold mb-4">Reschedule Service</h3>
+            <label className="text-sm font-medium">New Date</label>
+            <input
+              type="date"
+              className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+              value={newDate}
+              min={new Date().toISOString().split("T")[0]}
+              onChange={(e) => setNewDate(e.target.value)}
+            />
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" size="sm" onClick={() => setRescheduleJobId(null)}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={handleReschedule} disabled={!newDate || actionLoading}>
+                {actionLoading ? "Saving..." : "Confirm"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Confirmation Modal */}
+      {cancelConfirmJobId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm shadow-xl">
+            <h3 className="text-lg font-semibold mb-2">Cancel Service</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Are you sure you want to cancel this service? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={() => setCancelConfirmJobId(null)}>
+                Keep it
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleCancelJob(cancelConfirmJobId)}
+                disabled={actionLoading}
+              >
+                {actionLoading ? "Cancelling..." : "Cancel Service"}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
