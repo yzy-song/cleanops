@@ -61,4 +61,6 @@ Thumbs.db
 
 # TurboRepo
 .turbo
-.claude/settings.local.json
+
+# Claude local config and cache
+.claude/

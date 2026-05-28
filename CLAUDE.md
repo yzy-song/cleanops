@@ -1,124 +1,38 @@
-# 项目概述
+# CleanOps — NestJS + Next.js + Prisma + PostgreSQL Monorepo
 
-Nest.js + Next.js + TypeScript + Prisma + PostgreSQL SaaS
+## 项目结构
+- `apps/api` — NestJS 后端，端口 4000
+- `apps/web` — Next.js 14 App Router 前端，端口 3001
+- `packages/db` — Prisma schema + 共享数据库层
 
-# Behavioral Guidelines
+## 关键规则
+- 金额一律用整数 cents，禁止浮点数；仅前端展示时 `/100` 转欧元
+- 时间统一 UTC 存储，展示时用 `date-fns-tz` 转用户时区
+- 新代码不改相邻旧代码，不顺手重构
+- 不改测试（除非你的改动导致测试过时）
+- 不改 CLAUDE.md（除非明确要求）
 
-**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+## 后端规则 (`apps/api`)
+- Controller 只做路由，业务逻辑在 Service
+- DTO 用 `class-validator` 校验
+- 遵循现有 module 模式，用依赖注入
 
-## 1. Think Before Coding
+## 前端规则 (`apps/web`)
+- App Router，优先 Server Component
+- UI 和数据获取分离，不 mock 数据
+- 所有用户可见文案通过 `t()` i18n 函数
 
-**Don't assume. Don't hide confusion. Surface tradeoffs.**
+## 数据库规则 (`packages/db`)
+- 所有 DB 操作经此层，不写 raw query
+- Schema 改动用 `prisma db push`（开发）/ `prisma migrate deploy`（生产）
 
-Before implementing:
-- State your assumptions explicitly. If uncertain, ask.
-- If multiple interpretations exist, present them - don't pick silently.
-- If a simpler approach exists, say so. Push back when warranted.
-- If something is unclear, stop. Name what's confusing. Ask.
+## 命令
+- `pnpm dev` — 启动双端
+- `pnpm build` — 构建双端
+- `pnpm --filter @cleanops/api test` — 后端测试
+- `pnpm --filter @cleanops/web build` — 前端构建
 
-## 2. Simplicity First
-
-**Minimum code that solves the problem. Nothing speculative.**
-
-- No features beyond what was asked.
-- No abstractions for single-use code.
-- No "flexibility" or "configurability" that wasn't requested.
-- No error handling for impossible scenarios.
-- If you write 200 lines and it could be 50, rewrite it.
-
-Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
-
-## 3. Surgical Changes
-
-**Touch only what you must. Clean up only your own mess.**
-
-When editing existing code:
-- Don't "improve" adjacent code, comments, or formatting.
-- Don't refactor things that aren't broken.
-- Match existing style, even if you'd do it differently.
-- If you notice unrelated dead code, mention it - don't delete it.
-
-When your changes create orphans:
-- Remove imports/variables/functions that YOUR changes made unused.
-- Don't remove pre-existing dead code unless asked.
-
-The test: Every changed line should trace directly to the user's request.
-
-## 4. Goal-Driven Execution
-
-**Define success criteria. Loop until verified.**
-
-Transform tasks into verifiable goals:
-- "Add validation" → "Write tests for invalid inputs, then make them pass"
-- "Fix the bug" → "Write a test that reproduces it, then make it pass"
-- "Refactor X" → "Ensure tests pass before and after"
-
-For multi-step tasks, state a brief plan:
-```
-1. [Step] → verify: [check]
-2. [Step] → verify: [check]
-3. [Step] → verify: [check]
-```
-
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
-
----
-
-# Project Structure (IMPORTANT)
-
-This is a monorepo:
-
-- Backend: /apps/api (NestJS)
-- Frontend: /apps/web (Next.js, App Router)
-- Database: /packages/db (shared database layer, Prisma or ORM)
-
-Only work within the relevant folder. Do NOT scan the entire repository unless explicitly asked.
-
----
-
-## Backend Rules (NestJS - /apps/api)
-
-- Use modular architecture (feature-based modules).
-- Controllers handle routing only.
-- Business logic must be in services.
-- Use DTOs for validation (class-validator).
-- Follow existing module patterns (do not invent new structure).
-- Use dependency injection.
-
----
-
-## Frontend Rules (Next.js - /apps/web)
-
-- Use App Router.
-- Prefer Server Components.
-- Use Client Components only when necessary.
-- Keep UI and data fetching separate.
-- Use existing API endpoints, do NOT mock data unless asked.
-
----
-
-## Database Rules (/packages/db)
-
-- All database access must go through this layer.
-- Do NOT write raw queries in frontend or backend directly.
-- Reuse existing models and schema.
-
----
-
-## API Integration Rules
-
-- Backend is the single source of truth.
-- Frontend must call backend APIs.
-- Keep API responses consistent.
-
----
-
-## When Unsure
-
-- Ask before making large changes.
-- Prefer extending existing logic over creating new systems.
-
-# 开发命令
-
-pnpm dev
-pnpm build
+## CI/Deploy
+- CI 部署配置: `.github/workflows/deploy-cleanops.yml`
+- 服务器: Oracle Cloud (138.2.42.101), PM2 管理进程
+- SSH: `ssh yzy`
