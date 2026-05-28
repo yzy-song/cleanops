@@ -1,6 +1,6 @@
 # CleanOps 功能清单
 
-最后更新: 2026-05-24
+最后更新: 2026-05-28
 
 ## 已完成功能
 
@@ -159,16 +159,37 @@
 
 ### 8. 客户自助门户 (Customer Portal)
 
-- 客户查看自己的 Job 列表、发票列表
-- Magic Link 免密登录
-- 在线预约（book）
-- 报价浏览与接受
+- 客户查看自己的 Job 列表、发票列表、报价列表
+- Magic Link 免密登录（30min TTL），Session Token（7天 TTL）
+- 客户信息编辑：姓名 / 邮箱 / 电话 / 地址 / Eircode / Access Code
+- 在线预约：4 步表单（服务选择 → 物业规模 → 联系信息 → 确认），实时定价
+- 账单在线支付：Stripe Connect Checkout → 支付成功回调
+- 预约确认邮件自动发送
+- 任务改期 / 取消（仅 PENDING 状态）
+- 仪表盘摘要卡片：下次服务倒计时 / 未付账单总额 / 待处理报价
+- Rate Limiting：`/portal/send-link` 3次/60s/IP, 1次/5min/邮箱
+
+| 端点 | 说明 |
+|------|------|
+| `POST /portal/send-link` | Magic Link 发送（防邮箱枚举） |
+| `POST /portal/verify` | Token 验证 → 返回 sessionToken |
+| `GET /portal/me` | 客户个人信息 |
+| `PATCH /portal/me` | 更新客户信息 |
+| `POST /portal/logout` | 清除会话 |
+| `GET /portal/jobs` | 我的任务列表 |
+| `PATCH /portal/jobs/:id/reschedule` | 改期（PENDING 任务） |
+| `POST /portal/jobs/:id/cancel` | 取消（PENDING 任务） |
+| `GET /portal/invoices` | 账单列表（支持 status/page/limit） |
+| `POST /portal/invoices/:id/pay` | 生成 Stripe 支付链接 |
+| `POST /portal/book` | 在线预约 |
+| `GET /portal/quotes` | 我的报价列表 |
 
 | 前端页面 | 路径 |
 |------|------|
 | 门户首页 | `/portal` |
 | 登录 | `/portal/login` |
 | Token 验证 | `/portal/verify` |
+| 个人资料编辑 | `/portal/profile` |
 | 在线预约 | `/book` |
 | 报价查看 | `/portal/quote/[token]` |
 
@@ -237,10 +258,11 @@
 
 | 功能 | 优先级 | 备注 |
 |------|--------|------|
-| 公开预订表单改造 | 高 | `/book` 加入服务选择 + 定价预览，对标 Spotless |
-| 循环任务 (Recurring Jobs) | 高 | 按 WEEKLY / BI-WEEKLY 自动排班 |
-| 客户门户发票支付 | 中 | 暴露支付链接到客户门户 |
-| Stripe Elements 前端 | 低 | 目前用 Stripe 托管结账页，已可用 |
+| 循环任务 (Recurring Jobs) | 高 | Schema 已有 isRecurring / recurrenceRule，缺自动生成逻辑 |
+| 距离矩阵 API 升级 | 中 | 当前用 Haversine 直线距离，后续换 Google Distance Matrix |
+| 拖拽指派 UI | 中 | `/map` 目前点击标记→下拉指派，拖拽交互待做 |
+| Stripe Elements 内嵌支付 | 低 | 目前用 Stripe 托管结账页，已可用 |
+| 客户门户 i18n | 低 | 当前全英文，需引入 next-intl |
 
 ---
 
