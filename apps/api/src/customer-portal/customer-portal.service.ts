@@ -67,6 +67,24 @@ export class CustomerPortalService {
     return customer;
   }
 
+  async updateProfile(customerId: string, data: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    postalCode?: string;
+    accessCode?: string;
+  }) {
+    const customer = await this.prisma.client.customer.findUnique({
+      where: { id: customerId },
+    });
+    if (!customer) throw new NotFoundException('Customer not found');
+    return this.prisma.client.customer.update({
+      where: { id: customerId },
+      data,
+    });
+  }
+
   async getMyJobs(customerId: string) {
     return this.prisma.client.job.findMany({
       where: { customerId },
@@ -76,13 +94,51 @@ export class CustomerPortalService {
     });
   }
 
-  async getMyInvoices(customerId: string) {
-    return this.prisma.client.invoice.findMany({
-      where: { job: { customerId } },
-      include: { job: true },
-      orderBy: { createdAt: 'desc' },
-      take: 50,
+  async getMyInvoices(customerId: string, status?: string, page = 1, limit = 20) {
+    const where: any = { job: { customerId } };
+    if (status) where.status = status;
+    const [invoices, total] = await Promise.all([
+      this.prisma.client.invoice.findMany({
+        where,
+        include: { job: true, company: { select: { stripeAccountId: true } } },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.client.invoice.count({ where }),
+    ]);
+    return { data: invoices, total, page, limit };
+  }
+
+  async payInvoice(customerId: string, invoiceId: string) {
+    const invoice = await this.prisma.client.invoice.findFirst({
+      where: { id: invoiceId, job: { customerId } },
+      include: { job: true, company: true },
     });
+    if (!invoice) throw new NotFoundException('Invoice not found');
+    if (invoice.status === 'PAID') throw new BadRequestException('Invoice already paid');
+    if (invoice.status === 'VOID') throw new BadRequestException('Invoice is voided');
+
+    if (!invoice.company.stripeAccountId) {
+      throw new BadRequestException('Payment not available — company has no Stripe Connect account');
+    }
+
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3001';
+    const paymentUrl = await this.stripeService.createConnectCheckoutSession({
+      amount: invoice.amount,
+      connectedAccountId: invoice.company.stripeAccountId,
+      description: `Invoice ${invoice.invoiceNumber || invoice.id.slice(0, 8)} — ${invoice.job.notes || 'Cleaning service'}`,
+      metadata: { invoiceId: invoice.id, companyId: invoice.companyId, type: 'invoice' },
+      successUrl: `${frontendUrl}/portal?paid=${invoice.id}`,
+      cancelUrl: `${frontendUrl}/portal`,
+    });
+
+    await this.prisma.client.invoice.update({
+      where: { id: invoiceId },
+      data: { paymentLink: paymentUrl },
+    });
+
+    return { paymentUrl };
   }
 
   async getMyInvoice(customerId: string, invoiceId: string) {
@@ -138,6 +194,11 @@ export class CustomerPortalService {
       });
     }
 
+    const company = await this.prisma.client.company.findUnique({
+      where: { id: data.companyId },
+    });
+    if (!company) throw new BadRequestException('Company not found');
+
     const job = await this.prisma.client.job.create({
       data: {
         scheduledStart: new Date(data.scheduledDate),
@@ -148,6 +209,13 @@ export class CustomerPortalService {
       },
       include: { customer: true },
     });
+
+    // Send booking confirmation email
+    try {
+      await this.emailService.sendJobConfirmationEmail(customer, job, company);
+    } catch (err: any) {
+      this.logger.error(`Failed to send booking confirmation: ${err.message}`);
+    }
 
     return { customer, job };
   }

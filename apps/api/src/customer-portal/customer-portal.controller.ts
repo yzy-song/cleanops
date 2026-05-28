@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Request } from 'express';
 import { CustomerPortalService } from './customer-portal.service';
@@ -29,6 +29,20 @@ export class CustomerPortalController {
     return this.portalService.getProfile(req.customer.id);
   }
 
+  @Patch('me')
+  @UseGuards(CustomerAuthGuard)
+  @ApiOperation({ summary: '更新客户个人信息' })
+  updateProfile(@Req() req: any, @Body() body: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    postalCode?: string;
+    accessCode?: string;
+  }) {
+    return this.portalService.updateProfile(req.customer.id, body);
+  }
+
   @Get('jobs')
   @UseGuards(CustomerAuthGuard)
   @ApiOperation({ summary: '获取客户的任务列表' })
@@ -38,9 +52,19 @@ export class CustomerPortalController {
 
   @Get('invoices')
   @UseGuards(CustomerAuthGuard)
-  @ApiOperation({ summary: '获取客户的账单列表' })
-  getMyInvoices(@Req() req: any) {
-    return this.portalService.getMyInvoices(req.customer.id);
+  @ApiOperation({ summary: '获取客户的账单列表（支持筛选和分页）' })
+  getMyInvoices(
+    @Req() req: any,
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.portalService.getMyInvoices(
+      req.customer.id,
+      status,
+      page ? parseInt(page) : 1,
+      limit ? parseInt(limit) : 20,
+    );
   }
 
   @Get('invoices/:id')
@@ -131,5 +155,12 @@ export class CustomerPortalController {
   @ApiOperation({ summary: '获取已认证客户的报价列表' })
   getMyQuotes(@Req() req: any) {
     return this.portalService.getMyQuotes(req.customer.id);
+  }
+
+  @Post('invoices/:id/pay')
+  @UseGuards(CustomerAuthGuard)
+  @ApiOperation({ summary: '生成账单的 Stripe 支付链接' })
+  payInvoice(@Req() req: any, @Param('id') id: string) {
+    return this.portalService.payInvoice(req.customer.id, id);
   }
 }
