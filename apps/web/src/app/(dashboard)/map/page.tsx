@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { GoogleMap, Marker, InfoWindow, useLoadScript } from "@react-google-maps/api";
+import { GoogleMap, Marker, InfoWindow, Polyline, useLoadScript } from "@react-google-maps/api";
 import { format, parseISO, addDays, subDays } from "date-fns";
 import { Navigation, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
@@ -17,6 +17,11 @@ const dublinCenter = { lat: 53.3498, lng: -6.2603 };
 
 const BLUE_MARKER = "http://maps.google.com/mapfiles/ms/icons/blue-dot.png";
 const GRAY_MARKER = "http://maps.google.com/mapfiles/ms/icons/purple-dot.png";
+
+const WORKER_ROUTE_COLORS = [
+  "#2563eb", "#dc2626", "#16a34a", "#9333ea", "#ea580c",
+  "#0891b2", "#be185d", "#65a30d", "#d97706", "#4f46e5",
+];
 
 export default function MapPage() {
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
@@ -78,6 +83,36 @@ export default function MapPage() {
       toast.error(err?.message || "Failed to assign");
     }
   };
+
+  const workerRoutes = useMemo(() => {
+    const routes: { workerId: string; color: string; path: { lat: number; lng: number }[] }[] = [];
+    const assignedWorkers = new Map<string, any[]>();
+
+    for (const job of jobs) {
+      const workerId = job.assignments?.[0]?.workerId;
+      if (workerId && job.customer?.lat && job.customer?.lng) {
+        if (!assignedWorkers.has(workerId)) assignedWorkers.set(workerId, []);
+        assignedWorkers.get(workerId)!.push(job);
+      }
+    }
+
+    let colorIdx = 0;
+    for (const [workerId, workerJobs] of assignedWorkers) {
+      if (workerJobs.length < 2) continue;
+      // Sort by nearest-neighbor from a simple greedy approach
+      const path: { lat: number; lng: number }[] = workerJobs.map((j: any) => ({
+        lat: j.customer.lat,
+        lng: j.customer.lng,
+      }));
+      routes.push({
+        workerId,
+        color: WORKER_ROUTE_COLORS[colorIdx % WORKER_ROUTE_COLORS.length],
+        path,
+      });
+      colorIdx++;
+    }
+    return routes;
+  }, [jobs]);
 
   const dateStr = useMemo(() => format(new Date(date + "T00:00:00"), "EEE, MMM d"), [date]);
 
@@ -144,6 +179,25 @@ export default function MapPage() {
             fullscreenControl: false,
           }}
         >
+          {/* Worker route polylines */}
+          {workerRoutes.map((route) => (
+            <Polyline
+              key={route.workerId}
+              path={route.path}
+              options={{
+                strokeColor: route.color,
+                strokeWeight: 3,
+                strokeOpacity: 0.6,
+                icons: [
+                  {
+                    icon: { path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW },
+                    offset: "50%",
+                  },
+                ],
+              }}
+            />
+          ))}
+
           {jobs.map((job: any) => {
             const isAssigned = job.assignments?.length > 0;
             const workerName = isAssigned

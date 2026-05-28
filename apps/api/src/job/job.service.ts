@@ -141,6 +141,28 @@ export class JobService {
     });
   }
 
+  async setRecurrence(
+    id: string,
+    companyId: string,
+    isRecurring: boolean,
+    recurrenceRule?: string,
+  ) {
+    await this.findOne(id, companyId);
+
+    if (isRecurring && recurrenceRule && !['WEEKLY', 'BI-WEEKLY'].includes(recurrenceRule)) {
+      throw new BadRequestException('recurrenceRule must be WEEKLY or BI-WEEKLY');
+    }
+
+    return this.prisma.client.job.update({
+      where: { id },
+      data: {
+        isRecurring,
+        recurrenceRule: isRecurring ? recurrenceRule ?? 'WEEKLY' : null,
+        recurrenceLastDate: isRecurring ? undefined : null,
+      },
+    });
+  }
+
   async assignWorkers(id: string, companyId: string, workerIds: string[]) {
     await this.findOne(id, companyId);
     const existing = await this.prisma.client.jobAssignment.findMany({

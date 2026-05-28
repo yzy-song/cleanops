@@ -279,7 +279,11 @@ function CustomerDashboardContent() {
           ) : (
             <div className="space-y-3">
               {upcoming.map((job: any) => (
-                <div key={job.id} className="flex items-start gap-4 rounded-lg border p-4">
+                <div
+                  key={job.id}
+                  className="flex items-start gap-4 rounded-lg border p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => router.push(`/portal/jobs/${job.id}`)}
+                >
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
                     <Calendar className="h-5 w-5 text-primary" />
                   </div>
@@ -390,7 +394,11 @@ function CustomerDashboardContent() {
           <CardContent>
             <div className="space-y-3">
               {past.slice(0, 10).map((job: any) => (
-                <div key={job.id} className="flex items-start gap-4 rounded-lg border p-4">
+                <div
+                  key={job.id}
+                  className="flex items-start gap-4 rounded-lg border p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => router.push(`/portal/jobs/${job.id}`)}
+                >
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted shrink-0">
                     <MapPin className="h-5 w-5 text-muted-foreground" />
                   </div>

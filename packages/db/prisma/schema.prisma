@@ -251,7 +251,8 @@ model Job {
   
   // 重复任务逻辑
   isRecurring     Boolean   @default(false)
-  recurrenceRule  String?   // "WEEKLY", "BI-WEEKLY" (用于后续自动排班扩展)
+  recurrenceRule  String?   // "WEEKLY", "BI-WEEKLY"
+  recurrenceLastDate DateTime? // 最近一次生成实例的日期，用于 cron 判断下次生成时机
 
   // 定金 (爱尔兰市场: end-of-tenancy / one-off 大单需要)
   depositAmount   Int?

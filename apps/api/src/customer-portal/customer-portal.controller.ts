@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Patch, Param, Body, Query, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Response } from 'express';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Request } from 'express';
 import { Throttle } from '@nestjs/throttler';
@@ -50,6 +51,13 @@ export class CustomerPortalController {
   @ApiOperation({ summary: '获取客户的任务列表' })
   getMyJobs(@Req() req: any) {
     return this.portalService.getMyJobs(req.customer.id);
+  }
+
+  @Get('jobs/:id')
+  @UseGuards(CustomerAuthGuard)
+  @ApiOperation({ summary: '获取客户的任务详情（含照片、账单、工人信息）' })
+  getMyJob(@Req() req: any, @Param('id') id: string) {
+    return this.portalService.getMyJob(req.customer.id, id);
   }
 
   @Get('invoices')
@@ -164,6 +172,20 @@ export class CustomerPortalController {
   @ApiOperation({ summary: '生成账单的 Stripe 支付链接' })
   payInvoice(@Req() req: any, @Param('id') id: string) {
     return this.portalService.payInvoice(req.customer.id, id);
+  }
+
+  @Get('invoices/:id/pdf')
+  @UseGuards(CustomerAuthGuard)
+  @ApiOperation({ summary: '下载账单 PDF（客户端）' })
+  async downloadInvoicePdf(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Res() res: Response,
+  ) {
+    const { buffer, filename } = await this.portalService.getInvoicePdf(req.customer.id, id);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(buffer);
   }
 
   @Post('logout')

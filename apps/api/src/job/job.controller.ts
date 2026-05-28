@@ -202,6 +202,28 @@ export class JobController {
     return this.jobService.deletePhoto(jobId, photoId, companyId);
   }
 
+  @Patch(':id/recurrence')
+  @Auth(Role.ADMIN, Role.MANAGER)
+  @ApiOperation({ summary: '设置或取消任务的重复规则' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        isRecurring: { type: 'boolean' },
+        recurrenceRule: { type: 'string', example: 'WEEKLY' },
+      },
+      required: ['isRecurring'],
+    },
+  })
+  setRecurrence(
+    @Param('id') id: string,
+    @CurrentUser('companyId') companyId: string,
+    @Body('isRecurring') isRecurring: boolean,
+    @Body('recurrenceRule') recurrenceRule?: string,
+  ) {
+    return this.jobService.setRecurrence(id, companyId, isRecurring, recurrenceRule);
+  }
+
   @Post('auto-schedule')
   @Auth(Role.ADMIN, Role.MANAGER)
   @ApiOperation({ summary: '预览自动排班方案（不写入数据库）' })

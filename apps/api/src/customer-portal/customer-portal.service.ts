@@ -4,6 +4,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { PricingService } from '../quote/pricing.service';
 import { StripeService } from '../common/services/stripe.service';
+import { InvoiceService } from '../invoice/invoice.service';
 import { randomBytes } from 'crypto';
 import { ServiceType, PropertySize, ServiceFrequency } from '@cleanops/db';
 
@@ -17,6 +18,7 @@ export class CustomerPortalService {
     private configService: ConfigService,
     private pricingService: PricingService,
     private stripeService: StripeService,
+    private invoiceService: InvoiceService,
   ) {}
 
   async sendMagicLink(email: string) {
@@ -135,6 +137,20 @@ export class CustomerPortalService {
     });
   }
 
+  async getMyJob(customerId: string, jobId: string) {
+    const job = await this.prisma.client.job.findFirst({
+      where: { id: jobId, customerId },
+      include: {
+        assignments: { include: { worker: true } },
+        invoice: true,
+        photos: { orderBy: { createdAt: 'desc' } },
+        customer: true,
+      },
+    });
+    if (!job) throw new NotFoundException('Job not found');
+    return job;
+  }
+
   async rescheduleJob(customerId: string, jobId: string, newDate: string) {
     const job = await this.prisma.client.job.findFirst({
       where: { id: jobId, customerId },
@@ -192,6 +208,20 @@ export class CustomerPortalService {
       this.prisma.client.invoice.count({ where }),
     ]);
     return { data: invoices, total, page, limit };
+  }
+
+  async getInvoicePdf(customerId: string, invoiceId: string): Promise<{ buffer: Buffer; filename: string }> {
+    const invoice = await this.prisma.client.invoice.findFirst({
+      where: { id: invoiceId, job: { customerId } },
+      include: { job: true, company: true },
+    });
+    if (!invoice) throw new NotFoundException('Invoice not found');
+
+    const buffer = await this.invoiceService.generatePdf(invoiceId, invoice.companyId);
+    const invNum = invoice.invoiceNumber
+      ? `INV-${new Date(invoice.createdAt).getFullYear()}-${String(invoice.invoiceNumber).padStart(4, '0')}`
+      : invoiceId.slice(0, 8);
+    return { buffer, filename: `${invNum}.pdf` };
   }
 
   async payInvoice(customerId: string, invoiceId: string) {
