@@ -153,6 +153,25 @@ export class EmailService {
     await this.sendEmail(customer.email || '', subject, html);
   }
 
+  async sendServiceReminderEmail(customer: Customer, job: Job & { assignments?: Array<{ worker: { firstName: string; lastName: string } }> }, company: Company) {
+    const startTime = format(new Date(job.scheduledStart), 'yyyy-MM-dd HH:mm');
+    const workerName = job.assignments?.[0]?.worker
+      ? `${job.assignments[0].worker.firstName} ${job.assignments[0].worker.lastName}`
+      : null;
+    const subject = `Reminder: Your cleaning service tomorrow`;
+    const html = `
+      <h3>Hello, ${customer.name}!</h3>
+      <p>This is a reminder that your cleaning service with <strong>${company.name}</strong> is scheduled for <strong>tomorrow</strong>.</p>
+      <p><strong>Scheduled Time:</strong> ${startTime}</p>
+      <p><strong>Location:</strong> ${customer.address}</p>
+      ${workerName ? `<p><strong>Your Cleaner:</strong> ${workerName}</p>` : ''}
+      ${customer.accessCode ? `<p><strong>Access Instructions:</strong> ${customer.accessCode}</p>` : ''}
+      <p>If you need to reschedule or have any questions, please contact us.</p>
+      <p>We look forward to serving you!</p>
+    `;
+    await this.sendEmail(customer.email || '', subject, html);
+  }
+
   async sendEmail(to: string, subject: string, html: string) {
     if (!to) return;
     if (!this.resend) {
