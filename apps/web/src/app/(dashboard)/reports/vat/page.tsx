@@ -21,8 +21,8 @@ const tabs = [
 ];
 
 const DONUT_COLORS = [
-  "oklch(0.55 0.115 175)",  // teal
-  "oklch(0.50 0.14 248)",   // blue
+  "oklch(0.546 0.245 262.88)",  // blue primary
+  "oklch(0.527 0.154 162.95)",  // emerald accent
 ];
 
 export default function VatPage() {
@@ -147,7 +147,7 @@ export default function VatPage() {
                     </ResponsiveContainer>
                     <div className="flex justify-around text-sm mt-1">
                       <div className="text-center">
-                        <p className="font-bold text-teal-600">{eur(data.residential.vatTotal)}</p>
+                        <p className="font-bold text-blue-600">{eur(data.residential.vatTotal)}</p>
                         <p className="text-xs text-muted-foreground">Res. VAT</p>
                       </div>
                       <div className="text-center">
@@ -165,7 +165,7 @@ export default function VatPage() {
               <Card className="rounded-xl">
                 <CardHeader>
                   <CardTitle className="text-base font-semibold flex items-center gap-2">
-                    <Home className="h-4 w-4 text-teal-600" />
+                    <Home className="h-4 w-4 text-blue-600" />
                     Residential · 13.5% VAT
                   </CardTitle>
                 </CardHeader>
@@ -176,7 +176,7 @@ export default function VatPage() {
                   </div>
                   <div className="flex justify-between items-center py-2 border-b">
                     <span className="text-sm text-muted-foreground">VAT Amount</span>
-                    <span className="font-medium text-teal-700">{eur(data.residential.vatTotal)}</span>
+                    <span className="font-medium text-blue-700">{eur(data.residential.vatTotal)}</span>
                   </div>
                   <div className="flex justify-between items-center py-2">
                     <span className="text-sm text-muted-foreground">Invoices</span>

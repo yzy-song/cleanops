@@ -100,8 +100,8 @@ export default function PayrollPage() {
           <div className="grid gap-4 grid-cols-3">
             <Card className="rounded-xl">
               <CardContent className="p-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-100">
-                  <Euro className="h-5 w-5 text-teal-600" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
+                  <Euro className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Total Gross Pay</p>

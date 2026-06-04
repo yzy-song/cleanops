@@ -40,13 +40,13 @@ const statusConfig: Record<string, { color: string; label: string }> = {
 };
 
 const CHART_COLORS = {
-  teal: "oklch(0.55 0.115 175)",
+  blue: "oklch(0.546 0.245 262.88)",
+  emerald: "oklch(0.527 0.154 162.95)",
   gold: "oklch(0.75 0.13 75)",
-  blue: "oklch(0.50 0.14 248)",
-  green: "oklch(0.55 0.14 155)",
+  slate: "oklch(0.554 0.041 257)",
   red: "oklch(0.577 0.245 27.325)",
   purple: "oklch(0.50 0.14 300)",
-  tealLight: "oklch(0.55 0.115 175 / 0.2)",
+  blueLight: "oklch(0.546 0.245 262.88 / 0.2)",
 };
 
 function TrendPill({ current, previous }: { current: number; previous: number }) {
@@ -100,7 +100,7 @@ export default function DashboardPage() {
   })) ?? [];
 
   const pieData = overview ? [
-    { name: "Paid", value: overview.invoiceBreakdown.paid, color: CHART_COLORS.teal },
+    { name: "Paid", value: overview.invoiceBreakdown.paid, color: CHART_COLORS.blue },
     { name: "Unpaid", value: overview.invoiceBreakdown.unpaid, color: CHART_COLORS.gold },
   ] : [];
 
@@ -182,12 +182,12 @@ export default function DashboardPage() {
 
       {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <Card className="border-l-4 border-l-teal-500 rounded-xl overflow-hidden">
+        <Card className="border-l-4 border-l-blue-600 rounded-xl overflow-hidden">
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5 text-muted-foreground">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-100">
-                  <Calendar className="h-4.5 w-4.5 text-teal-600" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100">
+                  <Calendar className="h-4.5 w-4.5 text-blue-600" />
                 </div>
                 <span className="text-sm font-medium">Today&apos;s Jobs</span>
               </div>
@@ -305,7 +305,7 @@ export default function DashboardPage() {
                     }}
                     formatter={(value: any) => [`€${Number(value).toFixed(2)}`, "Revenue"]}
                   />
-                  <Bar dataKey="amount" fill={CHART_COLORS.teal} radius={[6, 6, 0, 0]} maxBarSize={32} />
+                  <Bar dataKey="amount" fill={CHART_COLORS.blue} radius={[6, 6, 0, 0]} maxBarSize={32} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -362,7 +362,7 @@ export default function DashboardPage() {
             )}
             <div className="flex justify-around mt-2 text-sm">
               <div className="text-center">
-                <p className="font-bold text-lg text-teal-600">{pieData[0]?.value ?? 0}</p>
+                <p className="font-bold text-lg text-blue-600">{pieData[0]?.value ?? 0}</p>
                 <p className="text-xs text-muted-foreground">Paid</p>
               </div>
               <div className="text-center">
@@ -413,7 +413,7 @@ export default function DashboardPage() {
                     >
                       <div className={cn(
                         "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-bold",
-                        isLate ? "bg-red-100 text-red-600" : "bg-teal-50 text-teal-700"
+                        isLate ? "bg-red-100 text-red-600" : "bg-blue-50 text-blue-700"
                       )}>
                         {format(parseISO(job.scheduledStart), "HH")}
                       </div>
