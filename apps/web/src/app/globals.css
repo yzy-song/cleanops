@@ -59,8 +59,8 @@
   --secondary-foreground: oklch(0.446 0.15 262);
   --muted: oklch(0.967 0.005 252);
   --muted-foreground: oklch(0.554 0.041 257);
-  --accent: oklch(0.527 0.154 162.95);
-  --accent-foreground: oklch(0.985 0 0);
+  --accent: oklch(0.946 0.018 258);
+  --accent-foreground: oklch(0.446 0.15 262);
   --destructive: oklch(0.577 0.245 27.33);
   --border: oklch(0.929 0.013 256);
   --input: oklch(0.929 0.013 256);
@@ -96,8 +96,8 @@
     --secondary-foreground: oklch(0.90 0.01 260);
     --muted: oklch(0.27 0.025 258);
     --muted-foreground: oklch(0.64 0.03 258);
-    --accent: oklch(0.65 0.13 163);
-    --accent-foreground: oklch(0.15 0.04 163);
+    --accent: oklch(0.27 0.03 260);
+    --accent-foreground: oklch(0.90 0.01 260);
     --destructive: oklch(0.60 0.23 25);
     --border: oklch(1 0 0 / 0.12);
     --input: oklch(1 0 0 / 0.15);
@@ -137,6 +137,11 @@ input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+/* ===== Recharts — transparent hover cursor ===== */
+.recharts-tooltip-cursor {
+  fill: transparent !important;
 }
 
 /* ===== Custom Scrollbar ===== */
