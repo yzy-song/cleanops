@@ -24,14 +24,14 @@ const tabs = [
 ];
 
 const CHART_COLORS = [
-  "oklch(0.55 0.115 175)",
-  "oklch(0.50 0.14 248)",
-  "oklch(0.75 0.13 75)",
-  "oklch(0.55 0.14 155)",
-  "oklch(0.577 0.245 27.325)",
-  "oklch(0.50 0.14 300)",
-  "oklch(0.45 0.12 200)",
-  "oklch(0.60 0.13 45)",
+  "oklch(0.546 0.245 262.88)",  // blue primary
+  "oklch(0.527 0.154 162.95)",  // emerald accent
+  "oklch(0.75 0.13 75)",        // gold
+  "oklch(0.577 0.245 27.325)",  // red
+  "oklch(0.50 0.14 300)",       // purple
+  "oklch(0.554 0.041 257)",     // slate
+  "oklch(0.62 0.16 15)",        // orange
+  "oklch(0.65 0.14 220)",       // cyan
 ];
 
 export default function PayrollPage() {
@@ -151,7 +151,7 @@ export default function PayrollPage() {
                     <XAxis type="number" tick={{ fontSize: 12, fill: "oklch(0.65 0.02 240)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `€${v}`} />
                     <YAxis dataKey="name" type="category" tick={{ fontSize: 12, fill: "oklch(0.65 0.02 240)" }} axisLine={false} tickLine={false} width={100} />
                     <Tooltip
-                      contentStyle={{ background: "oklch(0.25 0.02 180 / 0.96)", color: "oklch(0.92 0.01 175)", borderRadius: "0.75rem", border: "1px solid oklch(1 0 0 / 0.1)", boxShadow: "0 8px 32px rgba(0,0,0,0.35)", fontSize: "13px" }}
+                      contentStyle={{ background: "oklch(0.21 0.04 266 / 0.96)", color: "oklch(0.95 0 0)", borderRadius: "0.75rem", border: "1px solid oklch(1 0 0 / 0.1)", boxShadow: "0 8px 32px rgba(0,0,0,0.35)", fontSize: "13px" }}
                       formatter={(value: any) => [`€${Number(value).toFixed(2)}`, "Gross Pay"]}
                     />
                     <Bar dataKey="gross" radius={[0, 4, 4, 0]} maxBarSize={28}>

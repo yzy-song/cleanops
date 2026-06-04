@@ -141,7 +141,7 @@ export default function VatPage() {
                             <Cell key={i} fill={entry.color} />
                           ))}
                         </Pie>
-                        <Tooltip contentStyle={{ background: "oklch(0.25 0.02 180 / 0.96)", color: "oklch(0.92 0.01 175)", borderRadius: "0.75rem", border: "1px solid oklch(1 0 0 / 0.1)", boxShadow: "0 8px 32px rgba(0,0,0,0.35)", fontSize: "13px" }} formatter={(value: any) => [eur(Number(value)), ""]} />
+                        <Tooltip contentStyle={{ background: "oklch(0.21 0.04 266 / 0.96)", color: "oklch(0.95 0 0)", borderRadius: "0.75rem", border: "1px solid oklch(1 0 0 / 0.1)", boxShadow: "0 8px 32px rgba(0,0,0,0.35)", fontSize: "13px" }} formatter={(value: any) => [eur(Number(value)), ""]} />
                         <Legend verticalAlign="bottom" iconType="circle" iconSize={8} />
                       </PieChart>
                     </ResponsiveContainer>

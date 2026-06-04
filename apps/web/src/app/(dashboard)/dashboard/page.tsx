@@ -296,8 +296,8 @@ export default function DashboardPage() {
                   <YAxis tick={{ fontSize: 12, fill: "oklch(0.65 0.02 240)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `€${v}`} />
                   <Tooltip
                     contentStyle={{
-                      background: "oklch(0.25 0.02 180 / 0.96)",
-                      color: "oklch(0.92 0.01 175)",
+                      background: "oklch(0.21 0.04 266 / 0.96)",
+                      color: "oklch(0.95 0 0)",
                       borderRadius: "0.75rem",
                       border: "1px solid oklch(1 0 0 / 0.1)",
                       boxShadow: "0 8px 32px rgba(0,0,0,0.35)",
@@ -341,8 +341,8 @@ export default function DashboardPage() {
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      background: "oklch(0.25 0.02 180 / 0.96)",
-                      color: "oklch(0.92 0.01 175)",
+                      background: "oklch(0.21 0.04 266 / 0.96)",
+                      color: "oklch(0.95 0 0)",
                       borderRadius: "0.75rem",
                       border: "1px solid oklch(1 0 0 / 0.1)",
                       boxShadow: "0 8px 32px rgba(0,0,0,0.35)",
@@ -354,7 +354,7 @@ export default function DashboardPage() {
                     iconType="circle"
                     iconSize={8}
                     formatter={(value: string) => (
-                      <span style={{ color: "oklch(0.35 0.03 180)", fontSize: "13px" }}>{value}</span>
+                      <span style={{ color: "oklch(0.37 0.05 262)", fontSize: "13px" }}>{value}</span>
                     )}
                   />
                 </PieChart>
