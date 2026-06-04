@@ -1,6 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Cron } from '@nestjs/schedule';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PricingService } from './pricing.service';
+import { EmailService } from '../email/email.service';
+import { GeocodingService } from '../common/services/geocoding.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
 import { QueryQuoteDto } from './dto/query-quote.dto';
@@ -9,9 +13,14 @@ import crypto from 'crypto';
 
 @Injectable()
 export class QuoteService {
+  private readonly logger = new Logger(QuoteService.name);
+
   constructor(
     private prisma: PrismaService,
     private pricingService: PricingService,
+    private emailService: EmailService,
+    private configService: ConfigService,
+    private geocodingService: GeocodingService,
   ) {}
 
   async create(companyId: string, dto: CreateQuoteDto) {
@@ -173,12 +182,27 @@ export class QuoteService {
     }
 
     const publicToken = crypto.randomBytes(32).toString('hex');
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3001';
 
-    return this.prisma.client.quote.update({
+    const updated = await this.prisma.client.quote.update({
       where: { id },
       data: { status: 'SENT', publicToken, sentAt: new Date() },
-      include: { lineItems: { orderBy: { sortOrder: 'asc' } } },
+      include: { lineItems: { orderBy: { sortOrder: 'asc' } }, company: true },
     });
+
+    // Send quote email to customer
+    try {
+      await this.emailService.sendQuoteEmail(
+        { name: quote.customerName, email: quote.customerEmail },
+        updated,
+        updated.company.name,
+        frontendUrl,
+      );
+    } catch (err: any) {
+      this.logger.error(`Failed to send quote email: ${err.message}`);
+    }
+
+    return updated;
   }
 
   async convertToJob(id: string, companyId: string) {
@@ -199,6 +223,13 @@ export class QuoteService {
       if (existing) {
         customerId = existing.id;
       } else {
+        // Try geocoding from postalCode, fall back to Dublin default
+        let lat = 53.3498;
+        let lng = -6.2603;
+        if (quote.customerPostalCode) {
+          const coords = await this.geocodingService.geocode(quote.customerPostalCode);
+          if (coords) { lat = coords.lat; lng = coords.lng; }
+        }
         const created = await this.prisma.client.customer.create({
           data: {
             name: quote.customerName,
@@ -207,8 +238,8 @@ export class QuoteService {
             address: quote.customerAddress,
             postalCode: quote.customerPostalCode,
             accessCode: quote.customerAccessCode,
-            lat: 53.3498,
-            lng: -6.2603,
+            lat,
+            lng,
             isCommercial: quote.isCommercial,
             companyId,
           },
@@ -247,5 +278,20 @@ export class QuoteService {
       where: { id },
       data: { status: 'DECLINED', declinedAt: new Date(), declinedReason: reason },
     });
+  }
+
+  @Cron('0 6 * * *')
+  async expireStaleQuotes() {
+    this.logger.log('Running quote expiration check');
+    const result = await this.prisma.client.quote.updateMany({
+      where: {
+        status: 'SENT',
+        validUntil: { lt: new Date() },
+      },
+      data: { status: 'EXPIRED' },
+    });
+    if (result.count > 0) {
+      this.logger.log(`Expired ${result.count} quote(s)`);
+    }
   }
 }

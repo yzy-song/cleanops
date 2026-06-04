@@ -46,6 +46,8 @@ export interface DashboardData {
   pendingDepositsAmount: number;
   activeWorkers: number;
   totalCustomers: number;
+  sentQuotesCount: number;
+  sentQuotesValue: number;
   upcomingJobs: {
     id: string;
     customerName: string;

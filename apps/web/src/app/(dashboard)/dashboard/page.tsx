@@ -17,6 +17,7 @@ import {
   MapPin,
   ArrowRight,
   Wallet,
+  ScrollText,
   TrendingUp,
   TrendingDown,
   Activity,
@@ -180,7 +181,7 @@ export default function DashboardPage() {
       )}
 
       {/* KPI Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Card className="border-l-4 border-l-teal-500 rounded-xl overflow-hidden">
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
@@ -197,6 +198,24 @@ export default function DashboardPage() {
                 <span className="text-sm font-medium text-emerald-600">{data!.todayCompletedCount} done</span>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Sent Quotes */}
+        <Card className="border-l-4 border-l-purple-500 rounded-xl overflow-hidden">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-2.5 text-muted-foreground">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-100">
+                <ScrollText className="h-4.5 w-4.5 text-purple-600" />
+              </div>
+              <span className="text-sm font-medium">Open Quotes</span>
+            </div>
+            <div className="mt-3 flex items-baseline gap-2">
+              <span className="text-3xl font-bold tracking-tight">{data?.sentQuotesCount ?? 0}</span>
+            </div>
+            {(data?.sentQuotesValue ?? 0) > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">{eur(data!.sentQuotesValue)} pipeline</p>
+            )}
           </CardContent>
         </Card>
 

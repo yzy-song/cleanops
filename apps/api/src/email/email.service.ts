@@ -172,6 +172,30 @@ export class EmailService {
     await this.sendEmail(customer.email || '', subject, html);
   }
 
+  async sendQuoteEmail(customer: { name: string; email: string }, quote: {
+    id: string;
+    publicToken: string;
+    grandTotal: number;
+    serviceType: string;
+    validUntil: Date;
+  }, companyName: string, frontendUrl: string) {
+    const eur = (cents: number) => `€${(cents / 100).toFixed(2)}`;
+    const link = `${frontendUrl}/portal/quote/${quote.publicToken}`;
+    const expiryDate = format(new Date(quote.validUntil), 'yyyy-MM-dd');
+
+    const subject = `Your quote from ${companyName} — ${eur(quote.grandTotal)}`;
+    const html = `
+      <h3>Hello, ${customer.name}!</h3>
+      <p><strong>${companyName}</strong> has sent you a quote for <strong>${quote.serviceType}</strong>.</p>
+      <p><strong>Total:</strong> ${eur(quote.grandTotal)}</p>
+      <p><strong>Valid until:</strong> ${expiryDate}</p>
+      <p><a href="${link}">View and accept your quote</a></p>
+      <p>Or copy this link: ${link}</p>
+      <p>Thank you for your interest!</p>
+    `;
+    await this.sendEmail(customer.email, subject, html);
+  }
+
   async sendEmail(to: string, subject: string, html: string) {
     if (!to) return;
     if (!this.resend) {

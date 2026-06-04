@@ -6,6 +6,12 @@ import { Throttle } from '@nestjs/throttler';
 import { CustomerPortalService } from './customer-portal.service';
 import { CustomerAuthGuard } from './customer-auth.guard';
 import { TrialBypass } from '../billing/decorators/trial-bypass.decorator';
+import {
+  CalculateQuotePriceDto,
+  CreateQuoteFromPortalDto,
+  DeclineQuoteDto,
+  CreateBookingDto,
+} from './dto/portal-quote.dto';
 
 @ApiTags('Customer Portal')
 @Controller('portal')
@@ -86,56 +92,21 @@ export class CustomerPortalController {
 
   @Post('book')
   @ApiOperation({ summary: '客户在线预约（公开）' })
-  createBooking(@Body() body: {
-    name: string;
-    email: string;
-    phone?: string;
-    address: string;
-    postalCode?: string;
-    accessCode?: string;
-    lat?: number;
-    lng?: number;
-    scheduledDate: string;
-    notes?: string;
-    companyId?: string;
-  }) {
+  createBooking(@Body() body: CreateBookingDto) {
     return this.portalService.createBooking(body);
   }
 
   @Post('quote/calculate')
   @TrialBypass()
   @ApiOperation({ summary: '根据服务参数计算定价（公开）' })
-  calculateQuotePrice(@Body() body: {
-    serviceType: string;
-    propertySize: string;
-    bathrooms?: number;
-    frequency: string;
-    isCommercial: boolean;
-    companyId?: string;
-  }) {
+  calculateQuotePrice(@Body() body: CalculateQuotePriceDto) {
     return this.portalService.calculateQuotePrice(body);
   }
 
   @Post('quote')
   @TrialBypass()
   @ApiOperation({ summary: '从公开表单创建报价' })
-  createQuoteFromPortal(@Body() body: {
-    serviceType: string;
-    propertySize: string;
-    bathrooms?: number;
-    frequency: string;
-    isCommercial: boolean;
-    notes?: string;
-    name: string;
-    email: string;
-    phone?: string;
-    address: string;
-    postalCode?: string;
-    accessCode?: string;
-    lat?: number;
-    lng?: number;
-    companyId?: string;
-  }) {
+  createQuoteFromPortal(@Body() body: CreateQuoteFromPortalDto) {
     return this.portalService.createQuoteFromPortal(body);
   }
 
@@ -156,8 +127,8 @@ export class CustomerPortalController {
   @Post('quote/:token/decline')
   @TrialBypass()
   @ApiOperation({ summary: '拒绝报价' })
-  declineQuote(@Param('token') token: string, @Body('reason') reason?: string) {
-    return this.portalService.declineQuote(token, reason);
+  declineQuote(@Param('token') token: string, @Body() body: DeclineQuoteDto) {
+    return this.portalService.declineQuote(token, body.reason);
   }
 
   @Get('quotes')

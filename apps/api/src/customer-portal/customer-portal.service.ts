@@ -5,6 +5,7 @@ import { EmailService } from '../email/email.service';
 import { PricingService } from '../quote/pricing.service';
 import { StripeService } from '../common/services/stripe.service';
 import { InvoiceService } from '../invoice/invoice.service';
+import { GeocodingService } from '../common/services/geocoding.service';
 import { randomBytes } from 'crypto';
 import { ServiceType, PropertySize, ServiceFrequency } from '@cleanops/db';
 
@@ -19,6 +20,7 @@ export class CustomerPortalService {
     private pricingService: PricingService,
     private stripeService: StripeService,
     private invoiceService: InvoiceService,
+    private geocodingService: GeocodingService,
   ) {}
 
   async sendMagicLink(email: string) {
@@ -385,7 +387,7 @@ export class CustomerPortalService {
 
     const publicToken = randomBytes(32).toString('hex');
 
-    return this.prisma.client.quote.create({
+    const createdQuote = await this.prisma.client.quote.create({
       data: {
         status: 'SENT',
         publicToken,
@@ -422,6 +424,24 @@ export class CustomerPortalService {
       },
       include: { lineItems: { orderBy: { sortOrder: 'asc' } } },
     });
+
+    // Send quote notification email
+    try {
+      const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3001';
+      const company = await this.prisma.client.company.findUnique({ where: { id: companyId } });
+      if (company) {
+        await this.emailService.sendQuoteEmail(
+          { name: body.name, email: body.email },
+          createdQuote,
+          company.name,
+          frontendUrl,
+        );
+      }
+    } catch (err: any) {
+      this.logger.error(`Failed to send quote email: ${err.message}`);
+    }
+
+    return createdQuote;
   }
 
   async viewQuoteByToken(token: string) {
@@ -450,6 +470,12 @@ export class CustomerPortalService {
       where: { email: quote.customerEmail, companyId: quote.companyId },
     });
     if (!customer) {
+      let lat = 53.3498;
+      let lng = -6.2603;
+      if (quote.customerPostalCode) {
+        const coords = await this.geocodingService.geocode(quote.customerPostalCode);
+        if (coords) { lat = coords.lat; lng = coords.lng; }
+      }
       customer = await this.prisma.client.customer.create({
         data: {
           name: quote.customerName,
@@ -459,8 +485,8 @@ export class CustomerPortalService {
           postalCode: quote.customerPostalCode,
           accessCode: quote.customerAccessCode,
           isCommercial: quote.isCommercial,
-          lat: 53.3498,
-          lng: -6.2603,
+          lat,
+          lng,
           companyId: quote.companyId,
         },
       });

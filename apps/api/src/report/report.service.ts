@@ -28,6 +28,8 @@ export class ReportService {
       totalCustomers,
       upcomingJobs,
       pendingDeposits,
+      sentQuotesCount,
+      sentQuotesAgg,
     ] = await Promise.all([
       this.prisma.client.job.findMany({
         where: { companyId, scheduledStart: { gte: today, lt: tomorrow }, status: { not: 'CANCELLED' } },
@@ -85,6 +87,11 @@ export class ReportService {
         include: { customer: true },
         orderBy: { scheduledStart: 'asc' },
         take: 10,
+      }),
+      this.prisma.client.quote.count({ where: { companyId, status: 'SENT' } }),
+      this.prisma.client.quote.aggregate({
+        where: { companyId, status: 'SENT' },
+        _sum: { grandTotal: true },
       }),
     ]);
 
@@ -145,6 +152,8 @@ export class ReportService {
         status: j.status,
         workerNames: j.assignments.map((a) => `${a.worker.firstName} ${a.worker.lastName}`),
       })),
+      sentQuotesCount,
+      sentQuotesValue: sentQuotesAgg._sum.grandTotal ?? 0,
     };
   }
 
