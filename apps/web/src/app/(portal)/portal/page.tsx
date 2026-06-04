@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, MapPin, LogOut, CreditCard, User, XCircle, RefreshCw, Clock, AlertCircle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
@@ -335,16 +336,17 @@ function CustomerDashboardContent() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg">Invoices</CardTitle>
-            <select
-              className="text-sm border rounded-md px-2 py-1"
-              value={invoiceFilter}
-              onChange={(e) => setInvoiceFilter(e.target.value)}
-            >
-              <option value="">All</option>
-              <option value="UNPAID">Unpaid</option>
-              <option value="PAID">Paid</option>
-              <option value="VOID">Voided</option>
-            </select>
+            <Select value={invoiceFilter || "all"} onValueChange={(v) => setInvoiceFilter(v === "all" ? "" : v)}>
+              <SelectTrigger className="w-[130px] h-8 text-xs">
+                <SelectValue placeholder="All" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="UNPAID">Unpaid</SelectItem>
+                <SelectItem value="PAID">Paid</SelectItem>
+                <SelectItem value="VOID">Voided</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardHeader>
         <CardContent>
