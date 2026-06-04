@@ -36,13 +36,13 @@ export class CustomerPortalService {
     // Per-email rate limit: 1 per 5 minutes
     if (customer.authTokenExpiresAt) {
       const remainingMs = customer.authTokenExpiresAt.getTime() - Date.now();
-      if (remainingMs > 25 * 60 * 1000) {
+      if (remainingMs > 23 * 60 * 60 * 1000 + 55 * 60 * 1000) {
         throw new BadRequestException('A magic link was already sent recently. Please wait before requesting another.');
       }
     }
 
     const token = randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 min
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
 
     await this.prisma.client.customer.update({
       where: { id: customer.id },
@@ -58,7 +58,7 @@ export class CustomerPortalService {
       `<p>Hello ${customer.name},</p>
        <p>Click the link below to access your account:</p>
        <p><a href="${link}">${link}</a></p>
-       <p>This link expires in 30 minutes.</p>`,
+       <p>This link expires in 24 hours.</p>`,
     );
 
     return { message: 'If an account with that email exists, a magic link has been sent.' };
