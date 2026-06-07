@@ -197,7 +197,12 @@ export default function JobsPage() {
         </div>
       )}
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 items-center">
+        <button onClick={toggleAll} className="mr-1 shrink-0" title="Select all">
+          {selected.size > 0 && selected.size === (data?.data?.length || 0)
+            ? <CheckSquare className="h-5 w-5 text-primary" />
+            : <Square className="h-5 w-5 text-muted-foreground" />}
+        </button>
         {["", "PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED"].map((s) => (
           <Button
             key={s}
@@ -219,9 +224,14 @@ export default function JobsPage() {
       ) : (
         <div className="space-y-3">
           {jobs?.map((job: any) => (
-            <Card key={job.id}>
+            <Card key={job.id} className={selected.has(job.id) ? "ring-2 ring-primary" : ""}>
               <CardContent className="flex items-center justify-between p-4">
                 <div className="flex items-start gap-4">
+                  <button onClick={() => toggleSelect(job.id)} className="mt-2 shrink-0">
+                    {selected.has(job.id)
+                      ? <CheckSquare className="h-5 w-5 text-primary" />
+                      : <Square className="h-5 w-5 text-muted-foreground" />}
+                  </button>
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                     <Calendar className="h-5 w-5 text-primary" />
                   </div>
