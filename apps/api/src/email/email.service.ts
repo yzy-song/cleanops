@@ -196,6 +196,21 @@ export class EmailService {
     await this.sendEmail(customer.email, subject, html);
   }
 
+  async sendReviewRequestEmail(customer: { name: string; email: string }, job: { id: string }, companyName: string, frontendUrl: string) {
+    const reviewUrl = `${frontendUrl}/review/${job.id}`;
+    const subject = `How was your cleaning with ${companyName}?`;
+    const html = `
+      <h3>Hello, ${customer.name}!</h3>
+      <p>Thank you for choosing <strong>${companyName}</strong>. We hope you were happy with your recent cleaning service.</p>
+      <p>Your feedback helps us improve — and helps other customers find great service.</p>
+      <p style="margin: 24px 0;">
+        <a href="${reviewUrl}" style="display:inline-block;background:#2563EB;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Share Your Feedback</a>
+      </p>
+      <p style="color:#64748B;font-size:14px;">It only takes 30 seconds.</p>
+    `;
+    await this.sendEmail(customer.email, subject, html);
+  }
+
   async sendEmail(to: string, subject: string, html: string) {
     if (!to) return;
     if (!this.resend) {

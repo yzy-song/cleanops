@@ -7,6 +7,7 @@ import { StripeService } from '../common/services/stripe.service';
 import { InvoiceService } from '../invoice/invoice.service';
 import { GeocodingService } from '../common/services/geocoding.service';
 import { AiEstimateService } from '../common/services/ai-estimate.service';
+import { ReviewService } from '../job/review.service';
 import { randomBytes } from 'crypto';
 import { ServiceType, PropertySize, ServiceFrequency } from '@cleanops/db';
 
@@ -23,6 +24,7 @@ export class CustomerPortalService {
     private invoiceService: InvoiceService,
     private geocodingService: GeocodingService,
     private aiEstimateService: AiEstimateService,
+    private reviewService: ReviewService,
   ) {}
 
   async sendMagicLink(email: string) {
@@ -568,6 +570,18 @@ export class CustomerPortalService {
       orderBy: { createdAt: 'desc' },
       take: 50,
     });
+  }
+
+  async getReviewInfo(jobId: string) {
+    const info = await this.reviewService.getReviewInfo(jobId);
+    if (!info) throw new NotFoundException('Job not found');
+    return info;
+  }
+
+  async submitReviewFeedback(jobId: string, feedback: string) {
+    if (!feedback?.trim()) throw new BadRequestException('Feedback is required');
+    await this.reviewService.submitFeedback(jobId, feedback);
+    return { message: 'Thank you for your feedback. We will get back to you shortly.' };
   }
 
   async estimateFromPhotos(photos: string[]) {

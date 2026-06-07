@@ -166,6 +166,19 @@ export class CustomerPortalController {
     return this.portalService.estimateFromPhotos(photos);
   }
 
+  @Get('review/:jobId')
+  @ApiOperation({ summary: '获取评价页面信息（公开）' })
+  getReviewInfo(@Param('jobId') jobId: string) {
+    return this.portalService.getReviewInfo(jobId);
+  }
+
+  @Post('review/:jobId/feedback')
+  @TrialBypass()
+  @ApiOperation({ summary: '提交内部反馈（不满意的客户）' })
+  submitReviewFeedback(@Param('jobId') jobId: string, @Body('feedback') feedback: string) {
+    return this.portalService.submitReviewFeedback(jobId, feedback);
+  }
+
   @Post('logout')
   @UseGuards(CustomerAuthGuard)
   @ApiOperation({ summary: '客户退出登录（清除会话）' })

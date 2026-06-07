@@ -81,6 +81,9 @@ model Company {
   xeroTokenExpiresAt    DateTime?
   xeroConnectedAt       DateTime?
 
+  // Marketing & Reputation
+  googleReviewUrl   String?   // Google Business Profile 评价链接
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -260,6 +263,8 @@ model Job {
 
   // 服务提醒
   reminderSentAt  DateTime? // 上次发送服务提醒邮件的时间
+  // 评价邀请
+  reviewSentAt    DateTime? // 上次发送评价邀请邮件的时间
 
   // 时间戳
   createdAt       DateTime  @default(now())
