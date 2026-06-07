@@ -30,7 +30,7 @@ export default function StartupCostCalculator() {
   return (
     <div className="py-12">
       <div className="mx-auto max-w-2xl px-6">
-        <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900 mb-6">
+        <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-slate-700 hover:text-slate-900 mb-6">
           <ArrowLeft className="h-4 w-4" /> Back to Tools
         </Link>
         <div className="flex items-center gap-3 mb-6">
@@ -39,7 +39,7 @@ export default function StartupCostCalculator() {
           </div>
           <div>
             <h1 className="text-2xl font-bold">Startup Cost Calculator</h1>
-            <p className="text-sm text-slate-500">Estimate what it takes to start a cleaning business</p>
+            <p className="text-sm text-slate-700">Estimate what it takes to start a cleaning business</p>
           </div>
         </div>
 
@@ -76,7 +76,7 @@ export default function StartupCostCalculator() {
             <div className="space-y-2">
               {projection.map((p) => (
                 <div key={p.month} className="flex items-center gap-3">
-                  <span className="text-xs text-slate-500 w-16">Month {p.month}</span>
+                  <span className="text-xs text-slate-700 w-16">Month {p.month}</span>
                   <div className="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
                     <div
                       className="bg-orange-400 h-full rounded-full transition-all"
@@ -106,7 +106,7 @@ function Field({ label, value, onChange }: { label: string; value: number; onCha
 function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (
     <div className="flex justify-between text-sm">
-      <span className={bold ? "font-semibold" : "text-slate-600"}>{label}</span>
+      <span className={bold ? "font-semibold" : "text-slate-700"}>{label}</span>
       <span className={bold ? "font-semibold" : ""}>{value}</span>
     </div>
   );

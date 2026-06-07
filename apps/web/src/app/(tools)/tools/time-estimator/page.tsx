@@ -32,7 +32,7 @@ export default function TimeEstimator() {
   return (
     <div className="py-12">
       <div className="mx-auto max-w-2xl px-6">
-        <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900 mb-6">
+        <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-slate-700 hover:text-slate-900 mb-6">
           <ArrowLeft className="h-4 w-4" /> Back to Tools
         </Link>
         <div className="flex items-center gap-3 mb-6">
@@ -41,7 +41,7 @@ export default function TimeEstimator() {
           </div>
           <div>
             <h1 className="text-2xl font-bold">Cleaning Time Estimator</h1>
-            <p className="text-sm text-slate-500">Estimate job duration by room and size</p>
+            <p className="text-sm text-slate-700">Estimate job duration by room and size</p>
           </div>
         </div>
 
@@ -91,7 +91,7 @@ export default function TimeEstimator() {
 
         <Card className="bg-slate-50">
           <CardContent className="pt-6 text-center space-y-3">
-            <p className="text-sm text-slate-500">Estimated Cleaning Time</p>
+            <p className="text-sm text-slate-700">Estimated Cleaning Time</p>
             <p className="text-3xl font-bold">{hours}h {mins}m</p>
             <p className="text-xs text-slate-400">per person · {teamSize} cleaner{teamSize > 1 ? "s" : ""} · {size} · {condition}</p>
           </CardContent>

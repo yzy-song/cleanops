@@ -25,7 +25,7 @@ export default function ProfitMarginCalculator() {
   return (
     <div className="py-12">
       <div className="mx-auto max-w-2xl px-6">
-        <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900 mb-6">
+        <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-slate-700 hover:text-slate-900 mb-6">
           <ArrowLeft className="h-4 w-4" /> Back to Tools
         </Link>
         <div className="flex items-center gap-3 mb-6">
@@ -34,7 +34,7 @@ export default function ProfitMarginCalculator() {
           </div>
           <div>
             <h1 className="text-2xl font-bold">Profit Margin Calculator</h1>
-            <p className="text-sm text-slate-500">See your true profit per job</p>
+            <p className="text-sm text-slate-700">See your true profit per job</p>
           </div>
         </div>
 
@@ -61,7 +61,7 @@ export default function ProfitMarginCalculator() {
                   {margin.toFixed(1)}%
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-slate-700 mt-1">
                 {isHealthy ? "✅ Healthy margin (≥30%)" : "⚠️ Below target — consider adjusting pricing or reducing costs"}
               </p>
             </div>
@@ -90,7 +90,7 @@ function Field({ label, value, onChange }: { label: string; value: number; onCha
 function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (
     <div className="flex justify-between text-sm">
-      <span className={bold ? "font-semibold" : "text-slate-600"}>{label}</span>
+      <span className={bold ? "font-semibold" : "text-slate-700"}>{label}</span>
       <span className={bold ? "font-semibold" : ""}>{value}</span>
     </div>
   );

@@ -31,7 +31,7 @@ export default function EmployeeCostCalculator() {
   return (
     <div className="py-12">
       <div className="mx-auto max-w-2xl px-6">
-        <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900 mb-6">
+        <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-slate-700 hover:text-slate-900 mb-6">
           <ArrowLeft className="h-4 w-4" /> Back to Tools
         </Link>
         <div className="flex items-center gap-3 mb-6">
@@ -40,7 +40,7 @@ export default function EmployeeCostCalculator() {
           </div>
           <div>
             <h1 className="text-2xl font-bold">Employee Cost Calculator</h1>
-            <p className="text-sm text-slate-500">True cost per cleaner — wages + PRSI + pension + extras</p>
+            <p className="text-sm text-slate-700">True cost per cleaner — wages + PRSI + pension + extras</p>
           </div>
         </div>
 
@@ -68,7 +68,7 @@ export default function EmployeeCostCalculator() {
             <div className="border-t pt-3 space-y-1">
               <Row label="True Monthly Cost" value={eur(totalMonthly)} bold />
               <Row label="True Yearly Cost" value={eur(totalYearly)} bold />
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-slate-700 mt-1">
                 Effective hourly cost: {eur(effectiveHourly)}/hr — {((effectiveHourly / wage - 1) * 100).toFixed(0)}% above base wage
               </p>
             </div>
@@ -91,7 +91,7 @@ function Field({ label, value, onChange, step }: { label: string; value: number;
 function Row({ label, value, dim, bold }: { label: string; value: string; dim?: boolean; bold?: boolean }) {
   return (
     <div className="flex justify-between text-sm">
-      <span className={bold ? "font-semibold" : dim ? "text-slate-500" : "text-slate-700"}>{label}</span>
+      <span className={bold ? "font-semibold" : dim ? "text-slate-700" : "text-slate-700"}>{label}</span>
       <span className={bold ? "font-semibold" : ""}>{value}</span>
     </div>
   );

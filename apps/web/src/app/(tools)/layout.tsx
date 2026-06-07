@@ -12,8 +12,8 @@ export default function ToolsLayout({ children }: { children: React.ReactNode })
             <span className="font-semibold text-slate-900">CleanOps</span>
           </Link>
           <div className="flex items-center gap-4 text-sm">
-            <Link href="/tools" className="text-slate-600 hover:text-slate-900 font-medium">Tools</Link>
-            <Link href="/login" className="text-slate-600 hover:text-slate-900">Login</Link>
+            <Link href="/tools" className="text-slate-700 hover:text-slate-900 font-medium">Tools</Link>
+            <Link href="/login" className="text-slate-700 hover:text-slate-900">Login</Link>
           </div>
         </div>
       </header>
