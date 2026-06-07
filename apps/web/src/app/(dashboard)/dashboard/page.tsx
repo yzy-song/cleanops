@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useDashboard, useOverview } from "@/hooks/use-reports";
 import { useStripeConnectStatus } from "@/hooks/use-company";
+import { useAuthStore } from "@/store/auth.store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,6 +23,7 @@ import {
   TrendingDown,
   Activity,
   Link2,
+  Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format, parseISO, isPast } from "date-fns";
@@ -89,6 +91,16 @@ export default function DashboardPage() {
   const { data, isLoading } = useDashboard();
   const { data: overview } = useOverview();
   const { data: connectStatus } = useStripeConnectStatus();
+  const { user } = useAuthStore();
+
+  const greeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  };
+
+  const displayName = user?.email?.split("@")[0] || "there";
 
   if (isLoading) {
     return (
@@ -141,7 +153,9 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {greeting()}, {displayName}
+          </h1>
           <p className="text-muted-foreground text-sm mt-0.5">
             {format(new Date(), "EEEE, MMMM d, yyyy")}
           </p>
@@ -155,7 +169,7 @@ export default function DashboardPage() {
           </Button>
           <Button size="sm" asChild>
             <Link href="/jobs/new">
-              <Calendar className="mr-1.5 h-4 w-4" />
+              <Plus className="mr-1.5 h-4 w-4" />
               New Job
             </Link>
           </Button>
@@ -225,120 +239,105 @@ export default function DashboardPage() {
 
       {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <Card className="border-l-4 border-l-blue-600 rounded-xl overflow-hidden">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5 text-muted-foreground">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100">
-                  <Calendar className="h-4.5 w-4.5 text-blue-600" />
+        <Link href="/jobs">
+          <Card className="border-l-4 border-l-blue-600 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5 text-muted-foreground">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100">
+                    <Calendar className="h-4.5 w-4.5 text-blue-600" />
+                  </div>
+                  <span className="text-sm font-medium">Today&apos;s Jobs</span>
                 </div>
-                <span className="text-sm font-medium">Today&apos;s Jobs</span>
               </div>
-            </div>
-            <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-bold tracking-tight">
-                {data?.todayJobs ?? 0}
-              </span>
-              {(data?.todayCompletedCount ?? 0) > 0 && (
-                <span className="text-sm font-medium text-emerald-600">
-                  {data!.todayCompletedCount} done
-                </span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className="text-3xl font-bold tracking-tight">{data?.todayJobs ?? 0}</span>
+                {(data?.todayCompletedCount ?? 0) > 0 && (
+                  <span className="text-sm font-medium text-emerald-600">{data!.todayCompletedCount} done</span>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
 
-        {/* Sent Quotes */}
-        <Card className="border-l-4 border-l-purple-500 rounded-xl overflow-hidden">
-          <CardContent className="p-5">
-            <div className="flex items-center gap-2.5 text-muted-foreground">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-100">
-                <ScrollText className="h-4.5 w-4.5 text-purple-600" />
+        <Link href="/quotes">
+          <Card className="border-l-4 border-l-purple-500 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2.5 text-muted-foreground">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-100">
+                  <ScrollText className="h-4.5 w-4.5 text-purple-600" />
+                </div>
+                <span className="text-sm font-medium">Open Quotes</span>
               </div>
-              <span className="text-sm font-medium">Open Quotes</span>
-            </div>
-            <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-bold tracking-tight">
-                {data?.sentQuotesCount ?? 0}
-              </span>
-            </div>
-            {(data?.sentQuotesValue ?? 0) > 0 && (
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className="text-3xl font-bold tracking-tight">{data?.sentQuotesCount ?? 0}</span>
+              </div>
+              {(data?.sentQuotesValue ?? 0) > 0 && (
+                <p className="text-xs text-muted-foreground mt-1">{eur(data!.sentQuotesValue)} pipeline</p>
+              )}
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/reports">
+          <Card className="border-l-4 border-l-blue-500 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5 text-muted-foreground">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100">
+                    <Euro className="h-4.5 w-4.5 text-blue-600" />
+                  </div>
+                  <span className="text-sm font-medium">This Week</span>
+                </div>
+                {weekTrend && <TrendPill current={weekTrend.current} previous={weekTrend.previous} />}
+              </div>
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className="text-3xl font-bold tracking-tight">{eur(overview?.thisWeekRevenue ?? 0)}</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">vs {eur(overview?.lastWeekRevenue ?? 0)} last week</p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/jobs">
+          <Card className="border-l-4 border-l-amber-500 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2.5 text-muted-foreground">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100">
+                  <Activity className="h-4.5 w-4.5 text-amber-600" />
+                </div>
+                <span className="text-sm font-medium">Working Now</span>
+              </div>
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className="text-3xl font-bold tracking-tight">{data?.inProgressCount ?? 0}</span>
+                {data?.inProgressJobs && data.inProgressJobs.length > 0 && (
+                  <span className="text-sm text-blue-600 truncate max-w-[140px]">
+                    {data.inProgressJobs.map((j) => j.workers.join(", ")).join(" · ")}
+                  </span>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/reports">
+          <Card className="border-l-4 border-l-emerald-500 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2.5 text-muted-foreground">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100">
+                  <Euro className="h-4.5 w-4.5 text-emerald-600" />
+                </div>
+                <span className="text-sm font-medium">This Month</span>
+              </div>
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className="text-3xl font-bold tracking-tight">{eur(data?.thisMonthRevenue ?? 0)}</span>
+              </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {eur(data!.sentQuotesValue)} pipeline
+                {data?.pendingInvoices ?? 0} invoices unpaid · {eur(data?.pendingInvoicesAmount ?? 0)}
               </p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-blue-500 rounded-xl overflow-hidden">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5 text-muted-foreground">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100">
-                  <Euro className="h-4.5 w-4.5 text-blue-600" />
-                </div>
-                <span className="text-sm font-medium">This Week</span>
-              </div>
-              {weekTrend && (
-                <TrendPill
-                  current={weekTrend.current}
-                  previous={weekTrend.previous}
-                />
-              )}
-            </div>
-            <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-bold tracking-tight">
-                {eur(overview?.thisWeekRevenue ?? 0)}
-              </span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              vs {eur(overview?.lastWeekRevenue ?? 0)} last week
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-amber-500 rounded-xl overflow-hidden">
-          <CardContent className="p-5">
-            <div className="flex items-center gap-2.5 text-muted-foreground">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100">
-                <Activity className="h-4.5 w-4.5 text-amber-600" />
-              </div>
-              <span className="text-sm font-medium">Working Now</span>
-            </div>
-            <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-bold tracking-tight">
-                {data?.inProgressCount ?? 0}
-              </span>
-              {data?.inProgressJobs && data.inProgressJobs.length > 0 && (
-                <span className="text-sm text-blue-600 truncate max-w-[140px]">
-                  {data.inProgressJobs
-                    .map((j) => j.workers.join(", "))
-                    .join(" · ")}
-                </span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-emerald-500 rounded-xl overflow-hidden">
-          <CardContent className="p-5">
-            <div className="flex items-center gap-2.5 text-muted-foreground">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100">
-                <Euro className="h-4.5 w-4.5 text-emerald-600" />
-              </div>
-              <span className="text-sm font-medium">This Month</span>
-            </div>
-            <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-bold tracking-tight">
-                {eur(data?.thisMonthRevenue ?? 0)}
-              </span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {data?.pendingInvoices ?? 0} invoices unpaid ·{" "}
-              {eur(data?.pendingInvoicesAmount ?? 0)}
-            </p>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* Charts Row */}

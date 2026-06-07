@@ -1,6 +1,6 @@
 # CleanOps 竞品对比分析
 
-> 分析日期：2026-06-04
+> 分析日期：2026-06-07（更新：Spotless Dashboard 深入分析）
 > 覆盖范围：全球主流清洁行业 SaaS + 爱尔兰本地平台
 
 ---
@@ -233,3 +233,97 @@ B2B 管理 SaaS                              B2C 预约平台
 3. **eMop/Helpling 不是直接竞品** — 它们是 B2C 撮合平台，抢的是清洁公司的客户。CleanOps 应该帮清洁公司对抗这两家（给他们更好的数字化工具），而不是跟它们竞争。
 
 4. **价格是巨大优势** — 竞品 $39–$599/月，CleanOps 自有部署零月费。这是向小型清洁公司推广时的杀手锏。
+
+---
+
+## 七、Spotless Dashboard 深入对比
+
+> 实际登录 app.spotlessapp.io 体验后记录，2026-06-07。
+
+### 7a. 导航结构
+
+Spotless 侧边栏分 **5 个分组**，带标题分隔：
+
+| 分组 | 包含页面 | CleanOps 状态 |
+|------|----------|---------------|
+| **CORE** | Overview, Today's Jobs, Calendar, Jobs, Pipeline, Customers | ✅ 大部分有 |
+| **SALES & REVENUE** | Quotes, Invoices, Finance, Contracts | ⚠️ 缺 Finance + Contracts |
+| **TEAM & OPERATIONS** | Staff, Shifts, Time Tracking, Geofences, Stock, Analytics | ⚠️ 缺 Shifts/Time/Geofences/Stock |
+| **GROWTH** | Services, Booking Forms, Automations, Discounts, Referrals, Reviews | ⚠️ 缺 Automations/Discounts/Referrals/Reviews |
+| **SYSTEM** | Audit & Export, Alerts | ❌ 完全没有 |
+
+**侧边栏底部**：用户头像+姓名+公司名、设置进度条（20%）、设置按钮、退出登录
+
+### 7b. Dashboard 首页布局
+
+```
+┌─────────────────────────────────────────────────┐
+│ "Good morning, Ziyi"            Booking Link    │
+│ Sunday, June 7, 2026         [+ New Booking]    │
+├─────────────────────────────────────────────────┤
+│  TODAY'S   │ NEXT 7  │ OUTSTANDING │ REVENUE   │
+│  JOBS —    │ DAYS —  │ —           │ (30D) —   │
+│            │ sched.  │             │            │
+├──────────────────────┬──────────────────────────┤
+│ Today's Schedule     │ Staff Today              │
+│ (timeline list)      │ (assigned staff list)    │
+├──────────────────────┼──────────────────────────┤
+│ Tomorrow             │ Money                    │
+│ (tomorrow's jobs)    │ Revenue 30d + Outstand.  │
+└──────────────────────┴──────────────────────────┘
+```
+
+**关键 UX**：有数据时显示数字，没数据时显示 "No jobs scheduled"（但不空着，给了清晰的状态提示）。
+
+### 7c. 引导式 Onboarding
+
+顶部 banner："Complete your setup 1/5 steps completed"，可 "Dismiss for 3 days"。
+
+5 个步骤：
+1. Complete company profile（地址+电话）
+2. Set your rates（配置服务定价）
+3. Invite your first team member
+4. Connect Stripe to accept payments
+5. Share your booking link
+
+每步有图标 + 标题 + 描述，用绿色勾选/灰色待办区分状态。
+
+**CleanOps 缺失**：完全没有新手引导。
+
+### 7d. 设计细节
+
+| 元素 | Spotless | CleanOps |
+|------|----------|----------|
+| 主色调 | 绿色（翠绿） | 蓝色（Professional Blue） |
+| 侧边栏 | 深色底，白色文字，分组标题 | 浅色底，无分组标题 |
+| 按钮 | 圆角绿色 | 圆角蓝色 |
+| 字体 | Inter/系统字体 | Geist |
+| 问候语 | "Good morning, {name}" + 日期 | 无问候语 |
+| KPI 卡片 | 5 个水平排列，带链接 | 4+1 个网格布局 |
+| 空状态 | 友好提示文字 | 有（但不如 Spotless 细致） |
+| 快捷操作 | "+ New Booking" 按钮 | "New Job" 按钮 |
+| Stripe 弹窗 | 首次登录自动弹出引导 | 无 |
+
+### 7e. CleanOps 独有优势（Spotless 没有的）
+
+| 功能 | 说明 |
+|------|------|
+| **地图视图** | /map — Google Maps 可视化所有工单，带路线 |
+| **智能排班** | 贪心算法 + TSP 路径优化 |
+| **GPS 打卡** | Worker 端 GPS 签到/签退 |
+| **客户 Magic Link** | 无密码登录，24h 有效 |
+| **AI 照片估价** | 拍照估算清洁报价（代码就绪） |
+| **Review Collection** | 合规的好评引导系统 |
+
+### 7f. 差距总结：优先追赶项
+
+| 优先级 | 功能 | 理由 |
+|--------|------|------|
+| P0 | **侧边栏分组标题** | 导航体验立刻提升，30 分钟工作量 |
+| P0 | **Dashboard 问候语+日期** | 人性化，10 分钟工作量 |
+| P0 | **新手引导 Checklist** | 激活率提升，1-2 天 |
+| P1 | **KPI 行增加链接** | 点击跳转详情，1 小时 |
+| P1 | **Finance 页面** | 财务概览，对标功能 |
+| P2 | **Automations** | 自动化工作流 |
+| P2 | **Referrals** | 推荐系统 |
+| P3 | Time Tracking / Geofences / Stock | 复杂度高，非核心
