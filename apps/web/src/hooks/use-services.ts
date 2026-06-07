@@ -18,7 +18,7 @@ export function useServices() {
     queryKey: ["services"],
     queryFn: async () => {
       const res = await api.get("/services");
-      return res.data as ServiceItem[];
+      return (res.data.data || res.data) as ServiceItem[];
     },
   });
 }
