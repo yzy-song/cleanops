@@ -18,6 +18,7 @@ import {
   User,
   Package,
   Columns3,
+  Workflow,
 } from "lucide-react";
 
 interface NavGroup {
@@ -54,6 +55,7 @@ const navGroups: NavGroup[] = [
     label: "GROWTH",
     items: [
       { href: "/services", label: "Services", icon: Package, roles: ["ADMIN", "MANAGER"] },
+      { href: "/automations", label: "Automations", icon: Workflow, roles: ["ADMIN"] },
     ],
   },
   {

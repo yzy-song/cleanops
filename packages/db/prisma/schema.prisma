@@ -95,6 +95,7 @@ model Company {
   invoices          Invoice[]   // 账单库
   quotes            Quote[]     // 报价库
   services          Service[]   // 可配置服务目录
+  automations       Automation[] // 自动化规则
 }
 
 // 1b. 可配置服务
@@ -114,6 +115,20 @@ model Service {
   updatedAt     DateTime @updatedAt
 
   @@index([companyId])
+}
+
+// 1c. 自动化规则
+model Automation {
+  id        String   @id @default(uuid())
+  name      String
+  trigger   String   // JOB_COMPLETED | INVOICE_OVERDUE | QUOTE_ACCEPTED
+  action    String   // SEND_EMAIL | SEND_SMS
+  config    Json     // { subject, body, recipient }
+  isActive  Boolean  @default(true)
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // 2. 后台管理用户

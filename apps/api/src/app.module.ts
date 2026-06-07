@@ -25,6 +25,7 @@ import { BillingModule } from './billing/billing.module';
 import { TrialGuard } from './billing/trial.guard';
 import { XeroModule as XeroFeatureModule } from './xero/xero.module';
 import { ServiceModule } from './service/service.module';
+import { AutomationModule } from './automation/automation.module';
 import { QuoteModule } from './quote/quote.module';
 
 @Module({
@@ -59,6 +60,7 @@ import { QuoteModule } from './quote/quote.module';
     BillingModule,
     XeroFeatureModule,
     ServiceModule,
+    AutomationModule,
   ],
   controllers: [AppController],
   providers: [
