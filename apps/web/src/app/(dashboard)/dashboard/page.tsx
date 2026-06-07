@@ -48,7 +48,7 @@ const eur = (cents: number) => `€${(cents / 100).toFixed(2)}`;
 
 const statusConfig: Record<string, { color: string; label: string }> = {
   PENDING: { color: "bg-yellow-100 text-yellow-800", label: "Pending" },
-  IN_PROGRESS: { color: "bg-blue-100 text-blue-800", label: "Working" },
+  IN_PROGRESS: { color: "bg-blue-100 text-blue-800 status-pulse", label: "Working" },
   COMPLETED: { color: "bg-emerald-100 text-emerald-800", label: "Done" },
   CANCELLED: { color: "bg-red-100 text-red-800", label: "Cancelled" },
 };
@@ -247,7 +247,7 @@ export default function DashboardPage() {
       {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Link href="/jobs">
-          <Card className="border-l-4 border-l-blue-600 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full">
+          <Card className="border-l-4 border-l-blue-600 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full kpi-enter">
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5 text-muted-foreground">
@@ -268,7 +268,7 @@ export default function DashboardPage() {
         </Link>
 
         <Link href="/quotes">
-          <Card className="border-l-4 border-l-purple-500 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full">
+          <Card className="border-l-4 border-l-purple-500 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full kpi-enter">
             <CardContent className="p-5">
               <div className="flex items-center gap-2.5 text-muted-foreground">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-100">
@@ -287,7 +287,7 @@ export default function DashboardPage() {
         </Link>
 
         <Link href="/reports">
-          <Card className="border-l-4 border-l-blue-500 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full">
+          <Card className="border-l-4 border-l-blue-500 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full kpi-enter">
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5 text-muted-foreground">
@@ -307,7 +307,7 @@ export default function DashboardPage() {
         </Link>
 
         <Link href="/jobs">
-          <Card className="border-l-4 border-l-amber-500 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full">
+          <Card className="border-l-4 border-l-amber-500 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full kpi-enter">
             <CardContent className="p-5">
               <div className="flex items-center gap-2.5 text-muted-foreground">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100">
@@ -328,7 +328,7 @@ export default function DashboardPage() {
         </Link>
 
         <Link href="/reports">
-          <Card className="border-l-4 border-l-emerald-500 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full">
+          <Card className="border-l-4 border-l-emerald-500 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full kpi-enter">
             <CardContent className="p-5">
               <div className="flex items-center gap-2.5 text-muted-foreground">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100">
