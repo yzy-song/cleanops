@@ -120,7 +120,7 @@ async function seed() {
         email: `cust${i + 1}@example.com`,
         phone: `085300${String(i + 1).padStart(4, "0")}`,
         address: c.addr,
-        eircode: c.eircode,
+        postalCode: c.eircode,
         lat: c.lat,
         lng: c.lng,
         isCommercial: c.comm,
