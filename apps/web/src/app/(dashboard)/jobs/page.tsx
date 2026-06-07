@@ -3,13 +3,15 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useJobs, useCancelJob, useSendInvoice, type JobQuery } from "@/hooks/use-jobs";
+import { useWorkers } from "@/hooks/use-workers";
 import { NewJobSheet } from "@/components/job/new-job-sheet";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Calendar, MapPin, Clock, XCircle, Mail, RefreshCw, Wallet, Wand2 } from "lucide-react";
+import { Plus, Calendar, MapPin, Clock, XCircle, Mail, RefreshCw, Wallet, Wand2, FileText, CheckSquare, Square, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
@@ -26,6 +28,7 @@ export default function JobsPage() {
   const [filter, setFilter] = useState<string>("");
   const query: JobQuery = filter ? { status: filter } : {};
   const { data, isLoading, refetch } = useJobs(query);
+  const { data: workers } = useWorkers();
   const cancelJob = useCancelJob();
   const sendInvoice = useSendInvoice();
 
@@ -39,6 +42,57 @@ export default function JobsPage() {
   const [scheduling, setScheduling] = useState(false);
   const [applying, setApplying] = useState(false);
   const [jobSheetOpen, setJobSheetOpen] = useState(false);
+
+  // Batch selection
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [batchBusy, setBatchBusy] = useState(false);
+  const toggleSelect = (id: string) => {
+    const next = new Set(selected);
+    next.has(id) ? next.delete(id) : next.add(id);
+    setSelected(next);
+  };
+  const toggleAll = () => {
+    const all = data?.data?.map((j: any) => j.id) || [];
+    setSelected(selected.size === all.length ? new Set() : new Set(all));
+  };
+
+  const handleBatchAssign = async (workerId: string) => {
+    setBatchBusy(true);
+    try {
+      await api.post("/jobs/batch/assign", { jobIds: [...selected], workerId });
+      toast.success(`Assigned ${selected.size} job(s)`);
+      setSelected(new Set());
+      refetch();
+    } catch { toast.error("Batch assign failed"); }
+    finally { setBatchBusy(false); }
+  };
+
+  const handleBatchInvoice = async () => {
+    setBatchBusy(true);
+    try {
+      const res = await api.post("/jobs/batch/invoice", { jobIds: [...selected] });
+      toast.success(`Invoiced ${res.data.count}/${selected.size} job(s)`);
+      setSelected(new Set());
+      refetch();
+    } catch { toast.error("Batch invoice failed"); }
+    finally { setBatchBusy(false); }
+  };
+
+  const handleBatchCancel = async () => {
+    if (!confirm(`Cancel ${selected.size} job(s)?`)) return;
+    setBatchBusy(true);
+    try {
+      await api.post("/jobs/batch/cancel", { jobIds: [...selected] });
+      toast.success(`Cancelled ${selected.size} job(s)`);
+      setSelected(new Set());
+      refetch();
+    } catch { toast.error("Batch cancel failed"); }
+    finally { setBatchBusy(false); }
+  };
+
+  const handleExportCsv = () => {
+    window.open(`http://localhost:3000/jobs/export/csv`, "_blank");
+  };
 
   const handlePreview = async () => {
     setScheduling(true);
@@ -110,14 +164,38 @@ export default function JobsPage() {
               Calendar
             </Link>
           </Button>
-          <Button asChild>
-            <Button onClick={() => setJobSheetOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Job
-            </Button>
+          <Button variant="outline" size="sm" onClick={handleExportCsv}>
+            <FileText className="mr-1 h-4 w-4" />
+            CSV
+          </Button>
+          <Button onClick={() => setJobSheetOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Job
           </Button>
         </div>
       </div>
+
+      {/* Batch action bar */}
+      {selected.size > 0 && (
+        <div className="flex items-center gap-3 rounded-lg border bg-blue-50 px-4 py-3">
+          <span className="text-sm font-medium text-blue-800">{selected.size} selected</span>
+          <Select onValueChange={(wid) => handleBatchAssign(wid)} disabled={batchBusy}>
+              <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue placeholder="Assign to..." /></SelectTrigger>
+              <SelectContent>
+                {workers?.filter((w: any) => w.isActive).map((w: any) => (
+                  <SelectItem key={w.id} value={w.id}>{w.firstName} {w.lastName}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          <Button variant="outline" size="sm" onClick={handleBatchInvoice} disabled={batchBusy}>
+            <Mail className="mr-1 h-3.5 w-3.5" /> Invoice All
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleBatchCancel} disabled={batchBusy} className="text-red-600 border-red-200 hover:bg-red-50">
+            <XCircle className="mr-1 h-3.5 w-3.5" /> Cancel All
+          </Button>
+          <button className="ml-auto text-sm text-blue-600 hover:underline" onClick={() => setSelected(new Set())}>Clear</button>
+        </div>
+      )}
 
       <div className="flex gap-2">
         {["", "PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED"].map((s) => (

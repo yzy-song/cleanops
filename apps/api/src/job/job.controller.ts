@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UploadedFile, UseInterceptors, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UploadedFile, UseInterceptors, BadRequestException, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { ApiTags, ApiOperation, ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JobService } from './job.service';
 import { SchedulingService } from './scheduling.service';
+import { InvoiceService } from '../invoice/invoice.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 import { QueryJobDto } from './dto/query-job.dto';
@@ -16,6 +18,7 @@ export class JobController {
   constructor(
     private readonly jobService: JobService,
     private readonly schedulingService: SchedulingService,
+    private readonly invoiceService: InvoiceService,
   ) {}
 
   @Post()
@@ -288,5 +291,75 @@ export class JobController {
     @Body('workerId') workerId: string,
   ) {
     return this.schedulingService.reassignDay(date, workerId, companyId);
+  }
+
+  // ==================== Batch Operations ====================
+
+  @Post('batch/assign')
+  @Auth(Role.ADMIN, Role.MANAGER)
+  @ApiOperation({ summary: '批量分配工单给员工' })
+  async batchAssign(
+    @CurrentUser('companyId') companyId: string,
+    @Body('jobIds') jobIds: string[],
+    @Body('workerId') workerId: string,
+  ) {
+    if (!jobIds?.length || !workerId) throw new BadRequestException('jobIds and workerId required');
+    let count = 0;
+    for (const id of jobIds) {
+      try { await this.jobService.assignWorkers(id, companyId, [workerId]); count++; }
+      catch { /* skip failed */ }
+    }
+    return { count, total: jobIds.length };
+  }
+
+  @Post('batch/invoice')
+  @Auth(Role.ADMIN, Role.MANAGER)
+  @ApiOperation({ summary: '批量生成发票' })
+  async batchInvoice(
+    @CurrentUser('companyId') companyId: string,
+    @Body('jobIds') jobIds: string[],
+  ) {
+    if (!jobIds?.length) throw new BadRequestException('jobIds required');
+    let count = 0;
+    const errors: string[] = [];
+    for (const id of jobIds) {
+      try { await this.invoiceService.generateFromJob(companyId, id); count++; }
+      catch (e: any) { errors.push(`${id.slice(0,8)}: ${e.message}`); }
+    }
+    return { count, total: jobIds.length, errors };
+  }
+
+  @Post('batch/cancel')
+  @Auth(Role.ADMIN, Role.MANAGER)
+  @ApiOperation({ summary: '批量取消工单' })
+  async batchCancel(
+    @CurrentUser('companyId') companyId: string,
+    @Body('jobIds') jobIds: string[],
+  ) {
+    if (!jobIds?.length) throw new BadRequestException('jobIds required');
+    let count = 0;
+    for (const id of jobIds) {
+      try { await this.jobService.update(id, companyId, { status: 'CANCELLED' } as any); count++; }
+      catch { /* skip */ }
+    }
+    return { count, total: jobIds.length };
+  }
+
+  // ==================== CSV Export ====================
+
+  @Get('export/csv')
+  @Auth(Role.ADMIN, Role.MANAGER)
+  @ApiOperation({ summary: '导出工单为 CSV' })
+  async exportCsv(@CurrentUser('companyId') companyId: string, @Res() res: Response) {
+    const jobs = await this.jobService.findAll(companyId, {} as any);
+    const rows = [
+      ['ID', 'Customer', 'Status', 'Scheduled', 'Duration', 'Workers', 'Address', 'Notes'].join(','),
+      ...(jobs as any).data.map((j: any) =>
+        [j.id.slice(0,8), `"${(j.customer?.name || '').replace(/"/g,'""')}"`, j.status, j.scheduledStart, j.estimatedDuration || '', (j.assignments || []).map((a: any) => `${a.worker?.firstName} ${a.worker?.lastName}`).join('; '), `"${(j.customer?.address || '').replace(/"/g,'""')}"`, `"${(j.notes || '').replace(/"/g,'""')}"`].join(',')
+      ),
+    ].join('\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="jobs-export.csv"`);
+    res.send('﻿' + rows);
   }
 }
