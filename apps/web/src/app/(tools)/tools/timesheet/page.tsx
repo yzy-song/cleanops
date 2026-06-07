@@ -37,7 +37,7 @@ export default function TimesheetCalculator() {
   return (
     <div className="py-12">
       <div className="mx-auto max-w-2xl px-6">
-        <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white mb-6">
+        <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-slate-900 dark:hover:text-white mb-6">
           <ArrowLeft className="h-4 w-4" /> Back to Tools
         </Link>
         <div className="flex items-center justify-between gap-3 mb-6">
@@ -47,10 +47,10 @@ export default function TimesheetCalculator() {
             </div>
             <div>
               <h1 className="text-2xl font-bold">Timesheet Calculator</h1>
-              <p className="text-sm text-slate-700 dark:text-slate-300">Track employee hours, overtime, and pay</p>
+              <p className="text-sm text-muted-foreground">Track employee hours, overtime, and pay</p>
             </div>
           </div>
-          <button onClick={() => window.print()} className="flex items-center gap-1 text-sm text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+          <button onClick={() => window.print()} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-slate-900 dark:hover:text-white">
             <Printer className="h-4 w-4" /> Print
           </button>
         </div>
@@ -88,8 +88,8 @@ export default function TimesheetCalculator() {
                       <td className="py-2 text-right">
                         <Input type="number" min={0} max={24} step={0.5} value={hours[d]} onChange={(e) => setHours({ ...hours, [d]: e.target.value })} className="w-16 text-right inline-block" />
                       </td>
-                      <td className="py-2 text-right text-slate-700">{reg}</td>
-                      <td className="py-2 text-right text-slate-700">{ot || "-"}</td>
+                      <td className="py-2 text-right text-muted-foreground">{reg}</td>
+                      <td className="py-2 text-right text-muted-foreground">{ot || "-"}</td>
                       <td className="py-2 text-right">€{(reg * rate + ot * overtimeRate).toFixed(2)}</td>
                     </tr>
                   );

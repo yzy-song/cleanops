@@ -80,7 +80,7 @@ export default function ToolsPage() {
       <div className="mx-auto max-w-5xl px-6">
         <div className="text-center space-y-4 mb-16">
           <h1 className="text-4xl font-bold tracking-tight">Free Tools for Cleaning Businesses</h1>
-          <p className="text-lg text-slate-700 max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Practical calculators to help you run a smarter cleaning business. 100% free — no signup required. Your data stays in your browser.
           </p>
         </div>
@@ -90,7 +90,7 @@ export default function ToolsPage() {
             <Link
               key={t.href}
               href={t.href}
-              className="group rounded-xl border bg-white p-6 hover:shadow-md hover:border-primary/30 transition-all"
+              className="group rounded-xl border bg-card p-6 hover:shadow-md hover:border-primary/30 transition-all"
             >
               <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${t.color} mb-4`}>
                 <t.icon className="h-6 w-6" />
@@ -98,14 +98,14 @@ export default function ToolsPage() {
               <h2 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">
                 {t.title}
               </h2>
-              <p className="text-sm text-slate-700 leading-relaxed">{t.desc}</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">{t.desc}</p>
             </Link>
           ))}
         </div>
 
-        <div className="mt-20 text-center p-12 rounded-2xl bg-slate-50 border">
+        <div className="mt-20 text-center p-12 rounded-2xl bg-muted border">
           <h2 className="text-2xl font-bold mb-3">Ready for the full platform?</h2>
-          <p className="text-slate-700 mb-6 max-w-md mx-auto">
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
             These tools are just a taste. CleanOps gives you the complete operating system for your cleaning business.
           </p>
           <Link href="/register" className="inline-flex items-center gap-2 rounded-lg bg-primary text-primary-foreground px-6 py-3 font-medium hover:opacity-90 transition-opacity">

@@ -26,7 +26,7 @@ export default function RoiCalculator() {
   return (
     <div className="py-12">
       <div className="mx-auto max-w-2xl px-6">
-        <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white mb-6">
+        <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-slate-900 dark:hover:text-white mb-6">
           <ArrowLeft className="h-4 w-4" /> Back to Tools
         </Link>
         <div className="flex items-center gap-3 mb-6">
@@ -35,7 +35,7 @@ export default function RoiCalculator() {
           </div>
           <div>
             <h1 className="text-2xl font-bold">Software ROI Calculator</h1>
-            <p className="text-sm text-slate-700 dark:text-slate-300">See how much you save by switching to CleanOps</p>
+            <p className="text-sm text-muted-foreground">See how much you save by switching to CleanOps</p>
           </div>
         </div>
 

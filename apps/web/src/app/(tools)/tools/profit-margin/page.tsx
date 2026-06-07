@@ -25,7 +25,7 @@ export default function ProfitMarginCalculator() {
   return (
     <div className="py-12">
       <div className="mx-auto max-w-2xl px-6">
-        <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white mb-6">
+        <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-slate-900 dark:hover:text-white mb-6">
           <ArrowLeft className="h-4 w-4" /> Back to Tools
         </Link>
         <div className="flex items-center gap-3 mb-6">
@@ -34,7 +34,7 @@ export default function ProfitMarginCalculator() {
           </div>
           <div>
             <h1 className="text-2xl font-bold">Profit Margin Calculator</h1>
-            <p className="text-sm text-slate-700 dark:text-slate-300">See your true profit per job</p>
+            <p className="text-sm text-muted-foreground">See your true profit per job</p>
           </div>
         </div>
 
@@ -49,7 +49,7 @@ export default function ProfitMarginCalculator() {
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-50 dark:bg-slate-900">
+        <Card className="bg-muted">
           <CardContent className="pt-6 space-y-3">
             <Row label="Total Revenue" value={eur(price)} />
             <Row label="Total Costs" value={eur(totalCost)} />
@@ -61,7 +61,7 @@ export default function ProfitMarginCalculator() {
                   {margin.toFixed(1)}%
                 </span>
               </div>
-              <p className="text-xs text-slate-700 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 {isHealthy ? "✅ Healthy margin (≥30%)" : "⚠️ Below target — consider adjusting pricing or reducing costs"}
               </p>
             </div>
@@ -90,7 +90,7 @@ function Field({ label, value, onChange }: { label: string; value: number; onCha
 function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (
     <div className="flex justify-between text-sm">
-      <span className={bold ? "font-semibold" : "text-slate-700"}>{label}</span>
+      <span className={bold ? "font-semibold" : "text-muted-foreground"}>{label}</span>
       <span className={bold ? "font-semibold" : ""}>{value}</span>
     </div>
   );

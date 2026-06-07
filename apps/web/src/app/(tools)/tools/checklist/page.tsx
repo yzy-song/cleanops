@@ -40,10 +40,10 @@ export default function ChecklistGenerator() {
     <div className="py-12">
       <div className="mx-auto max-w-2xl px-6">
         <div className="flex items-center justify-between mb-6">
-          <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+          <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-slate-900 dark:hover:text-white">
             <ArrowLeft className="h-4 w-4" /> Back to Tools
           </Link>
-          <button onClick={() => window.print()} className="flex items-center gap-1 text-sm text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+          <button onClick={() => window.print()} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-slate-900 dark:hover:text-white">
             <Printer className="h-4 w-4" /> Print
           </button>
         </div>
@@ -53,7 +53,7 @@ export default function ChecklistGenerator() {
           </div>
           <div>
             <h1 className="text-2xl font-bold">Checklist Generator</h1>
-            <p className="text-sm text-slate-700 dark:text-slate-300">Create custom cleaning checklists you can print</p>
+            <p className="text-sm text-muted-foreground">Create custom cleaning checklists you can print</p>
           </div>
         </div>
 
@@ -63,7 +63,7 @@ export default function ChecklistGenerator() {
               <Label className="text-sm mb-2 block">Template</Label>
               <div className="flex flex-wrap gap-2">
                 {Object.keys(templates).map((t) => (
-                  <button key={t} onClick={() => pickTemplate(t)} className={`rounded-full px-4 py-1.5 text-sm border transition-colors ${template === t ? "bg-primary text-primary-foreground border-primary" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-primary/50"}`}>
+                  <button key={t} onClick={() => pickTemplate(t)} className={`rounded-full px-4 py-1.5 text-sm border transition-colors ${template === t ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border hover:border-primary/50"}`}>
                     {t}
                   </button>
                 ))}
@@ -78,7 +78,7 @@ export default function ChecklistGenerator() {
                 {items.map((item, i) => (
                   <div key={i} className="flex items-start gap-3">
                     <Checkbox id={`check-${i}`} checked={checked[i] || false} onCheckedChange={(c) => setChecked({ ...checked, [i]: !!c })} />
-                    <Label htmlFor={`check-${i}`} className={`text-sm cursor-pointer ${checked[i] ? "line-through text-slate-400" : ""}`}>{item}</Label>
+                    <Label htmlFor={`check-${i}`} className={`text-sm cursor-pointer ${checked[i] ? "line-through text-muted-foreground" : ""}`}>{item}</Label>
                   </div>
                 ))}
               </div>

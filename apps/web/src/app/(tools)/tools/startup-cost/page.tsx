@@ -30,7 +30,7 @@ export default function StartupCostCalculator() {
   return (
     <div className="py-12">
       <div className="mx-auto max-w-2xl px-6">
-        <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white mb-6">
+        <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-slate-900 dark:hover:text-white mb-6">
           <ArrowLeft className="h-4 w-4" /> Back to Tools
         </Link>
         <div className="flex items-center gap-3 mb-6">
@@ -39,20 +39,20 @@ export default function StartupCostCalculator() {
           </div>
           <div>
             <h1 className="text-2xl font-bold">Startup Cost Calculator</h1>
-            <p className="text-sm text-slate-700 dark:text-slate-300">Estimate what it takes to start a cleaning business</p>
+            <p className="text-sm text-muted-foreground">Estimate what it takes to start a cleaning business</p>
           </div>
         </div>
 
         <Card className="mb-6">
           <CardContent className="pt-6 space-y-4">
-            <p className="text-sm font-medium text-slate-700">One-Time Costs</p>
+            <p className="text-sm font-medium text-muted-foreground">One-Time Costs</p>
             <Field label="Equipment & Supplies" value={equipment} onChange={setEquipment} />
             <Field label="Vehicle / Transport" value={vehicle} onChange={setVehicle} />
             <Field label="Insurance (Annual)" value={insurance} onChange={setInsurance} />
             <Field label="Licenses & Registration" value={licenses} onChange={setLicenses} />
             <Field label="Training & Certification" value={training} onChange={setTraining} />
             <div className="border-t pt-4">
-              <p className="text-sm font-medium text-slate-700">Monthly Costs</p>
+              <p className="text-sm font-medium text-muted-foreground">Monthly Costs</p>
             </div>
             <Field label="Marketing & Advertising" value={marketing} onChange={setMarketing} />
             <Field label="Website & Software" value={website} onChange={setWebsite} />
@@ -76,7 +76,7 @@ export default function StartupCostCalculator() {
             <div className="space-y-2">
               {projection.map((p) => (
                 <div key={p.month} className="flex items-center gap-3">
-                  <span className="text-xs text-slate-700 w-16">Month {p.month}</span>
+                  <span className="text-xs text-muted-foreground w-16">Month {p.month}</span>
                   <div className="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
                     <div
                       className="bg-orange-400 h-full rounded-full transition-all"
@@ -106,7 +106,7 @@ function Field({ label, value, onChange }: { label: string; value: number; onCha
 function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (
     <div className="flex justify-between text-sm">
-      <span className={bold ? "font-semibold" : "text-slate-700"}>{label}</span>
+      <span className={bold ? "font-semibold" : "text-muted-foreground"}>{label}</span>
       <span className={bold ? "font-semibold" : ""}>{value}</span>
     </div>
   );

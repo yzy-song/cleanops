@@ -64,7 +64,7 @@ ${items.map(i => `<tr><td>${i.description}</td><td style="text-align:right">${i.
   return (
     <div className="py-12">
       <div className="mx-auto max-w-2xl px-6">
-        <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white mb-6">
+        <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-slate-900 dark:hover:text-white mb-6">
           <ArrowLeft className="h-4 w-4" /> Back to Tools
         </Link>
         <div className="flex items-center gap-3 mb-6">
@@ -73,7 +73,7 @@ ${items.map(i => `<tr><td>${i.description}</td><td style="text-align:right">${i.
           </div>
           <div>
             <h1 className="text-2xl font-bold">Invoice Generator</h1>
-            <p className="text-sm text-slate-700 dark:text-slate-300">Create branded invoices instantly. Data stays in your browser.</p>
+            <p className="text-sm text-muted-foreground">Create branded invoices instantly. Data stays in your browser.</p>
           </div>
         </div>
 
@@ -109,7 +109,7 @@ ${items.map(i => `<tr><td>${i.description}</td><td style="text-align:right">${i.
                   <div key={i} className="flex gap-2 items-center">
                     <Input placeholder="Description" value={item.description} onChange={(e) => updateItem(i, "description", e.target.value)} className="flex-1 text-sm" />
                     <Input type="number" value={item.quantity} onChange={(e) => updateItem(i, "quantity", e.target.value)} className="w-16 text-sm text-right" />
-                    <span className="text-xs text-slate-400">×</span>
+                    <span className="text-xs text-muted-foreground">×</span>
                     <Input type="number" value={item.unitPrice} onChange={(e) => updateItem(i, "unitPrice", e.target.value)} className="w-20 text-sm text-right" />
                     <Button variant="ghost" size="icon" onClick={() => removeItem(i)} className="shrink-0"><Trash2 className="h-4 w-4 text-red-400" /></Button>
                   </div>
@@ -119,11 +119,11 @@ ${items.map(i => `<tr><td>${i.description}</td><td style="text-align:right">${i.
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-50 dark:bg-slate-900">
+        <Card className="bg-muted">
           <CardContent className="pt-6 flex items-center justify-between">
             <div>
               <p className="font-semibold text-lg">Total: €{total.toFixed(2)}</p>
-              <p className="text-xs text-slate-700">Subtotal €{subtotal.toFixed(2)} + VAT {vatRate}%</p>
+              <p className="text-xs text-muted-foreground">Subtotal €{subtotal.toFixed(2)} + VAT {vatRate}%</p>
             </div>
             <Button onClick={generate} className="gap-2" disabled={!clientName || items.length === 0}>
               <FileText className="h-4 w-4" /> Generate Invoice

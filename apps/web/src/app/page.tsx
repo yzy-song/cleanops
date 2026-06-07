@@ -72,17 +72,17 @@ const faqs = [
 // ====== Component ======
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen bg-background text-foreground">
       {/* ====== Nav ====== */}
-      <header className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur-md">
+      <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md">
         <div className="mx-auto max-w-7xl flex items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2.5 font-bold text-lg">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white text-sm">CO</div>
             CleanOps
           </Link>
           <div className="flex items-center gap-4 text-sm">
-            <Link href="/tools" className="text-slate-600 hover:text-slate-900 font-medium">Free Tools</Link>
-            <Link href="/login" className="text-slate-600 hover:text-slate-900">Log In</Link>
+            <Link href="/tools" className="text-muted-foreground hover:text-foreground font-medium">Free Tools</Link>
+            <Link href="/login" className="text-muted-foreground hover:text-foreground">Log In</Link>
             <Button size="sm" className="rounded-full px-5" asChild>
               <Link href="/register">Start Free Trial</Link>
             </Button>
@@ -120,7 +120,7 @@ export default function LandingPage() {
       </section>
 
       {/* ====== Problem ====== */}
-      <section className="py-24 bg-slate-950 text-white">
+      <section className="py-24 bg-slate-900 text-white">
         <div className="mx-auto max-w-7xl px-6">
           <div className="text-center space-y-4 mb-16">
             <p className="text-blue-400 font-semibold text-sm tracking-wide uppercase">The Problem</p>
@@ -155,7 +155,7 @@ export default function LandingPage() {
                   <f.icon className="h-6 w-6" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">{f.title}</h3>
-                <p className="text-sm text-slate-600 leading-relaxed mb-4">{f.desc}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-4">{f.desc}</p>
                 {f.stats && (
                   <div className="mt-auto pt-3 border-t">
                     <span className="text-xs font-semibold text-emerald-600">{f.stats}</span>
@@ -168,7 +168,7 @@ export default function LandingPage() {
       </section>
 
       {/* ====== Dashboard Preview + Stats ====== */}
-      <section className="py-24 bg-slate-50 border-y">
+      <section className="py-24 bg-muted border-y">
         <div className="mx-auto max-w-7xl px-6">
           <div className="text-center mb-16 space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full border bg-white px-4 py-1.5 text-sm text-slate-500">
@@ -182,7 +182,7 @@ export default function LandingPage() {
             {stats.map((s) => (
               <div key={s.label} className="space-y-2">
                 <p className="text-4xl font-extrabold text-blue-600">{s.value}</p>
-                <p className="text-sm text-slate-600">{s.label}</p>
+                <p className="text-sm text-muted-foreground">{s.label}</p>
               </div>
             ))}
           </div>
@@ -206,7 +206,7 @@ export default function LandingPage() {
                 <blockquote className="text-sm text-slate-700 leading-relaxed italic">&ldquo;{t.quote}&rdquo;</blockquote>
                 <div>
                   <p className="font-semibold text-sm">{t.name}</p>
-                  <p className="text-xs text-slate-500">{t.company} · {t.location}</p>
+                  <p className="text-xs text-muted-foreground">{t.company} · {t.location}</p>
                 </div>
               </div>
             ))}
@@ -215,7 +215,7 @@ export default function LandingPage() {
       </section>
 
       {/* ====== Solutions by Niche ====== */}
-      <section className="py-24 bg-slate-50 border-y">
+      <section className="py-24 bg-muted border-y">
         <div className="mx-auto max-w-7xl px-6">
           <div className="text-center space-y-4 mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold">Solutions for every cleaning niche</h2>
@@ -226,7 +226,7 @@ export default function LandingPage() {
               <div key={n.title} className="rounded-xl border bg-white p-5 text-center hover:border-blue-200 hover:shadow-sm transition-all">
                 <p className="text-2xl mb-2">{n.icon}</p>
                 <p className="font-semibold text-sm">{n.title}</p>
-                <p className="text-xs text-slate-500">{n.desc}</p>
+                <p className="text-xs text-muted-foreground">{n.desc}</p>
               </div>
             ))}
           </div>
@@ -250,7 +250,7 @@ export default function LandingPage() {
       </section>
 
       {/* ====== FAQ ====== */}
-      <section className="py-24 bg-slate-50 border-y">
+      <section className="py-24 bg-muted border-y">
         <div className="mx-auto max-w-3xl px-6">
           <div className="text-center space-y-4 mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold">Got questions?</h2>
@@ -291,7 +291,7 @@ export default function LandingPage() {
       </section>
 
       {/* ====== Footer ====== */}
-      <footer className="bg-slate-950 text-white py-16">
+      <footer className="bg-slate-900 text-white py-16">
         <div className="mx-auto max-w-7xl px-6">
           <div className="grid gap-12 sm:grid-cols-4 mb-12">
             <div className="space-y-4 sm:col-span-1">
@@ -346,7 +346,7 @@ function RoiCard({ icon, value, label, color }: { icon: React.ReactNode; value: 
     <div className="rounded-2xl border bg-white p-8 text-center space-y-3">
       <div className={`flex h-14 w-14 items-center justify-center rounded-xl ${color} mx-auto`}>{icon}</div>
       <p className="text-3xl font-extrabold text-slate-900">{value}</p>
-      <p className="text-sm text-slate-600">{label}</p>
+      <p className="text-sm text-muted-foreground">{label}</p>
     </div>
   );
 }

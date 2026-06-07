@@ -31,7 +31,7 @@ export default function EmployeeCostCalculator() {
   return (
     <div className="py-12">
       <div className="mx-auto max-w-2xl px-6">
-        <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white mb-6">
+        <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-slate-900 dark:hover:text-white mb-6">
           <ArrowLeft className="h-4 w-4" /> Back to Tools
         </Link>
         <div className="flex items-center gap-3 mb-6">
@@ -40,7 +40,7 @@ export default function EmployeeCostCalculator() {
           </div>
           <div>
             <h1 className="text-2xl font-bold">Employee Cost Calculator</h1>
-            <p className="text-sm text-slate-700 dark:text-slate-300">True cost per cleaner — wages + PRSI + pension + extras</p>
+            <p className="text-sm text-muted-foreground">True cost per cleaner — wages + PRSI + pension + extras</p>
           </div>
         </div>
 
@@ -57,7 +57,7 @@ export default function EmployeeCostCalculator() {
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-50 dark:bg-slate-900">
+        <Card className="bg-muted">
           <CardContent className="pt-6 space-y-3">
             <Row label="Gross Monthly Pay" value={eur(grossMonthly)} />
             <Row label="Employer PRSI" value={eurm(prsiMonthly)} dim />
@@ -68,7 +68,7 @@ export default function EmployeeCostCalculator() {
             <div className="border-t pt-3 space-y-1">
               <Row label="True Monthly Cost" value={eur(totalMonthly)} bold />
               <Row label="True Yearly Cost" value={eur(totalYearly)} bold />
-              <p className="text-xs text-slate-700 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Effective hourly cost: {eur(effectiveHourly)}/hr — {((effectiveHourly / wage - 1) * 100).toFixed(0)}% above base wage
               </p>
             </div>
@@ -91,7 +91,7 @@ function Field({ label, value, onChange, step }: { label: string; value: number;
 function Row({ label, value, dim, bold }: { label: string; value: string; dim?: boolean; bold?: boolean }) {
   return (
     <div className="flex justify-between text-sm">
-      <span className={bold ? "font-semibold" : dim ? "text-slate-700" : "text-slate-700"}>{label}</span>
+      <span className={bold ? "font-semibold" : dim ? "text-muted-foreground" : "text-muted-foreground"}>{label}</span>
       <span className={bold ? "font-semibold" : ""}>{value}</span>
     </div>
   );
