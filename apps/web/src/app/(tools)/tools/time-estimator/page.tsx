@@ -32,7 +32,7 @@ export default function TimeEstimator() {
   return (
     <div className="py-12">
       <div className="mx-auto max-w-2xl px-6">
-        <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-slate-700 hover:text-slate-900 mb-6">
+        <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white mb-6">
           <ArrowLeft className="h-4 w-4" /> Back to Tools
         </Link>
         <div className="flex items-center gap-3 mb-6">
@@ -41,7 +41,7 @@ export default function TimeEstimator() {
           </div>
           <div>
             <h1 className="text-2xl font-bold">Cleaning Time Estimator</h1>
-            <p className="text-sm text-slate-700">Estimate job duration by room and size</p>
+            <p className="text-sm text-slate-700 dark:text-slate-300">Estimate job duration by room and size</p>
           </div>
         </div>
 
@@ -51,7 +51,7 @@ export default function TimeEstimator() {
               <Label className="text-sm mb-2 block">Property Size</Label>
               <div className="flex flex-wrap gap-2">
                 {Object.keys(sizeMultiplier).map((s) => (
-                  <button key={s} onClick={() => setSize(s)} className={`rounded-full px-4 py-1.5 text-sm border transition-colors ${size === s ? "bg-primary text-primary-foreground border-primary" : "bg-white border-slate-200 hover:border-primary/50"}`}>
+                  <button key={s} onClick={() => setSize(s)} className={`rounded-full px-4 py-1.5 text-sm border transition-colors ${size === s ? "bg-primary text-primary-foreground border-primary" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-primary/50"}`}>
                     {s}
                   </button>
                 ))}
@@ -61,7 +61,7 @@ export default function TimeEstimator() {
               <Label className="text-sm mb-2 block">Condition</Label>
               <div className="flex flex-wrap gap-2">
                 {["Clean", "Moderate", "Dirty", "Very Dirty"].map((c) => (
-                  <button key={c} onClick={() => setCondition(c)} className={`rounded-full px-4 py-1.5 text-sm border transition-colors ${condition === c ? "bg-primary text-primary-foreground border-primary" : "bg-white border-slate-200 hover:border-primary/50"}`}>
+                  <button key={c} onClick={() => setCondition(c)} className={`rounded-full px-4 py-1.5 text-sm border transition-colors ${condition === c ? "bg-primary text-primary-foreground border-primary" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-primary/50"}`}>
                     {c}
                   </button>
                 ))}
@@ -89,9 +89,9 @@ export default function TimeEstimator() {
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-50">
+        <Card className="bg-slate-50 dark:bg-slate-900">
           <CardContent className="pt-6 text-center space-y-3">
-            <p className="text-sm text-slate-700">Estimated Cleaning Time</p>
+            <p className="text-sm text-slate-700 dark:text-slate-300">Estimated Cleaning Time</p>
             <p className="text-3xl font-bold">{hours}h {mins}m</p>
             <p className="text-xs text-slate-400">per person · {teamSize} cleaner{teamSize > 1 ? "s" : ""} · {size} · {condition}</p>
           </CardContent>
