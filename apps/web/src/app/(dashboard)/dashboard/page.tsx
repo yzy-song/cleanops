@@ -6,6 +6,7 @@ import { useDashboard, useOverview } from "@/hooks/use-reports";
 import { useStripeConnectStatus } from "@/hooks/use-company";
 import { useAuthStore } from "@/store/auth.store";
 import { NewJobSheet } from "@/components/job/new-job-sheet";
+import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -258,7 +259,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="mt-3 flex items-baseline gap-2">
-                <span className="text-3xl font-bold tracking-tight">{data?.todayJobs ?? 0}</span>
+                <AnimatedCounter value={data?.todayJobs ?? 0} className="text-3xl font-bold tracking-tight" />
                 {(data?.todayCompletedCount ?? 0) > 0 && (
                   <span className="text-sm font-medium text-emerald-600">{data!.todayCompletedCount} done</span>
                 )}
@@ -277,7 +278,7 @@ export default function DashboardPage() {
                 <span className="text-sm font-medium">Open Quotes</span>
               </div>
               <div className="mt-3 flex items-baseline gap-2">
-                <span className="text-3xl font-bold tracking-tight">{data?.sentQuotesCount ?? 0}</span>
+                <AnimatedCounter value={data?.sentQuotesCount ?? 0} className="text-3xl font-bold tracking-tight" />
               </div>
               {(data?.sentQuotesValue ?? 0) > 0 && (
                 <p className="text-xs text-muted-foreground mt-1">{eur(data!.sentQuotesValue)} pipeline</p>
@@ -299,7 +300,7 @@ export default function DashboardPage() {
                 {weekTrend && <TrendPill current={weekTrend.current} previous={weekTrend.previous} />}
               </div>
               <div className="mt-3 flex items-baseline gap-2">
-                <span className="text-3xl font-bold tracking-tight">{eur(overview?.thisWeekRevenue ?? 0)}</span>
+                <AnimatedCounter value={overview?.thisWeekRevenue ?? 0} prefix="€" className="text-3xl font-bold tracking-tight" />
               </div>
               <p className="text-xs text-muted-foreground mt-1">vs {eur(overview?.lastWeekRevenue ?? 0)} last week</p>
             </CardContent>
@@ -316,7 +317,7 @@ export default function DashboardPage() {
                 <span className="text-sm font-medium">Working Now</span>
               </div>
               <div className="mt-3 flex items-baseline gap-2">
-                <span className="text-3xl font-bold tracking-tight">{data?.inProgressCount ?? 0}</span>
+                <AnimatedCounter value={data?.inProgressCount ?? 0} className="text-3xl font-bold tracking-tight" />
                 {data?.inProgressJobs && data.inProgressJobs.length > 0 && (
                   <span className="text-sm text-blue-600 truncate max-w-[140px]">
                     {data.inProgressJobs.map((j) => j.workers.join(", ")).join(" · ")}
@@ -337,7 +338,7 @@ export default function DashboardPage() {
                 <span className="text-sm font-medium">This Month</span>
               </div>
               <div className="mt-3 flex items-baseline gap-2">
-                <span className="text-3xl font-bold tracking-tight">{eur(data?.thisMonthRevenue ?? 0)}</span>
+                <AnimatedCounter value={data?.thisMonthRevenue ?? 0} prefix="€" className="text-3xl font-bold tracking-tight" />
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 {data?.pendingInvoices ?? 0} invoices unpaid · {eur(data?.pendingInvoicesAmount ?? 0)}
