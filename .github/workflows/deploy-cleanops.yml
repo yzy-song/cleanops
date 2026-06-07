@@ -59,23 +59,37 @@ jobs:
           RELEASE_DIR="/var/www/cleanops/releases/$GITHUB_SHA"
           $SSH $SSH_USER@$SSH_HOST "sudo mkdir -p $RELEASE_DIR && sudo chown ubuntu:ubuntu $RELEASE_DIR"
 
+          # Generate a clean production-ready dist with flat node_modules
           cd apps/api
           tar czf /tmp/dist.tar.gz dist
+          # Create package.json for production (npm needs clean deps, not pnpm workspace:)
+          node -e "
+            const pkg = require('./package.json');
+            const deps = {};
+            for (const [k, v] of Object.entries(pkg.dependencies || {})) {
+              deps[k] = v.replace(/^workspace:\*$/, '*');
+            }
+            require('fs').writeFileSync('/tmp/prod-package.json', JSON.stringify({ name: pkg.name, version: pkg.version, dependencies: deps }));
+          "
           cp ../../ecosystem.config.cjs /tmp/ecosystem.config.cjs
-          $SCP /tmp/dist.tar.gz /tmp/ecosystem.config.cjs $SSH_USER@$SSH_HOST:$RELEASE_DIR/
+          $SCP /tmp/dist.tar.gz /tmp/prod-package.json /tmp/ecosystem.config.cjs $SSH_USER@$SSH_HOST:$RELEASE_DIR/
 
           $SSH $SSH_USER@$SSH_HOST "
             set -e
             cd $RELEASE_DIR
             tar xzf dist.tar.gz && rm dist.tar.gz
+            mv prod-package.json dist/package.json
+            # Pull latest repo code (needed for Prisma migrations)
             cd /var/www/cleanops/repo && git fetch origin main && git reset --hard origin/main
-            CI=true pnpm install
+            # Flat npm install for dist — same as CloudLoom (no pnpm symlinks)
+            cd $RELEASE_DIR/dist && npm install --omit=dev --no-package-lock 2>&1 | tail -3
             sudo mkdir -p /var/www/cleanops/logs && sudo chown cleanops:cleanops /var/www/cleanops/logs
-            ln -sf /var/www/cleanops/repo/apps/api/node_modules $RELEASE_DIR/dist/node_modules
             sudo ln -nfs $RELEASE_DIR/dist /var/www/cleanops/current
-            export DATABASE_URL=\$(grep '^DATABASE_URL=' /var/www/cleanops/.env | cut -d= -f2-) && cd packages/db && npx prisma generate && npx prisma migrate deploy
+            # Prisma: needs repo's pnpm modules. Install if missing.
+            (cd /var/www/cleanops/repo && CI=true pnpm install --frozen-lockfile 2>&1 | tail -3)
+            export DATABASE_URL=\$(grep '^DATABASE_URL=' /var/www/cleanops/.env | cut -d= -f2-) && cd /var/www/cleanops/repo/packages/db && npx prisma generate && npx prisma migrate deploy
             sudo cp $RELEASE_DIR/ecosystem.config.cjs /var/www/cleanops/ecosystem.config.cjs
-            sudo -u cleanops pm2 delete cleanops 2>/dev/null || true
-            sudo -u cleanops pm2 start /var/www/cleanops/ecosystem.config.cjs
+            pm2 delete cleanops 2>/dev/null || true
+            pm2 start /var/www/cleanops/ecosystem.config.cjs
             ls -dt /var/www/cleanops/releases/*/ 2>/dev/null | tail -n +6 | sudo xargs rm -rf 2>/dev/null || true
           "
