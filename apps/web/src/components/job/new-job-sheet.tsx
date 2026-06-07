@@ -46,7 +46,7 @@ export function NewJobSheet({ open, onOpenChange, onCreated }: Props) {
     setLoading(true);
     try {
       const body: any = { customerId, scheduledStart: new Date(date).toISOString(), estimatedDuration, notes: notes || undefined };
-      if (workerId) body.workerId = workerId;
+      if (workerId) body.workerIds = [workerId];
       if (serviceId) body.serviceId = serviceId;
       await api.post("/jobs", body);
       toast.success("Job created");

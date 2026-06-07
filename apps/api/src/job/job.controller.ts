@@ -66,9 +66,12 @@ export class JobController {
   assignWorkers(
     @Param('id') id: string,
     @CurrentUser('companyId') companyId: string,
-    @Body('workerIds') workerIds: string[],
+    @Body('workerIds') workerIds?: string[],
+    @Body('workerId') workerId?: string,
   ) {
-    return this.jobService.assignWorkers(id, companyId, workerIds);
+    const ids = workerIds || (workerId ? [workerId] : []);
+    if (ids.length === 0) throw new BadRequestException('workerIds or workerId is required');
+    return this.jobService.assignWorkers(id, companyId, ids);
   }
 
   @Patch(':id/unassign/:workerId')
