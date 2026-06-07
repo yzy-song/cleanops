@@ -59,39 +59,20 @@ jobs:
           RELEASE_DIR="/var/www/cleanops/releases/$GITHUB_SHA"
           $SSH $SSH_USER@$SSH_HOST "sudo mkdir -p $RELEASE_DIR && sudo chown ubuntu:ubuntu $RELEASE_DIR"
 
-          # Build @cleanops/db and pack for production
-          cd ../../packages/db && pnpm build && npm pack --pack-destination /tmp/
-          DB_TGZ=$(ls /tmp/cleanops-db-*.tgz | head -1)
-
-          # Generate production dist with flat node_modules
-          cd ../apps/api
+          cd apps/api
           tar czf /tmp/dist.tar.gz dist
-          node -e "
-            const pkg = require('./package.json');
-            const deps = {};
-            for (const [k, v] of Object.entries(pkg.dependencies || {})) {
-              if (k === '@cleanops/db') continue;
-              deps[k] = v.replace(/^workspace:\*$/, '*');
-            }
-            require('fs').writeFileSync('/tmp/prod-package.json', JSON.stringify({ name: pkg.name, version: pkg.version, dependencies: deps }));
-          "
           cp ../../ecosystem.config.cjs /tmp/ecosystem.config.cjs
-          cp $DB_TGZ /tmp/db-package.tgz
-          $SCP /tmp/dist.tar.gz /tmp/prod-package.json /tmp/db-package.tgz /tmp/ecosystem.config.cjs $SSH_USER@$SSH_HOST:$RELEASE_DIR/
+          $SCP /tmp/dist.tar.gz /tmp/ecosystem.config.cjs $SSH_USER@$SSH_HOST:$RELEASE_DIR/
 
           $SSH $SSH_USER@$SSH_HOST "
             set -e
             cd $RELEASE_DIR
             tar xzf dist.tar.gz && rm dist.tar.gz
-            mv prod-package.json dist/package.json
-            mv db-package.tgz dist/
-            cd $RELEASE_DIR/dist && npm install ./db-package.tgz --omit=dev --no-package-lock 2>&1 | tail -3
-            npm install --omit=dev --no-package-lock 2>&1 | tail -3
             cd /var/www/cleanops/repo && git fetch origin main && git reset --hard origin/main
-            sudo mkdir -p /var/www/cleanops/logs && sudo chown cleanops:cleanops /var/www/cleanops/logs
+            CI=true pnpm install
+            ln -sf /var/www/cleanops/repo/apps/api/node_modules $RELEASE_DIR/dist/node_modules
             sudo ln -nfs $RELEASE_DIR/dist /var/www/cleanops/current
-            (cd /var/www/cleanops/repo && CI=true pnpm install --frozen-lockfile 2>&1 | tail -3)
-            export DATABASE_URL=\$(grep '^DATABASE_URL=' /var/www/cleanops/.env | cut -d= -f2-) && cd /var/www/cleanops/repo/packages/db && npx prisma generate && npx prisma migrate deploy
+            export DATABASE_URL=\$(grep '^DATABASE_URL=' /var/www/cleanops/.env | cut -d= -f2-) && cd packages/db && npx prisma generate && npx prisma migrate deploy
             sudo cp $RELEASE_DIR/ecosystem.config.cjs /var/www/cleanops/ecosystem.config.cjs
             pm2 delete cleanops 2>/dev/null || true
             pm2 start /var/www/cleanops/ecosystem.config.cjs
