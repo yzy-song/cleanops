@@ -1,81 +1,89 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
-  Calendar,
-  CreditCard,
-  MapPin,
-  BarChart3,
-  FileText,
-  Users,
-  ArrowRight,
-  CheckCircle2,
-  Star,
-  Globe,
+  Calendar, CreditCard, MapPin, BarChart3, FileText, Users,
+  ArrowRight, CheckCircle2, Star, Globe, Clock, DollarSign,
+  Sparkles, Shield, ChevronDown, MessageCircle,
 } from "lucide-react";
+
+// ====== Data ======
+const problems = [
+  { icon: Calendar, title: "Scattered Booking Systems", desc: "WhatsApp, text messages, phone calls — booking requests come from everywhere and nothing is tracked." },
+  { icon: CreditCard, title: "Chasing Payments Manually", desc: "Cash, bank transfers, Revolut — reconciling payments takes hours and invoices get lost." },
+  { icon: Users, title: "Scheduling Chaos", desc: "Who's working where? When? Double-bookings and missed appointments destroy your reputation." },
+];
 
 const features = [
   {
-    icon: Calendar,
-    title: "Smart Scheduling",
-    desc: "Drag-and-drop job scheduling with route optimization. Assign cleaners, track time, and avoid double-bookings.",
+    icon: Globe, title: "Custom Booking Forms", desc: "Embed on your website in 2 minutes. Clients pick service, property size, frequency — auto-generates instant quotes.",
+    color: "bg-purple-100 text-purple-600",
+    stats: null,
   },
   {
-    icon: FileText,
-    title: "Instant Quotes & Invoicing",
-    desc: "Auto-generate professional quotes and invoices. Clients approve online. Stripe payments built in.",
+    icon: CreditCard, title: "Payments & Invoicing", desc: "Auto-generate invoices. Accept card payments via Stripe. Payment reminders on autopilot.",
+    color: "bg-emerald-100 text-emerald-600",
+    stats: "98% payment collection rate",
   },
   {
-    icon: CreditCard,
-    title: "Online Payments",
-    desc: "Accept card payments via Stripe Connect. Auto-reconciliation. Faster cash flow. No chasing invoices.",
+    icon: Users, title: "Staff Management", desc: "Assign jobs, track GPS check-ins, manage schedules. Staff see their day in real-time.",
+    color: "bg-blue-100 text-blue-600",
+    stats: "15 hrs admin saved/week",
   },
   {
-    icon: Users,
-    title: "Worker Management",
-    desc: "Track hours, GPS check-ins, skills, and payroll. Built-in PRSI and pension calculations.",
+    icon: Star, title: "Review Collection", desc: "Auto-request reviews after every job. Happy clients → Google. Unhappy clients → private feedback. Build your reputation on autopilot.",
+    color: "bg-amber-100 text-amber-600",
+    stats: "4.9 ★ average rating",
   },
-  {
-    icon: MapPin,
-    title: "GPS & Eircode",
-    desc: "Ireland-first: Eircode geocoding, GPS check-in verification, and optimized travel routes.",
-  },
-  {
-    icon: BarChart3,
-    title: "Real-Time Reporting",
-    desc: "Revenue dashboards, VAT reports, payroll summaries, and client profitability — all in one place.",
-  },
-];
-
-const steps = [
-  { title: "Sign Up", desc: "Create your account in 30 seconds. No credit card required." },
-  { title: "Add Your Team", desc: "Invite your cleaners and set up your service catalog." },
-  { title: "Start Growing", desc: "Send quotes, schedule jobs, and get paid — all from one dashboard." },
+  { icon: Calendar, title: "Recurring Jobs", desc: "Weekly, fortnightly, monthly schedules that run automatically. Never miss a repeat booking.", color: "bg-teal-100 text-teal-600", stats: null },
+  { icon: BarChart3, title: "Revenue Analytics", desc: "Real-time dashboards. See revenue, profit margins, staff performance — all in one place.", color: "bg-rose-100 text-rose-600", stats: null },
 ];
 
 const stats = [
-  { value: "15 hrs", label: "Saved per week on admin" },
+  { value: "15 hrs", label: "Admin time saved per week" },
   { value: "23%", label: "Average revenue increase" },
-  { value: "98%", label: "Invoice payment rate" },
+  { value: "98%", label: "Payment collection rate" },
   { value: "4.9/5", label: "Customer satisfaction" },
 ];
 
+const testimonials = [
+  { quote: "CleanOps saved us 15 hours a week on admin. We've grown from 3 to 12 staff without hiring a single admin person.", name: "Sarah O'Brien", company: "SparkleClean Co.", location: "Dublin", stars: 5 },
+  { quote: "The booking form on our website now brings in 40% of new clients. It paid for itself in the first week.", name: "Tom Murphy", company: "Cork Cleaning Services", location: "Cork", stars: 5 },
+  { quote: "Finally, software that understands Irish VAT and Eircodes. The GPS check-in gives our clients real peace of mind.", name: "Aisling Ryan", company: "Galway Home Cleaners", location: "Galway", stars: 5 },
+];
+
+const niches = [
+  { icon: "🏠", title: "Residential", desc: "Domestic cleaning services" },
+  { icon: "🏢", title: "Commercial", desc: "Office & business cleaning" },
+  { icon: "🏖️", title: "Airbnb & Short Lets", desc: "Turnover cleaning" },
+  { icon: "📦", title: "Move-In / Move-Out", desc: "End of tenancy deep cleans" },
+  { icon: "🧹", title: "Carpet & Deep Clean", desc: "Specialist services" },
+  { icon: "🏗️", title: "Post-Construction", desc: "Builder & renovation clean" },
+];
+
+const faqs = [
+  { q: "How long does it take to set up?", a: "Most businesses are fully up and running within 30 minutes. Import your clients, customize your booking form, and you're ready to go." },
+  { q: "Can my cleaners use it on their phone?", a: "Yes! CleanOps works on any device — phone, tablet, or desktop. Staff can view their schedule, check in via GPS, and mark jobs complete from their phone." },
+  { q: "How do payments work?", a: "We integrate with Stripe — Ireland's most trusted payment processor. Clients pay by card, and funds arrive in your bank account within 2-7 days." },
+  { q: "Can I embed the booking form on my website?", a: "Absolutely. Copy one line of code and paste it into your WordPress, Wix, or custom site. The form auto-matches your brand colors." },
+  { q: "Is my data secure?", a: "Yes. We use enterprise-grade encryption. Your data is backed up daily and hosted on Oracle Cloud infrastructure in the EU." },
+  { q: "Can I cancel anytime?", a: "Yes. No contracts, no lock-in. Cancel anytime with no penalties." },
+];
+
+// ====== Component ======
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white text-slate-900">
       {/* ====== Nav ====== */}
-      <header className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur-sm">
+      <header className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur-md">
         <div className="mx-auto max-w-7xl flex items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm">
-              CO
-            </div>
-            <span className="text-lg font-semibold tracking-tight">CleanOps</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" asChild>
-              <Link href="/login">Log in</Link>
-            </Button>
-            <Button asChild>
+          <Link href="/" className="flex items-center gap-2.5 font-bold text-lg">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white text-sm">CO</div>
+            CleanOps
+          </Link>
+          <div className="flex items-center gap-4 text-sm">
+            <Link href="/tools" className="text-slate-600 hover:text-slate-900 font-medium">Free Tools</Link>
+            <Link href="/login" className="text-slate-600 hover:text-slate-900">Log In</Link>
+            <Button size="sm" className="rounded-full px-5" asChild>
               <Link href="/register">Start Free Trial</Link>
             </Button>
           </div>
@@ -83,44 +91,50 @@ export default function LandingPage() {
       </header>
 
       {/* ====== Hero ====== */}
-      <section className="relative overflow-hidden">
-        <div className="mx-auto max-w-7xl px-6 pt-24 pb-20 text-center">
-          <div className="mx-auto max-w-3xl space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full border bg-blue-50 px-4 py-1.5 text-sm font-medium text-blue-700">
-              <Globe className="h-4 w-4" />
-              Built for Irish Cleaning Companies
+      <section className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-blue-950 text-white overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(37,99,235,0.15),transparent_50%)]" />
+        <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 relative z-10">
+          <div className="max-w-3xl space-y-8">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm backdrop-blur-sm">
+              <span className="text-amber-400">★★★★★</span>
+              <span>Trusted by 50+ cleaning companies</span>
             </div>
-            <h1 className="text-5xl font-bold tracking-tight sm:text-6xl">
-              Run your cleaning business
-              <br />
-              <span className="text-primary">without the paperwork</span>
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.05]">
+              Run your cleaning business<br />
+              <span className="text-blue-400">like a machine.</span>
             </h1>
-            <p className="text-lg text-slate-600 max-w-xl mx-auto">
-              The all-in-one platform for Irish cleaning companies. Schedule jobs, send quotes, get paid online, and grow your business — all in one place.
+            <p className="text-lg text-white/70 max-w-xl">
+              The all-in-one platform that handles bookings, payments, staff scheduling, and customer management — so you can stop juggling spreadsheets.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-              <Button size="lg" className="gap-2 text-base px-8" asChild>
-                <Link href="/register">
-                  Start Free 14-Day Trial <ArrowRight className="h-4 w-4" />
-                </Link>
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <Button size="lg" className="gap-2 text-base px-8 rounded-full h-12 bg-blue-500 hover:bg-blue-400" asChild>
+                <Link href="/register">Start Your Free Trial <ArrowRight className="h-4 w-4" /></Link>
               </Button>
-              <Button variant="outline" size="lg" className="text-base px-8" asChild>
-                <Link href="/book">See a demo booking →</Link>
+              <Button size="lg" variant="outline" className="gap-2 text-base px-8 rounded-full h-12 border-white/20 text-white hover:bg-white/10" asChild>
+                <Link href="/book">See It In Action</Link>
               </Button>
             </div>
-            <p className="text-sm text-slate-400">No credit card required · Cancel anytime</p>
+            <p className="text-sm text-white/50">Free 14-day trial · No credit card required · Cancel anytime</p>
           </div>
         </div>
       </section>
 
-      {/* ====== Stats ====== */}
-      <section className="border-y bg-slate-50">
-        <div className="mx-auto max-w-7xl px-6 py-12">
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 text-center">
-            {stats.map((s) => (
-              <div key={s.label} className="space-y-1">
-                <p className="text-3xl font-bold text-primary">{s.value}</p>
-                <p className="text-sm text-slate-600">{s.label}</p>
+      {/* ====== Problem ====== */}
+      <section className="py-24 bg-slate-950 text-white">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="text-center space-y-4 mb-16">
+            <p className="text-blue-400 font-semibold text-sm tracking-wide uppercase">The Problem</p>
+            <h2 className="text-3xl sm:text-4xl font-bold">Running a cleaning business is chaotic.</h2>
+            <p className="text-white/60 max-w-2xl mx-auto text-lg">Without the right tools, you're losing time, money, and clients.</p>
+          </div>
+          <div className="grid gap-8 sm:grid-cols-3 max-w-4xl mx-auto">
+            {problems.map((p) => (
+              <div key={p.title} className="rounded-2xl bg-white/5 border border-white/10 p-8 text-center space-y-4">
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/10 mx-auto">
+                  <p.icon className="h-7 w-7 text-blue-400" />
+                </div>
+                <h3 className="text-lg font-semibold">{p.title}</h3>
+                <p className="text-white/50 text-sm leading-relaxed">{p.desc}</p>
               </div>
             ))}
           </div>
@@ -128,107 +142,211 @@ export default function LandingPage() {
       </section>
 
       {/* ====== Features ====== */}
-      <section id="features" className="py-24">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="text-center space-y-4 mb-16">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Everything you need to grow</h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Stop juggling spreadsheets, WhatsApp, and paper invoices. CleanOps handles the admin so you can focus on your clients.
-            </p>
-          </div>
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((f) => (
-              <div key={f.title} className="rounded-xl border bg-white p-6 hover:shadow-md transition-shadow">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 mb-4">
-                  <f.icon className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">{f.title}</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ====== How It Works ====== */}
-      <section className="py-24 bg-slate-50">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="text-center space-y-4 mb-16">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Get started in minutes</h2>
-            <p className="text-lg text-slate-600">No training required. You'll be up and running before your next coffee.</p>
-          </div>
-          <div className="grid gap-8 sm:grid-cols-3 max-w-3xl mx-auto">
-            {steps.map((s, i) => (
-              <div key={s.title} className="text-center space-y-3">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground text-xl font-bold mx-auto">
-                  {i + 1}
-                </div>
-                <h3 className="text-lg font-semibold">{s.title}</h3>
-                <p className="text-sm text-slate-600">{s.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ====== Ireland Differentiator ====== */}
       <section className="py-24">
         <div className="mx-auto max-w-7xl px-6">
-          <div className="rounded-2xl bg-primary/5 border p-12 text-center space-y-4 max-w-3xl mx-auto">
-            <MapPin className="h-10 w-10 text-primary mx-auto" />
-            <h2 className="text-2xl font-bold">Built for Ireland, not retrofitted</h2>
-            <p className="text-slate-600 max-w-xl mx-auto">
-              Eircode routing, 13.5% / 23% VAT handling, Stripe Connect euro payments, and Irish payroll compliance — features that generic American software simply doesn't support.
-            </p>
+          <div className="text-center space-y-4 mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold">Everything you need. Nothing you don&apos;t.</h2>
+            <p className="text-slate-600 max-w-2xl mx-auto text-lg">Purpose-built for cleaning businesses — not a generic field service tool.</p>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {features.map((f) => (
+              <div key={f.title} className="group rounded-2xl border bg-white p-6 hover:shadow-lg hover:border-blue-200 transition-all relative overflow-hidden">
+                <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${f.color} mb-4`}>
+                  <f.icon className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">{f.title}</h3>
+                <p className="text-sm text-slate-600 leading-relaxed mb-4">{f.desc}</p>
+                {f.stats && (
+                  <div className="mt-auto pt-3 border-t">
+                    <span className="text-xs font-semibold text-emerald-600">{f.stats}</span>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ====== CTA ====== */}
-      <section className="py-24 bg-slate-900 text-white">
-        <div className="mx-auto max-w-3xl px-6 text-center space-y-6">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Ready to grow your cleaning business?</h2>
-          <p className="text-lg text-slate-400 max-w-xl mx-auto">
-            Join 50+ Irish cleaning companies already using CleanOps. Start your free trial today.
+      {/* ====== Dashboard Preview + Stats ====== */}
+      <section className="py-24 bg-slate-50 border-y">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="text-center mb-16 space-y-4">
+            <div className="inline-flex items-center gap-2 rounded-full border bg-white px-4 py-1.5 text-sm text-slate-500">
+              <Shield className="h-4 w-4 text-blue-500" />
+              app.cleanops.yzysong.com
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold">See CleanOps in action</h2>
+            <p className="text-slate-600 max-w-xl mx-auto text-lg">One dashboard. Complete control of your entire operation.</p>
+          </div>
+          <div className="grid gap-8 sm:grid-cols-4 text-center max-w-4xl mx-auto">
+            {stats.map((s) => (
+              <div key={s.label} className="space-y-2">
+                <p className="text-4xl font-extrabold text-blue-600">{s.value}</p>
+                <p className="text-sm text-slate-600">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ====== Testimonials ====== */}
+      <section className="py-24">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="text-center space-y-4 mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold">What cleaning business owners say</h2>
+          </div>
+          <div className="grid gap-8 sm:grid-cols-3 max-w-5xl mx-auto">
+            {testimonials.map((t) => (
+              <div key={t.name} className="rounded-2xl border bg-white p-8 space-y-4">
+                <div className="flex gap-0.5">
+                  {Array.from({ length: t.stars }).map((_, i) => (
+                    <Star key={i} className="h-5 w-5 fill-amber-400 text-amber-400" />
+                  ))}
+                </div>
+                <blockquote className="text-sm text-slate-700 leading-relaxed italic">&ldquo;{t.quote}&rdquo;</blockquote>
+                <div>
+                  <p className="font-semibold text-sm">{t.name}</p>
+                  <p className="text-xs text-slate-500">{t.company} · {t.location}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ====== Solutions by Niche ====== */}
+      <section className="py-24 bg-slate-50 border-y">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="text-center space-y-4 mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold">Solutions for every cleaning niche</h2>
+            <p className="text-slate-600 max-w-2xl mx-auto text-lg">Whatever type of cleaning you do, CleanOps adapts to your workflow.</p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3 max-w-4xl mx-auto">
+            {niches.map((n) => (
+              <div key={n.title} className="rounded-xl border bg-white p-5 text-center hover:border-blue-200 hover:shadow-sm transition-all">
+                <p className="text-2xl mb-2">{n.icon}</p>
+                <p className="font-semibold text-sm">{n.title}</p>
+                <p className="text-xs text-slate-500">{n.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ====== ROI Calculator ====== */}
+      <section className="py-24">
+        <div className="mx-auto max-w-3xl px-6">
+          <div className="text-center space-y-4 mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold">What you&apos;ll save with CleanOps</h2>
+            <p className="text-slate-600 text-lg">Based on a typical cleaning business with 30 clients.</p>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-3 text-center">
+            <RoiCard icon={<Clock className="h-6 w-6" />} value="11.3 hrs" label="Admin time saved per week" color="bg-blue-100 text-blue-600" />
+            <RoiCard icon={<DollarSign className="h-6 w-6" />} value="€21,600" label="Revenue uplift per year" color="bg-emerald-100 text-emerald-600" />
+            <RoiCard icon={<CreditCard className="h-6 w-6" />} value="€7,200" label="Payment recovery per year" color="bg-purple-100 text-purple-600" />
+          </div>
+          <p className="text-center mt-8 text-2xl font-extrabold text-blue-600">€32,760 estimated annual benefit</p>
+        </div>
+      </section>
+
+      {/* ====== FAQ ====== */}
+      <section className="py-24 bg-slate-50 border-y">
+        <div className="mx-auto max-w-3xl px-6">
+          <div className="text-center space-y-4 mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold">Got questions?</h2>
+          </div>
+          <div className="space-y-3">
+            {faqs.map((faq) => (
+              <details key={faq.q} className="group rounded-xl border bg-white">
+                <summary className="flex items-center justify-between p-5 cursor-pointer font-medium text-sm list-none">
+                  {faq.q}
+                  <ChevronDown className="h-4 w-4 text-slate-400 group-open:rotate-180 transition-transform" />
+                </summary>
+                <p className="px-5 pb-5 text-sm text-slate-600 leading-relaxed">{faq.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ====== Final CTA ====== */}
+      <section className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-blue-950 text-white overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(37,99,235,0.15),transparent_50%)]" />
+        <div className="mx-auto max-w-7xl px-6 py-24 text-center relative z-10 space-y-8">
+          <h2 className="text-3xl sm:text-4xl font-bold">Stop losing money to bad systems.</h2>
+          <p className="text-lg text-white/70 max-w-xl mx-auto">
+            Join 50+ cleaning companies already using CleanOps. Start your free 14-day trial today. No credit card required.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-            <Button size="lg" variant="secondary" className="gap-2 text-base px-8" asChild>
-              <Link href="/register">
-                Start Free Trial <ArrowRight className="h-4 w-4" />
-              </Link>
+          <div className="flex flex-col sm:flex-row justify-center gap-3 pt-2">
+            <Button size="lg" className="gap-2 text-base px-8 rounded-full h-12 bg-blue-500 hover:bg-blue-400" asChild>
+              <Link href="/register">Start Your Free Trial <ArrowRight className="h-4 w-4" /></Link>
             </Button>
           </div>
-          <div className="flex items-center justify-center gap-6 pt-4">
-            <div className="flex items-center gap-1.5 text-sm text-slate-400">
-              <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-              14-day free trial
-            </div>
-            <div className="flex items-center gap-1.5 text-sm text-slate-400">
-              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-              Card payments via Stripe
-            </div>
+          <div className="flex items-center justify-center gap-6 text-sm text-white/50 pt-4">
+            <span className="flex items-center gap-1.5"><Star className="h-4 w-4 fill-amber-400 text-amber-400" /> 14-day free trial</span>
+            <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-emerald-400" /> No credit card required</span>
+            <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-emerald-400" /> Cancel anytime</span>
           </div>
         </div>
       </section>
 
       {/* ====== Footer ====== */}
-      <footer className="border-t bg-slate-50 py-12">
+      <footer className="bg-slate-950 text-white py-16">
         <div className="mx-auto max-w-7xl px-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-            <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded bg-primary text-primary-foreground text-xs font-bold">
-                CO
+          <div className="grid gap-12 sm:grid-cols-4 mb-12">
+            <div className="space-y-4 sm:col-span-1">
+              <div className="flex items-center gap-2.5 font-bold text-lg">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white text-sm">CO</div>
+                CleanOps
               </div>
-              <span>CleanOps &copy; {new Date().getFullYear()}</span>
+              <p className="text-sm text-slate-400 leading-relaxed">The operating system for modern cleaning companies.</p>
             </div>
+            <div>
+              <p className="font-semibold text-sm mb-4">Product</p>
+              <div className="space-y-2 text-sm text-slate-400">
+                <Link href="/login" className="block hover:text-white transition-colors">Login</Link>
+                <Link href="/register" className="block hover:text-white transition-colors">Sign Up</Link>
+                <Link href="/tools" className="block hover:text-white transition-colors">Free Tools</Link>
+                <Link href="/book" className="block hover:text-white transition-colors">Book a Demo</Link>
+              </div>
+            </div>
+            <div>
+              <p className="font-semibold text-sm mb-4">Compare</p>
+              <div className="space-y-2 text-sm text-slate-400">
+                <span className="block">vs Spreadsheets</span>
+                <span className="block">vs Jobber</span>
+                <span className="block">vs ZenMaid</span>
+                <span className="block">vs Spotless</span>
+              </div>
+            </div>
+            <div>
+              <p className="font-semibold text-sm mb-4">Company</p>
+              <div className="space-y-2 text-sm text-slate-400">
+                <Link href="mailto:hello@cleanops.ie" className="block hover:text-white transition-colors">hello@cleanops.ie</Link>
+                <span className="block">Dublin, Ireland</span>
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-white/10 pt-8 flex flex-col sm:flex-row justify-between gap-4 text-sm text-slate-500">
+            <span>&copy; {new Date().getFullYear()} CleanOps. All rights reserved.</span>
             <div className="flex gap-6">
-              <Link href="/login" className="hover:text-slate-700 transition-colors">Login</Link>
-              <Link href="/register" className="hover:text-slate-700 transition-colors">Sign Up</Link>
-              <Link href="/book" className="hover:text-slate-700 transition-colors">Book a Demo</Link>
+              <span>Privacy Policy</span>
+              <span>Terms of Service</span>
+              <span>GDPR</span>
             </div>
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+function RoiCard({ icon, value, label, color }: { icon: React.ReactNode; value: string; label: string; color: string }) {
+  return (
+    <div className="rounded-2xl border bg-white p-8 text-center space-y-3">
+      <div className={`flex h-14 w-14 items-center justify-center rounded-xl ${color} mx-auto`}>{icon}</div>
+      <p className="text-3xl font-extrabold text-slate-900">{value}</p>
+      <p className="text-sm text-slate-600">{label}</p>
     </div>
   );
 }
