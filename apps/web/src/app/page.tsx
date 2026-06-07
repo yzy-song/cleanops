@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { SoftwareAppStructuredData, FAQStructuredData } from "@/components/seo/structured-data";
+import { NewsletterForm } from "@/components/marketing/newsletter-form";
 import {
   Calendar, CreditCard, MapPin, BarChart3, FileText, Users,
   ArrowRight, CheckCircle2, Star, Globe, Clock, DollarSign,
@@ -285,7 +286,11 @@ export default function LandingPage() {
               <Link href="/register">Start Your Free Trial <ArrowRight className="h-4 w-4" /></Link>
             </Button>
           </div>
-          <div className="flex items-center justify-center gap-6 text-sm text-white/50 pt-4">
+          <div className="pt-6">
+            <p className="text-sm text-white/40 mb-3">Get cleaning business tips delivered to your inbox</p>
+            <NewsletterForm />
+          </div>
+          <div className="flex items-center justify-center gap-6 text-sm text-white/50 pt-6">
             <span className="flex items-center gap-1.5"><Star className="h-4 w-4 fill-amber-400 text-amber-400" /> 14-day free trial</span>
             <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-emerald-400" /> No credit card required</span>
             <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-emerald-400" /> Cancel anytime</span>
