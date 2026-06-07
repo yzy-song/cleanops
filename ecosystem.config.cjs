@@ -3,7 +3,7 @@ module.exports = {
     name: 'cleanops',
     script: '/var/www/cleanops/current/main.js',
     cwd: '/var/www/cleanops',
-    max_restarts: 15,
+    max_restarts: 20,
     min_uptime: '10s',
     restart_delay: 3000,
     max_memory_restart: '512M',
