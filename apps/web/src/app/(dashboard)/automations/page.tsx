@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/auth.store";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,7 +23,13 @@ const triggers = [
 ];
 
 export default function AutomationsPage() {
+  const router = useRouter();
+  const { user } = useAuthStore();
   const qc = useQueryClient();
+
+  useEffect(() => {
+    if (user && user.role === "WORKER") router.push("/dashboard");
+  }, [user, router]);
   const { data, isLoading } = useQuery({ queryKey: ["automations"], queryFn: async () => { const r = await api.get("/automations"); return r.data as any[]; } });
   const createMutation = useMutation({ mutationFn: (body: any) => api.post("/automations", body), onSuccess: () => { qc.invalidateQueries({ queryKey: ["automations"] }); toast.success("Automation created"); } });
   const deleteMutation = useMutation({ mutationFn: (id: string) => api.delete(`/automations/${id}`), onSuccess: () => { qc.invalidateQueries({ queryKey: ["automations"] }); toast.success("Deleted"); } });

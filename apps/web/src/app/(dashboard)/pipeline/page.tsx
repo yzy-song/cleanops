@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/auth.store";
 import { useQuotes } from "@/hooks/use-quotes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,7 +20,13 @@ const columns = [
 ];
 
 export default function PipelinePage() {
+  const router = useRouter();
+  const { user } = useAuthStore();
   const { data, isLoading } = useQuotes({ limit: 200 });
+
+  useEffect(() => {
+    if (user && user.role === "WORKER") router.push("/dashboard");
+  }, [user, router]);
 
   if (isLoading) return <Skeleton className="h-96" />;
 

@@ -44,11 +44,14 @@ export class InvoiceService {
   async generateFromJob(companyId: string, jobId: string) {
     const job = await this.prisma.client.job.findFirst({
       where: { id: jobId, companyId },
-      include: { customer: true, company: true, assignments: { include: { worker: true } } },
+      include: { customer: true, company: true, assignments: { include: { worker: true } }, invoice: true },
     });
     if (!job) throw new NotFoundException('Job not found');
     if (job.status !== 'COMPLETED') {
       throw new BadRequestException('Can only generate invoice for completed jobs');
+    }
+    if (job.invoice) {
+      throw new BadRequestException('Job already has an invoice. Void the existing invoice first if you need to regenerate.');
     }
 
     let totalMinutes = 0;
