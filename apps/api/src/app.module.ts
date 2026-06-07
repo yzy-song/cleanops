@@ -24,6 +24,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { BillingModule } from './billing/billing.module';
 import { TrialGuard } from './billing/trial.guard';
 import { XeroModule as XeroFeatureModule } from './xero/xero.module';
+import { ServiceModule } from './service/service.module';
 import { QuoteModule } from './quote/quote.module';
 
 @Module({
@@ -57,6 +58,7 @@ import { QuoteModule } from './quote/quote.module';
     QuoteModule,
     BillingModule,
     XeroFeatureModule,
+    ServiceModule,
   ],
   controllers: [AppController],
   providers: [

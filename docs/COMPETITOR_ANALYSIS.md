@@ -1,6 +1,6 @@
 # CleanOps 竞品对比分析
 
-> 分析日期：2026-06-07（更新：Spotless Dashboard 深入分析）
+> 分析日期：2026-06-07（更新：实际登录 app.spotlessapp.io 深度体验）
 > 覆盖范围：全球主流清洁行业 SaaS + 爱尔兰本地平台
 
 ---
@@ -327,3 +327,38 @@ Spotless 侧边栏分 **5 个分组**，带标题分隔：
 | P2 | **Automations** | 自动化工作流 |
 | P2 | **Referrals** | 推荐系统 |
 | P3 | Time Tracking / Geofences / Stock | 复杂度高，非核心
+
+---
+
+## 八、实际使用 Spotless 后的核心发现
+
+### 8a. Reviews 是假的
+
+**Reviews 页面显示 "Coming Soon"** — 他们在 landing page 大肆宣传的 Review Collection 功能还没上线。这是重要情报。
+
+### 8b. 创建工单的交互（最值得抄的 UX）
+
+点击 "New Booking" → **右侧滑出面板**（不是跳转新页面）：Customer → Schedule → Services → Property Details → Staff → Notes → Pricing → Create。保持上下文，流程丝滑。
+
+### 8c. Services 是可配置的产品目录
+
+每个 Service 可设：Name、Description、Pricing model、Duration、Category。老板自己管理，不是写死在代码里。
+
+### 8d. Jobs 有三个视图
+
+List | Routes（地图）| Auto-Assign（自动分配）。搜索+日期筛选+7种状态Tab+多排序。
+
+### 8e. Pipeline 是独立 CRM
+
+看板视图：New Lead → Contacted → Quoted → Won → Lost。可拖拽移动。
+
+### 8f. Automations 是规则引擎
+
+if-this-then-that：Trigger（工单完成/发票逾期/报价接受）→ Action（发邮件/发SMS/创建任务/分配员工）。
+
+### 8g. 值得立刻实现的 4 个东西
+
+1. **Services 配置管理** — 商业模式基础（2天）
+2. **Jobs 右侧滑出面板** — 不改功能只改交互（1天）
+3. **Pipeline CRM** — 简单看板（2天）
+4. **空状态文案** — 每个空列表给引导文案（半天）

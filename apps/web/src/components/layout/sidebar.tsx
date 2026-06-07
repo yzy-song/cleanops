@@ -16,6 +16,7 @@ import {
   Settings,
   LogOut,
   User,
+  Package,
 } from "lucide-react";
 
 interface NavGroup {
@@ -45,6 +46,12 @@ const navGroups: NavGroup[] = [
     items: [
       { href: "/quotes", label: "Quotes", icon: ScrollText, roles: ["ADMIN", "MANAGER"] },
       { href: "/invoices", label: "Invoices", icon: FileText, roles: ["ADMIN", "MANAGER"] },
+    ],
+  },
+  {
+    label: "GROWTH",
+    items: [
+      { href: "/services", label: "Services", icon: Package, roles: ["ADMIN", "MANAGER"] },
     ],
   },
   {

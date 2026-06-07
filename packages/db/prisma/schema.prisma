@@ -94,6 +94,26 @@ model Company {
   jobs              Job[]       // 任务库
   invoices          Invoice[]   // 账单库
   quotes            Quote[]     // 报价库
+  services          Service[]   // 可配置服务目录
+}
+
+// 1b. 可配置服务
+model Service {
+  id            String   @id @default(uuid())
+  name          String
+  description   String?
+  pricingModel  String   @default("FIXED") // FIXED | HOURLY | PER_ROOM
+  basePrice     Int      @default(0) // 基础价格 (cents)
+  durationMin   Int      @default(60) // 预估时长 (分钟)
+  category      String?  // 分组
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  companyId     String
+  company       Company  @relation(fields: [companyId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([companyId])
 }
 
 // 2. 后台管理用户
