@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Calculator, TrendingUp, DollarSign, Clock, Rocket, Sparkles, CheckSquare, FileText } from "lucide-react";
+import { Calculator, TrendingUp, DollarSign, Clock, Rocket, Sparkles, CheckSquare, FileText, FileDigit } from "lucide-react";
 
 const tools = [
   {
@@ -22,6 +22,13 @@ const tools = [
     desc: "True cost per cleaner — wages, PRSI (11.15%), pension, equipment, insurance.",
     href: "/tools/employee-cost",
     color: "bg-amber-100 text-amber-600",
+  },
+  {
+    icon: FileDigit,
+    title: "Invoice Generator",
+    desc: "Create branded invoices with line items and VAT. Print or save as PDF.",
+    href: "/tools/invoice-generator",
+    color: "bg-indigo-100 text-indigo-600",
   },
   {
     icon: TrendingUp,
