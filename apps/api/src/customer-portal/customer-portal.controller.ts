@@ -159,6 +159,13 @@ export class CustomerPortalController {
     res.send(buffer);
   }
 
+  @Post('quote/photo-estimate')
+  @TrialBypass()
+  @ApiOperation({ summary: '通过照片 AI 估算清洁报价' })
+  estimateFromPhotos(@Body('photos') photos: string[]) {
+    return this.portalService.estimateFromPhotos(photos);
+  }
+
   @Post('logout')
   @UseGuards(CustomerAuthGuard)
   @ApiOperation({ summary: '客户退出登录（清除会话）' })

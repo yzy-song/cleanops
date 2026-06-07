@@ -6,6 +6,7 @@ import { PricingService } from '../quote/pricing.service';
 import { StripeService } from '../common/services/stripe.service';
 import { InvoiceService } from '../invoice/invoice.service';
 import { GeocodingService } from '../common/services/geocoding.service';
+import { AiEstimateService } from '../common/services/ai-estimate.service';
 import { randomBytes } from 'crypto';
 import { ServiceType, PropertySize, ServiceFrequency } from '@cleanops/db';
 
@@ -21,6 +22,7 @@ export class CustomerPortalService {
     private stripeService: StripeService,
     private invoiceService: InvoiceService,
     private geocodingService: GeocodingService,
+    private aiEstimateService: AiEstimateService,
   ) {}
 
   async sendMagicLink(email: string) {
@@ -566,6 +568,14 @@ export class CustomerPortalService {
       orderBy: { createdAt: 'desc' },
       take: 50,
     });
+  }
+
+  async estimateFromPhotos(photos: string[]) {
+    const estimate = await this.aiEstimateService.estimateFromPhotos(photos);
+    if (!estimate) {
+      throw new BadRequestException('AI estimate is not available. Please configure OPENAI_API_KEY.');
+    }
+    return estimate;
   }
 
   private async resolveCompanyId(): Promise<string> {
