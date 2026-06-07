@@ -32,7 +32,7 @@ export class JobService {
         company: { connect: { id: companyId } },
         customer: { connect: { id: dto.customerId } },
         assignments: {
-          create: dto.workerIds.map((workerId) => ({
+          create: (dto.workerIds || []).map((workerId) => ({
             worker: { connect: { id: workerId } },
           })),
         },
