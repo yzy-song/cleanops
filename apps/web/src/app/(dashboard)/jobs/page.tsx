@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useJobs, useCancelJob, useSendInvoice, type JobQuery } from "@/hooks/use-jobs";
+import { NewJobSheet } from "@/components/job/new-job-sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,6 +38,7 @@ export default function JobsPage() {
   const [scheduleResult, setScheduleResult] = useState<any[] | null>(null);
   const [scheduling, setScheduling] = useState(false);
   const [applying, setApplying] = useState(false);
+  const [jobSheetOpen, setJobSheetOpen] = useState(false);
 
   const handlePreview = async () => {
     setScheduling(true);
@@ -109,10 +111,10 @@ export default function JobsPage() {
             </Link>
           </Button>
           <Button asChild>
-            <Link href="/jobs/new">
+            <Button onClick={() => setJobSheetOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Create Job
-            </Link>
+            </Button>
           </Button>
         </div>
       </div>
@@ -214,7 +216,7 @@ export default function JobsPage() {
           ))}
           {!jobs?.length && (
             <div className="py-8 text-center text-muted-foreground">
-              No jobs found. <Link href="/jobs/new" className="text-primary hover:underline">Create your first job</Link>
+              No jobs found. <button onClick={() => setJobSheetOpen(true)} className="text-primary hover:underline">Create your first job</button>
             </div>
           )}
         </div>
@@ -302,6 +304,7 @@ export default function JobsPage() {
           </div>
         </div>
       )}
+      <NewJobSheet open={jobSheetOpen} onOpenChange={setJobSheetOpen} onCreated={() => refetch()} />
     </div>
   );
 }
