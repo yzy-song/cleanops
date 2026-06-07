@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useDashboard, useOverview } from "@/hooks/use-reports";
 import { useStripeConnectStatus } from "@/hooks/use-company";
 import { useAuthStore } from "@/store/auth.store";
+import { NewJobSheet } from "@/components/job/new-job-sheet";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -92,6 +95,8 @@ export default function DashboardPage() {
   const { data: overview } = useOverview();
   const { data: connectStatus } = useStripeConnectStatus();
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
+  const [jobSheetOpen, setJobSheetOpen] = useState(false);
 
   const greeting = () => {
     const hour = new Date().getHours();
@@ -167,14 +172,16 @@ export default function DashboardPage() {
               Reports
             </Link>
           </Button>
-          <Button size="sm" asChild>
-            <Link href="/jobs/new">
-              <Plus className="mr-1.5 h-4 w-4" />
-              New Job
-            </Link>
+          <Button size="sm" onClick={() => setJobSheetOpen(true)}>
+            <Plus className="mr-1.5 h-4 w-4" />
+            New Job
           </Button>
         </div>
       </div>
+
+      <NewJobSheet open={jobSheetOpen} onOpenChange={setJobSheetOpen} onCreated={() => {
+        queryClient.invalidateQueries({ queryKey: ["reports"] });
+      }} />
 
       {/* Alert bar */}
       {(!connectStatus?.connected ||
