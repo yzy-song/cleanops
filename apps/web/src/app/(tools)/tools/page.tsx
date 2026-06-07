@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Calculator, TrendingUp, DollarSign, Clock, Rocket, Users } from "lucide-react";
+import { Calculator, TrendingUp, DollarSign, Clock, Rocket, Sparkles, CheckSquare, FileText } from "lucide-react";
 
 const tools = [
   {
@@ -19,7 +19,7 @@ const tools = [
   {
     icon: DollarSign,
     title: "Employee Cost Calculator",
-    desc: "Calculate the true cost per cleaner including wages, PRSI, pension, equipment, and insurance.",
+    desc: "True cost per cleaner — wages, PRSI (11.15%), pension, equipment, insurance.",
     href: "/tools/employee-cost",
     color: "bg-amber-100 text-amber-600",
   },
@@ -33,9 +33,30 @@ const tools = [
   {
     icon: Rocket,
     title: "Startup Cost Calculator",
-    desc: "Estimate your cleaning business startup costs with a 6-month projection.",
+    desc: "Estimate your cleaning business startup costs with a 6-month cash projection.",
     href: "/tools/startup-cost",
     color: "bg-orange-100 text-orange-600",
+  },
+  {
+    icon: FileText,
+    title: "Timesheet Calculator",
+    desc: "Track employee hours, overtime, and pay. Interactive weekly timesheet grid.",
+    href: "/tools/timesheet",
+    color: "bg-cyan-100 text-cyan-600",
+  },
+  {
+    icon: Sparkles,
+    title: "Business Name Generator",
+    desc: "Find the perfect name for your cleaning company. Filter by style and tone.",
+    href: "/tools/business-name",
+    color: "bg-pink-100 text-pink-600",
+  },
+  {
+    icon: CheckSquare,
+    title: "Checklist Generator",
+    desc: "Create custom cleaning checklists from templates. Print-ready.",
+    href: "/tools/checklist",
+    color: "bg-green-100 text-green-600",
   },
   {
     icon: Calculator,
