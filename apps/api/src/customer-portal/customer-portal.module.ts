@@ -5,11 +5,12 @@ import { CustomerAuthGuard } from './customer-auth.guard';
 import { EmailModule } from 'src/email/email.module';
 import { QuoteModule } from '../quote/quote.module';
 import { InvoiceModule } from '../invoice/invoice.module';
+import { ReviewService } from '../job/review.service';
 
 @Module({
   imports: [EmailModule, QuoteModule, InvoiceModule],
   controllers: [CustomerPortalController],
-  providers: [CustomerPortalService, CustomerAuthGuard],
+  providers: [CustomerPortalService, CustomerAuthGuard, ReviewService],
   exports: [CustomerPortalService],
 })
 export class CustomerPortalModule {}
