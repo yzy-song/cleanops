@@ -8,28 +8,39 @@ import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: {
-    default: "CleanOps — Cleaning Business Management",
+    default: "CleanOps — Cleaning Business Management Software",
     template: "%s — CleanOps",
   },
   description:
-    "Professional cleaning business management SaaS. Job scheduling, GPS check-in, invoicing, Stripe payments, and payroll. Built for Irish cleaning companies in Dublin and across Ireland.",
+    "Professional cleaning business management SaaS for Irish cleaning companies. Job scheduling, GPS check-in, invoicing, Stripe payments, payroll. Built for Dublin and across Ireland.",
   keywords: [
     "cleaning business software",
-    "cleaning management",
+    "cleaning management software",
     "Dublin cleaners",
     "Irish cleaning company",
-    "job scheduling",
+    "cleaning job scheduling",
+    "cleaning invoicing software",
     "GPS check-in",
-    "cleaning invoicing",
-    "Stripe payments",
+    "Stripe payments Ireland",
+    "cleaning business app",
+    "maid service software",
   ],
+  authors: [{ name: "CleanOps" }],
   openGraph: {
-    title: "CleanOps — Cleaning Business Management",
+    title: "CleanOps — Cleaning Business Management Software",
     description:
-      "Professional cleaning business management for Irish cleaning companies. Job scheduling, GPS check-in, invoicing & Stripe payments.",
+      "All-in-one platform for Irish cleaning companies. Schedule jobs, send invoices, get paid online. Start your free trial.",
     type: "website",
     locale: "en_IE",
+    siteName: "CleanOps",
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "CleanOps — Cleaning Business Management",
+    description: "All-in-one platform for Irish cleaning companies. Start your free trial.",
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({

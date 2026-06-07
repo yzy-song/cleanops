@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { SoftwareAppStructuredData, FAQStructuredData } from "@/components/seo/structured-data";
 import {
   Calendar, CreditCard, MapPin, BarChart3, FileText, Users,
   ArrowRight, CheckCircle2, Star, Globe, Clock, DollarSign,
@@ -73,6 +74,8 @@ const faqs = [
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SoftwareAppStructuredData />
+      <FAQStructuredData items={faqs} />
       {/* ====== Nav ====== */}
       <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md">
         <div className="mx-auto max-w-7xl flex items-center justify-between px-6 py-4">
