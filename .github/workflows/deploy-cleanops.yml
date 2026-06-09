@@ -68,12 +68,18 @@ jobs:
             set -e
             cd $RELEASE_DIR
             tar xzf dist.tar.gz && rm dist.tar.gz
+
+            # Copy flat node_modules from repo (already installed by pnpm on CI runner)
             cd /var/www/cleanops/repo && git fetch origin main && git reset --hard origin/main
             sudo chown -R ubuntu:ubuntu /var/www/cleanops/repo
             CI=true pnpm install
-            ln -sf /var/www/cleanops/repo/apps/api/node_modules $RELEASE_DIR/dist/node_modules
+
+            # Flatten node_modules — copy real files, dereference pnpm symlinks
+            cp -rL /var/www/cleanops/repo/node_modules $RELEASE_DIR/dist/node_modules
+
+            sudo mkdir -p /var/www/cleanops/logs && sudo chown ubuntu:ubuntu /var/www/cleanops/logs
             sudo ln -nfs $RELEASE_DIR/dist /var/www/cleanops/current
-            export DATABASE_URL=\$(grep '^DATABASE_URL=' /var/www/cleanops/.env | cut -d= -f2-) && cd packages/db && npx prisma generate && npx prisma migrate deploy
+            export DATABASE_URL=\$(grep '^DATABASE_URL=' /var/www/cleanops/.env | cut -d= -f2-) && cd /var/www/cleanops/repo/packages/db && npx prisma generate && npx prisma migrate deploy
             sudo cp $RELEASE_DIR/ecosystem.config.cjs /var/www/cleanops/ecosystem.config.cjs
             sudo -u ubuntu pm2 delete cleanops 2>/dev/null || true
             sudo -u ubuntu pm2 reset cleanops 2>/dev/null || true
