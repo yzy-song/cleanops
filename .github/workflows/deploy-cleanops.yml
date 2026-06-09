@@ -76,6 +76,9 @@ jobs:
             export DATABASE_URL=\$(grep '^DATABASE_URL=' /var/www/cleanops/.env | cut -d= -f2-) && cd packages/db && npx prisma generate && npx prisma migrate deploy
             sudo cp $RELEASE_DIR/ecosystem.config.cjs /var/www/cleanops/ecosystem.config.cjs
             sudo -u ubuntu pm2 delete cleanops 2>/dev/null || true
+            sudo -u ubuntu pm2 reset cleanops 2>/dev/null || true
             sudo -u ubuntu pm2 start /var/www/cleanops/ecosystem.config.cjs
+            sleep 5
+            sudo -u ubuntu pm2 status
             ls -dt /var/www/cleanops/releases/*/ 2>/dev/null | tail -n +6 | sudo xargs rm -rf 2>/dev/null || true
           "
