@@ -3,14 +3,12 @@ module.exports = {
     name: 'cleanops',
     script: '/var/www/cleanops/current/main.js',
     cwd: '/var/www/cleanops',
-    max_restarts: 10,
+    max_restarts: 5,
     min_uptime: '10s',
-    restart_delay: 10000,
-    kill_timeout: 30000,
-    max_memory_restart: '500M',
+    restart_delay: 3000,
+    max_memory_restart: '512M',
     env: {
       NODE_ENV: 'production',
-      PORT: '4000',
     },
   }],
 };
