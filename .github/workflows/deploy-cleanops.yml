@@ -78,5 +78,7 @@ jobs:
             sudo cp $RELEASE_DIR/ecosystem.config.cjs /var/www/cleanops/ecosystem.config.cjs
             sudo -u cleanops pm2 delete cleanops 2>/dev/null || true
             sudo -u cleanops pm2 start /var/www/cleanops/ecosystem.config.cjs
+            echo 'Waiting for health check...'
+            for i in 1 2 3 4 5 6; do sleep 5; curl -sf http://localhost:4000/api/health && break; done
             ls -dt /var/www/cleanops/releases/*/ 2>/dev/null | tail -n +6 | sudo xargs rm -rf 2>/dev/null || true
           "
