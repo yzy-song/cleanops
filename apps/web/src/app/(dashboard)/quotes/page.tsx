@@ -40,6 +40,8 @@ export default function QuotesPage() {
   const declineQuote = useDeclineQuote();
 
   const quotes = data?.data ?? [];
+  const counts = { draft: quotes.filter((q: any) => q.status === 'DRAFT').length, sent: quotes.filter((q: any) => q.status === 'SENT').length, accepted: quotes.filter((q: any) => q.status === 'ACCEPTED').length };
+  const totalPending = quotes.filter((q: any) => q.status === 'SENT' || q.status === 'ACCEPTED').reduce((s: number, q: any) => s + (q.grandTotal || 0), 0);
 
   const handleSend = async (id: string) => {
     if (!confirm("Send this quote to the customer?")) return;
@@ -80,6 +82,15 @@ export default function QuotesPage() {
             <Plus className="mr-2 h-4 w-4" />New Quote
           </Link>
         </Button>
+      </div>
+
+      {/* Quick summary */}
+      <div className="flex gap-3 text-sm">
+        <span className="text-muted-foreground">{quotes.length} quotes</span>
+        {counts.draft > 0 && <span className="text-gray-600">{counts.draft} drafts</span>}
+        {counts.sent > 0 && <span className="text-blue-600">{counts.sent} sent</span>}
+        {counts.accepted > 0 && <span className="text-emerald-600">{counts.accepted} accepted</span>}
+        {totalPending > 0 && <span className="ml-auto font-medium text-primary">{eur(totalPending)} pending</span>}
       </div>
 
       <div className="flex gap-2 flex-wrap">
