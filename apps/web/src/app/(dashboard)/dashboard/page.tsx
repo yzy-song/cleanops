@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useDashboard, useOverview } from "@/hooks/use-reports";
-import { useStripeStatus } from "@/hooks/use-company";
+import { useStripeStatus, useXeroConnectionStatus } from "@/hooks/use-company";
 import { useAuthStore } from "@/store/auth.store";
 import { NewJobSheet } from "@/components/job/new-job-sheet";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
@@ -96,6 +96,7 @@ export default function DashboardPage() {
   const { data, isLoading } = useDashboard();
   const { data: overview } = useOverview();
   const { data: connectStatus } = useStripeStatus();
+  const { data: xeroStatus } = useXeroConnectionStatus();
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -193,7 +194,7 @@ export default function DashboardPage() {
       }} />
 
       {/* Alert bar */}
-      {(!connectStatus?.connected ||
+      {(!connectStatus?.connected || !xeroStatus?.connected ||
         (data?.overdueInvoicesCount ?? 0) > 0 ||
         (data?.missingCheckIns ?? 0) > 0 ||
         (data?.pendingDepositsCount ?? 0) > 0) && (
@@ -205,7 +206,19 @@ export default function DashboardPage() {
             >
               <Link2 className="h-4 w-4" />
               <span className="font-medium">
-                Connect Stripe to receive payments
+                Add Stripe Key to receive payments
+              </span>
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          )}
+          {!xeroStatus?.connected && (
+            <Link
+              href="/settings"
+              className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800 hover:bg-emerald-100 transition-colors"
+            >
+              <Link2 className="h-4 w-4" />
+              <span className="font-medium">
+                Connect Xero for auto-sync
               </span>
               <ArrowRight className="h-3 w-3" />
             </Link>
