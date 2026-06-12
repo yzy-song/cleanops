@@ -1,11 +1,11 @@
 {
-  "name": "ChimeraLens AI",
-  "short_name": "ChimeraLens",
-  "start_url": "/",
+  "name": "CleanOps",
+  "short_name": "CleanOps",
+  "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000",
-  "description": "AI-powered face swap and creation platform.",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "description": "Cleaning Business Management — Schedule, Track, Invoice",
   "icons": [
     {
       "src": "/icon-192.png",
