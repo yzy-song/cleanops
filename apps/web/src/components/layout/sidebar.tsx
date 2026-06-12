@@ -37,7 +37,7 @@ const navGroups: NavGroup[] = [
   {
     label: "CORE",
     items: [
-      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["ADMIN", "MANAGER", "WORKER"] },
+      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["ADMIN", "MANAGER"] },
       { href: "/jobs", label: "Jobs", icon: Calendar, roles: ["ADMIN", "MANAGER", "WORKER"] },
       { href: "/map", label: "Map", icon: Map, roles: ["ADMIN", "MANAGER", "WORKER"] },
       { href: "/customers", label: "Customers", icon: Building2, roles: ["ADMIN", "MANAGER"] },

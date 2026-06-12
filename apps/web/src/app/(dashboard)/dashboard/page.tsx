@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useDashboard, useOverview } from "@/hooks/use-reports";
 import { useStripeConnectStatus } from "@/hooks/use-company";
@@ -97,7 +98,14 @@ export default function DashboardPage() {
   const { data: connectStatus } = useStripeConnectStatus();
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [jobSheetOpen, setJobSheetOpen] = useState(false);
+
+  // Workers don't need the admin dashboard — redirect to Jobs
+  if (user?.role === "WORKER") {
+    router.replace("/jobs");
+    return null;
+  }
 
   const greeting = () => {
     const hour = new Date().getHours();
