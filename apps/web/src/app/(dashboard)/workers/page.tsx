@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useWorkers, useDeleteWorker } from "@/hooks/use-workers";
+import { NewWorkerSheet } from "@/components/worker/new-worker-sheet";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,9 +14,10 @@ import { useRoleGuard } from "@/hooks/use-role-guard";
 const eur = (cents: number | null) => `€${((cents ?? 0) / 100).toFixed(2)}`;
 
 export default function WorkersPage() {
-  const { data: workers, isLoading } = useWorkers();
+  const { data: workers, isLoading, refetch } = useWorkers();
   useRoleGuard(["ADMIN", "MANAGER"]);
   const deleteWorker = useDeleteWorker();
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const handleDelete = async (id: string, displayName: string) => {
     if (!confirm(`Deactivate ${displayName}?`)) return;

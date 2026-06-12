@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useCustomers, useDeleteCustomer, useCustomersCreditRisk } from "@/hooks/use-customers";
+import { NewCustomerSheet } from "@/components/customer/new-customer-sheet";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,10 +12,11 @@ import { toast } from "sonner";
 import { useRoleGuard } from "@/hooks/use-role-guard";
 
 export default function CustomersPage() {
-  const { data: customers, isLoading } = useCustomers();
+  const { data: customers, isLoading, refetch } = useCustomers();
   useRoleGuard(["ADMIN", "MANAGER"]);
   const { data: creditRisks } = useCustomersCreditRisk();
   const deleteCustomer = useDeleteCustomer();
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const riskMap = new Map(creditRisks?.map((r) => [r.id, r]));
 
@@ -44,11 +47,9 @@ export default function CustomersPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Customers</h1>
-        <Button asChild>
-          <Link href="/customers/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Customer
-          </Link>
+        <Button onClick={() => setSheetOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Customer
         </Button>
       </div>
 
@@ -116,6 +117,7 @@ export default function CustomersPage() {
           </div>
         )}
       </div>
+      <NewCustomerSheet open={sheetOpen} onOpenChange={setSheetOpen} onCreated={() => refetch()} />
     </div>
   );
 }
