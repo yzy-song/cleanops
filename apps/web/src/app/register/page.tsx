@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useRegister } from "@/hooks/use-auth";
+import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -11,9 +12,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const register = useRegister();
+  const selectedPlan = searchParams.get("plan") || "";
+  const selectedInterval = searchParams.get("interval") || "month";
   const [form, setForm] = useState({
     name: "",
     vatNumber: "",
@@ -29,7 +33,16 @@ export default function RegisterPage() {
     e.preventDefault();
     try {
       await register.mutateAsync(form);
-      toast.success("Company registered! Redirecting...");
+      toast.success("Company registered!");
+
+      // If a plan was selected, redirect to Stripe checkout
+      if (selectedPlan) {
+        const res = await api.post("/billing/checkout", { plan: selectedPlan, interval: selectedInterval });
+        if (res.data?.data?.url) {
+          window.location.href = res.data.data.url;
+          return;
+        }
+      }
       router.push("/dashboard");
     } catch (err: any) {
       toast.error(err?.message || "Registration failed");
@@ -44,7 +57,11 @@ export default function RegisterPage() {
             CO
           </div>
           <CardTitle className="text-xl">Register Your Company</CardTitle>
-          <CardDescription>Create your CleanOps account</CardDescription>
+          <CardDescription>
+            {selectedPlan
+              ? `${selectedPlan} plan · ${selectedInterval === 'year' ? 'Yearly' : 'Monthly'} · 14-day free trial`
+              : "Create your CleanOps account"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -78,5 +95,13 @@ export default function RegisterPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}>
+      <RegisterForm />
+    </Suspense>
   );
 }

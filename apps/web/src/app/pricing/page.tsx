@@ -131,7 +131,9 @@ export default function PricingPage() {
                 </ul>
 
                 <Button className="w-full" variant={plan.highlight ? "default" : "outline"} asChild>
-                  <Link href="/register">Start Free Trial</Link>
+                  <Link href={`/register?plan=${plan.name.toUpperCase()}&interval=${yearly ? 'year' : 'month'}`}>
+                    Start Free Trial
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
