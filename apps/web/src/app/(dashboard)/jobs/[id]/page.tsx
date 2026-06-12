@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
-import { ArrowLeft, Calendar, Clock, MapPin, User, FileText, MessageCircle, Wallet, CheckCircle, Camera, Trash2 } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, MapPin, User, FileText, MessageCircle, Wallet, CheckCircle, Camera, Trash2, ShieldAlert, Zap, UserCheck, ClipboardList } from "lucide-react";
+import { useAuthStore } from "@/store/auth.store";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -32,7 +33,38 @@ export default function JobDetailPage() {
   const markDepositPaid = useMarkDepositPaid();
   const generateDepositLink = useGenerateDepositLink();
 
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === "ADMIN" || user?.role === "MANAGER";
   const [photos, setPhotos] = useState<any[]>([]);
+  const [internalNote, setInternalNote] = useState("");
+  const [adminLoading, setAdminLoading] = useState(false);
+
+  // Admin quick actions
+  const handleForceComplete = async () => {
+    setAdminLoading(true);
+    try { await api.patch(`/jobs/${id}/complete`, {}); toast.success("Job marked complete"); window.location.reload(); }
+    catch { toast.error("Failed"); }
+    finally { setAdminLoading(false); }
+  };
+  const handleForceCheckout = async () => {
+    setAdminLoading(true);
+    try { await api.patch(`/jobs/${id}/check-out`, {}); toast.success("Worker checked out"); window.location.reload(); }
+    catch { toast.error("Failed"); }
+    finally { setAdminLoading(false); }
+  };
+  const handleAddNote = async () => {
+    if (!internalNote.trim()) return;
+    setAdminLoading(true);
+    try {
+      const note = `[${new Date().toISOString().slice(0,10)} Admin Note] ${internalNote.trim()}`;
+      const existing = job?.internalNotes || '';
+      await api.patch(`/jobs/${id}`, { internalNotes: existing ? `${existing}\n${note}` : note });
+      toast.success("Note added");
+      setInternalNote("");
+      window.location.reload();
+    } catch { toast.error("Failed"); }
+    finally { setAdminLoading(false); }
+  };
 
   const fetchPhotos = async () => {
     try {
@@ -334,6 +366,41 @@ export default function JobDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Admin Quick Actions — for handling special situations */}
+      {isAdmin && (job.status === "PENDING" || job.status === "IN_PROGRESS") && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2 text-amber-800">
+              <ShieldAlert className="h-5 w-5" /> Admin Actions
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={handleForceComplete} disabled={adminLoading}>
+                <CheckCircle className="mr-1.5 h-4 w-4" /> Force Complete
+              </Button>
+              {job.status === "IN_PROGRESS" && (
+                <Button size="sm" variant="outline" onClick={handleForceCheckout} disabled={adminLoading}>
+                  <Zap className="mr-1.5 h-4 w-4" /> Force Check-out
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <textarea
+                value={internalNote}
+                onChange={(e) => setInternalNote(e.target.value)}
+                placeholder="Add internal note (worker overslept, customer complaint, etc.)"
+                className="flex-1 rounded-md border px-3 py-1.5 text-sm"
+                rows={2}
+              />
+              <Button size="sm" variant="ghost" onClick={handleAddNote} disabled={!internalNote.trim() || adminLoading}>
+                <ClipboardList className="mr-1.5 h-4 w-4" /> Save
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="flex gap-3">
         {job.status === "PENDING" && (
