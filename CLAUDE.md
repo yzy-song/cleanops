@@ -1,38 +1,54 @@
-# CleanOps — NestJS + Next.js + Prisma + PostgreSQL Monorepo
+# CleanOps — Cleaning Business Management Platform
 
-## 项目结构
-- `apps/api` — NestJS 后端，端口 4000
-- `apps/web` — Next.js 14 App Router 前端，端口 3001
-- `packages/db` — Prisma schema + 共享数据库层
+Monorepo: NestJS API + Next.js 14 Web + Prisma + PostgreSQL.
 
-## 关键规则
-- 金额一律用整数 cents，禁止浮点数；仅前端展示时 `/100` 转欧元
-- 时间统一 UTC 存储，展示时用 `date-fns-tz` 转用户时区
-- 新代码不改相邻旧代码，不顺手重构
-- 不改测试（除非你的改动导致测试过时）
-- 不改 CLAUDE.md（除非明确要求）
+## Quick Links
+- Backend rules: [apps/api/CLAUDE.md](apps/api/CLAUDE.md)
+- Frontend rules: [apps/web/CLAUDE.md](apps/web/CLAUDE.md)
+- Database: [packages/db/prisma/schema.prisma](packages/db/prisma/schema.prisma)
 
-## 后端规则 (`apps/api`)
-- Controller 只做路由，业务逻辑在 Service
-- DTO 用 `class-validator` 校验
-- 遵循现有 module 模式，用依赖注入
+## Shared Rules (all projects)
+- **金额**: 整数 cents，禁止浮点数。前端展示 `/100` 转 €
+- **时间**: UTC 存储，`date-fns-tz` 转用户时区展示
+- **新代码不碰相邻旧代码**，不顺手重构
+- **不改测试**（除非改动导致过时）
+- **不改 CLAUDE.md**（除非明确要求）
+- **国际化**: 所有用户可见文案通过 `t()` 函数
 
-## 前端规则 (`apps/web`)
-- App Router，优先 Server Component
-- UI 和数据获取分离，不 mock 数据
-- 所有用户可见文案通过 `t()` i18n 函数
+## Common Commands
+| Command | What |
+|---------|------|
+| `pnpm dev` | Start API (3000) + Web (3001) |
+| `pnpm build` | Build both |
+| `pnpm --filter @cleanops/api test` | Backend tests |
+| `pnpm --filter @cleanops/web build` | Frontend build check |
 
-## 数据库规则 (`packages/db`)
-- 所有 DB 操作经此层，不写 raw query
-- Schema 改动用 `prisma db push`（开发）/ `prisma migrate deploy`（生产）
+## Database
+```
+# Dev (local)
+pnpm --filter @cleanops/db exec prisma db push
+pnpm --filter @cleanops/db exec prisma generate
 
-## 命令
-- `pnpm dev` — 启动双端
-- `pnpm build` — 构建双端
-- `pnpm --filter @cleanops/api test` — 后端测试
-- `pnpm --filter @cleanops/web build` — 前端构建
+# Production
+pnpm --filter @cleanops/db exec prisma migrate deploy
+```
 
-## CI/Deploy
-- CI 部署配置: `.github/workflows/deploy-cleanops.yml`
-- 服务器: Oracle Cloud (138.2.42.101), PM2 管理进程
+## Deploy
+- CI: `.github/workflows/deploy-cleanops.yml`
+- Server: Oracle Cloud (138.2.42.101)
+- PM2: `ecosystem.config.cjs`
 - SSH: `ssh yzy`
+- Pre-deploy: `export DATABASE_URL=...` before starting node (Prisma reads it at import time)
+
+## Architecture
+```
+apps/api   → NestJS :3000 (REST + Swagger)
+apps/web   → Next.js :3001 (App Router)
+packages/db → Prisma schema + migrations
+```
+
+### Integration Points
+- **Stripe**: Per-company secret key (not Connect). Payment Links for invoices.
+- **Xero**: OAuth2 → auto-sync invoices on create/paid/void. Token refresh cron.
+- **Cloudinary**: Job photo uploads.
+- **Google Maps**: Geocoding postal codes → lat/lng.

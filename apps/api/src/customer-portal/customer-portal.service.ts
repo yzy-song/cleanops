@@ -206,7 +206,7 @@ export class CustomerPortalService {
     const [invoices, total] = await Promise.all([
       this.prisma.client.invoice.findMany({
         where,
-        include: { job: true, company: { select: { stripeAccountId: true } } },
+        include: { job: true, company: { select: { stripeSecretKey: true } } },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
@@ -239,19 +239,14 @@ export class CustomerPortalService {
     if (invoice.status === 'PAID') throw new BadRequestException('Invoice already paid');
     if (invoice.status === 'VOID') throw new BadRequestException('Invoice is voided');
 
-    if (!invoice.company.stripeAccountId) {
-      throw new BadRequestException('Payment not available — company has no Stripe Connect account');
-    }
+    const paymentUrl = await this.stripeService.createPaymentLink(
+      invoice.companyId,
+      invoice.amount,
+      `Invoice ${invoice.invoiceNumber || invoice.id.slice(0, 8)}`,
+      { invoiceId: invoice.id, companyId: invoice.companyId, type: 'invoice' },
+    );
 
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3001';
-    const paymentUrl = await this.stripeService.createConnectCheckoutSession({
-      amount: invoice.amount,
-      connectedAccountId: invoice.company.stripeAccountId,
-      description: `Invoice ${invoice.invoiceNumber || invoice.id.slice(0, 8)} — ${invoice.job.notes || 'Cleaning service'}`,
-      metadata: { invoiceId: invoice.id, companyId: invoice.companyId, type: 'invoice' },
-      successUrl: `${frontendUrl}/portal?paid=${invoice.id}`,
-      cancelUrl: `${frontendUrl}/portal`,
-    });
+    if (!paymentUrl) throw new BadRequestException('Payment not available — company has not configured Stripe');
 
     await this.prisma.client.invoice.update({
       where: { id: invoiceId },
@@ -521,17 +516,14 @@ export class CustomerPortalService {
 
     // Generate deposit payment link if required
     let paymentUrl: string | null = null;
-    if (quote.depositRequired && quote.depositAmount && quote.company.stripeAccountId) {
+    if (quote.depositRequired && quote.depositAmount && quote.company.stripeSecretKey) {
       try {
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3001';
-        paymentUrl = await this.stripeService.createConnectCheckoutSession({
-          amount: quote.depositAmount,
-          connectedAccountId: quote.company.stripeAccountId,
-          description: `Deposit for ${quote.serviceType} — ${quote.customerName}`,
-          metadata: { jobId: job.id, companyId: quote.companyId, type: 'deposit' },
-          successUrl: `${frontendUrl}/portal/quote/${token}?paid=true`,
-          cancelUrl: `${frontendUrl}/portal/quote/${token}`,
-        });
+        paymentUrl = await this.stripeService.createPaymentLink(
+          quote.companyId,
+          quote.depositAmount,
+          `Deposit for ${quote.serviceType || 'Service'} — ${quote.customerName}`,
+          { jobId: job.id, companyId: quote.companyId, type: 'deposit' },
+        );
       } catch (err: any) {
         this.logger.error(`Failed to create deposit checkout session: ${err.message}`);
       }

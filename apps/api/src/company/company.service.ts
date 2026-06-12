@@ -78,77 +78,35 @@ export class CompanyService {
     return this.prisma.client.company.delete({ where: { id } });
   }
 
-  // ==================== Stripe Connect ====================
+  // ==================== Stripe Key Management ====================
 
-  /** Generate Stripe Connect OAuth URL and redirect the user. */
-  getConnectOAuthUrl(companyId: string): string {
-    return this.stripeService.generateConnectOAuthUrl(companyId, '/settings?stripe=callback');
-  }
-
-  /** Handle Stripe Connect OAuth callback — exchange code for account ID. */
-  async handleConnectCallback(companyId: string, code: string) {
-    const { stripeUserId, email } = await this.stripeService.exchangeOAuthCode(code);
-
-    // Retrieve initial account status
-    let status = 'pending';
-    try {
-      const account = await this.stripeService.retrieveAccount(stripeUserId);
-      status = account.status;
-    } catch {
-      // non-blocking: status will be updated via webhook
-    }
-
-    await this.prisma.client.company.update({
+  async saveStripeKey(companyId: string, secretKey: string) {
+    return this.prisma.client.company.update({
       where: { id: companyId },
-      data: {
-        stripeAccountId: stripeUserId,
-        stripeAccountStatus: status,
-        stripeAccountEmail: email,
-      },
+      data: { stripeSecretKey: secretKey },
     });
-
-    return { accountId: stripeUserId, email, status };
   }
 
-  /** Get current Stripe Connect status for a company. */
-  async getConnectStatus(companyId: string) {
+  async removeStripeKey(companyId: string) {
+    return this.prisma.client.company.update({
+      where: { id: companyId },
+      data: { stripeSecretKey: null },
+    });
+  }
+
+  async getStripeStatus(companyId: string) {
     const company = await this.prisma.client.company.findUnique({
       where: { id: companyId },
-      select: { stripeAccountId: true, stripeAccountStatus: true, stripeAccountEmail: true },
+      select: { stripeSecretKey: true },
     });
     if (!company) throw new NotFoundException('Company not found');
 
-    // Refresh status from Stripe if account is connected
-    if (company.stripeAccountId) {
-      try {
-        const account = await this.stripeService.retrieveAccount(company.stripeAccountId);
-        if (account.status !== company.stripeAccountStatus) {
-          await this.prisma.client.company.update({
-            where: { id: companyId },
-            data: { stripeAccountStatus: account.status },
-          });
-          company.stripeAccountStatus = account.status;
-        }
-      } catch {
-        // non-blocking
-      }
-    }
-
+    const hasKey = !!company.stripeSecretKey;
     return {
-      connected: !!company.stripeAccountId,
-      accountId: company.stripeAccountId,
-      email: company.stripeAccountEmail,
-      status: company.stripeAccountStatus || 'disconnected',
+      connected: hasKey,
+      mode: hasKey
+        ? (company.stripeSecretKey!.startsWith('sk_live_') ? 'live' : 'test')
+        : 'disconnected',
     };
-  }
-
-  /** Update Connect account status from webhook. */
-  async updateConnectAccountStatus(accountId: string, chargesEnabled: boolean) {
-    const status = chargesEnabled ? 'enabled' : 'restricted';
-    await this.prisma.client.company.updateMany({
-      where: { stripeAccountId: accountId },
-      data: { stripeAccountStatus: status },
-    });
-    this.logger.log(`Connect account ${accountId} status → ${status}`);
   }
 }

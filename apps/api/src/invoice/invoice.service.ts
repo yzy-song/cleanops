@@ -189,19 +189,14 @@ export class InvoiceService {
     if (invoice.status === 'PAID') throw new BadRequestException('Invoice already paid');
     if (invoice.paymentLink) return { url: invoice.paymentLink };
 
-    const company = await this.prisma.client.company.findUnique({ where: { id: companyId } });
-    if (!company?.stripeAccountId) throw new BadRequestException('Stripe Connect is not set up for this company');
+    const url = await this.stripeService.createPaymentLink(
+      companyId,
+      invoice.amount,
+      `Invoice ${invoice.invoiceNumber ?? invoice.id.slice(0, 8)} — ${invoice.job.customer.name}`,
+      { invoiceId: invoice.id, companyId },
+    );
 
-    const url = await this.stripeService.createConnectCheckoutSession({
-      amount: invoice.amount,
-      connectedAccountId: company.stripeAccountId,
-      description: `Invoice ${invoice.invoiceNumber ?? invoice.id.slice(0, 8)}`,
-      metadata: { invoiceId: invoice.id },
-      successUrl: `${this.configService.get('FRONTEND_URL')}/invoices/${invoice.id}?paid=true`,
-      cancelUrl: `${this.configService.get('FRONTEND_URL')}/invoices/${invoice.id}`,
-    });
-
-    if (!url) throw new BadRequestException('Failed to create payment link');
+    if (!url) throw new BadRequestException('Stripe is not configured for this company. Please add your Stripe secret key in Settings.');
 
     await this.prisma.client.invoice.update({
       where: { id },
@@ -237,15 +232,8 @@ export class InvoiceService {
   }
 
   async handleConnectWebhook(rawBody: Buffer, signature: string) {
-    const secret = this.configService.get<string>('STRIPE_CONNECT_WEBHOOK_SECRET');
-    if (!secret) { this.logger.warn('STRIPE_CONNECT_WEBHOOK_SECRET not configured'); return { received: true }; }
-    try {
-      const event = this.stripeService.constructWebhookEvent(rawBody, signature, secret);
-      await this.processConnectWebhookEvent(event);
-    } catch (err: any) {
-      this.logger.error(`Connect webhook error: ${err.message}`);
-      throw new BadRequestException('Invalid signature');
-    }
+    // Stripe Connect webhook — no longer used, kept for backward compatibility
+    this.logger.warn('Connect webhook received but Connect is deprecated');
     return { received: true };
   }
 
@@ -259,16 +247,6 @@ export class InvoiceService {
           await this.markAsPaid(invoiceId, invoice.companyId, 'STRIPE');
         }
       }
-    }
-  }
-
-  private async processConnectWebhookEvent(event: any): Promise<void> {
-    if (event.type === 'account.updated') {
-      const account = event.data.object;
-      await this.prisma.client.company.updateMany({
-        where: { stripeAccountId: account.id },
-        data: { stripeAccountStatus: account.charges_enabled ? 'enabled' : 'restricted' },
-      });
     }
   }
 

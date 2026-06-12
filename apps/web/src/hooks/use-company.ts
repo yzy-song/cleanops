@@ -8,17 +8,13 @@ export interface Company {
   vatNumber: string | null;
   baseHourlyRate: number;
   pensionEnrollment: boolean;
-  stripeAccountId?: string | null;
-  stripeAccountStatus?: string | null;
-  stripeAccountEmail?: string | null;
+  stripeSecretKey?: string | null;
   _count?: { users: number; workers: number; customers: number; jobs: number };
 }
 
-export interface StripeConnectStatus {
+export interface StripeStatus {
   connected: boolean;
-  accountId: string | null;
-  email: string | null;
-  status: string;
+  mode: 'live' | 'test' | 'disconnected';
 }
 
 export function useCompany() {
@@ -54,29 +50,45 @@ export function useUpdateCompany() {
   });
 }
 
-export function useConnectStripeUrl() {
-  const user = useAuthStore((s) => s.user);
-
-  return useQuery({
-    queryKey: ["company", "stripe", "connect-url"],
-    queryFn: async () => {
-      const res = await api.get("/company/stripe/connect");
-      return res.data.data as { url: string };
-    },
-    enabled: false, // only fetch on demand
-  });
-}
-
-export function useStripeConnectStatus() {
+export function useStripeStatus() {
   const user = useAuthStore((s) => s.user);
 
   return useQuery({
     queryKey: ["company", "stripe", "status"],
     queryFn: async () => {
       const res = await api.get("/company/stripe/status");
-      return res.data.data as StripeConnectStatus;
+      return res.data.data as StripeStatus;
     },
     enabled: !!user?.companyId,
+  });
+}
+
+export function useSaveStripeKey() {
+  const qc = useQueryClient();
+  const user = useAuthStore((s) => s.user);
+
+  return useMutation({
+    mutationFn: async (secretKey: string) => {
+      const res = await api.post("/company/stripe/key", { secretKey });
+      return res.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["company", "stripe"] });
+    },
+  });
+}
+
+export function useDisconnectStripe() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const res = await api.post("/company/stripe/disconnect");
+      return res.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["company", "stripe"] });
+    },
   });
 }
 

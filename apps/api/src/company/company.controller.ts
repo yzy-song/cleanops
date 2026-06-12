@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Res, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Logger } from '@nestjs/common';
 import { CompanyService } from './company.service';
 import { CreateCompanyWithAdminDto } from './dto/create-company-with-admin.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
@@ -7,7 +7,6 @@ import { Auth } from '../auth/decorators/auth.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Role } from '@cleanops/db';
 import { TrialBypass } from '../billing/decorators/trial-bypass.decorator';
-import { Response } from 'express';
 
 @ApiTags('Companies')
 @Controller('company')
@@ -23,41 +22,35 @@ export class CompanyController {
     return this.companyService.create(body);
   }
 
-  // ---- Stripe Connect (must be before :id) ----
+  // ---- Stripe Key Management ----
 
-  @Get('stripe/connect')
+  @Post('stripe/key')
   @Auth(Role.ADMIN)
-  @ApiOperation({ summary: '获取 Stripe Connect OAuth 链接' })
-  connectStripe(@CurrentUser('companyId') companyId: string) {
-    const url = this.companyService.getConnectOAuthUrl(companyId);
-    return { url };
-  }
-
-  @Get('stripe/callback')
-  @TrialBypass()
-  @ApiOperation({ summary: 'Stripe Connect OAuth 回调' })
-  async stripeConnectCallback(
-    @Query('code') code: string,
-    @Query('state') companyId: string,
-    @Res() res: Response,
+  @ApiOperation({ summary: '保存公司的 Stripe Secret Key' })
+  async saveStripeKey(
+    @CurrentUser('companyId') companyId: string,
+    @Body('secretKey') secretKey: string,
   ) {
-    if (!code || !companyId) {
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3001'}/settings?stripe=error`);
+    if (!secretKey || (!secretKey.startsWith('sk_live_') && !secretKey.startsWith('sk_test_'))) {
+      return { success: false, message: 'Invalid Stripe secret key. Must start with sk_live_ or sk_test_' };
     }
-    try {
-      await this.companyService.handleConnectCallback(companyId, code);
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3001'}/settings?stripe=success`);
-    } catch (err: any) {
-      this.logger.error(`Stripe Connect callback failed: ${err.message}`);
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3001'}/settings?stripe=error`);
-    }
+    await this.companyService.saveStripeKey(companyId, secretKey);
+    return { success: true, message: 'Stripe key saved' };
   }
 
   @Get('stripe/status')
   @Auth(Role.ADMIN)
-  @ApiOperation({ summary: '获取当前公司 Stripe Connect 状态' })
-  getStripeStatus(@CurrentUser('companyId') companyId: string) {
-    return this.companyService.getConnectStatus(companyId);
+  @ApiOperation({ summary: '检查公司是否已配置 Stripe' })
+  async getStripeStatus(@CurrentUser('companyId') companyId: string) {
+    return this.companyService.getStripeStatus(companyId);
+  }
+
+  @Post('stripe/disconnect')
+  @Auth(Role.ADMIN)
+  @ApiOperation({ summary: '移除公司的 Stripe 密钥' })
+  async disconnectStripe(@CurrentUser('companyId') companyId: string) {
+    await this.companyService.removeStripeKey(companyId);
+    return { success: true };
   }
 
   // ---- CRUD ----

@@ -53,45 +53,27 @@ export class BillingService {
   async createCheckoutSession(companyId: string, plan: string, interval: 'month' | 'year' = 'month') {
     const company = await this.prisma.client.company.findUnique({
       where: { id: companyId },
+      select: { stripeCustomerId: true },
     });
     if (!company) throw new BadRequestException('Company not found');
 
-    const priceId = this.getPriceId(plan, interval);
-    if (!priceId) throw new BadRequestException(`Price not configured for ${plan} (${interval})`);
+    const url = await this.stripeService.createSubscriptionCheckout(plan, interval, { companyId, plan, customerId: company.stripeCustomerId! });
+    if (!url) throw new BadRequestException('Stripe is not configured');
 
-    const stripe = this.stripeService.client as Stripe | null;
-    if (!stripe) throw new BadRequestException('Stripe is not configured');
-
-    const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
-      customer: company.stripeCustomerId!,
-      line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${this.configService.get('FRONTEND_URL')}/settings/billing?success=true`,
-      cancel_url: `${this.configService.get('FRONTEND_URL')}/settings/billing?canceled=true`,
-      metadata: { companyId, plan },
-      subscription_data: {
-        metadata: { companyId, plan },
-      },
-    });
-
-    return { url: session.url };
+    return { url };
   }
 
   async createPortalSession(companyId: string) {
     const company = await this.prisma.client.company.findUnique({
       where: { id: companyId },
+      select: { stripeCustomerId: true },
     });
     if (!company?.stripeCustomerId) throw new BadRequestException('No Stripe customer');
 
-    const stripe = this.stripeService.client as Stripe | null;
-    if (!stripe) throw new BadRequestException('Stripe is not configured');
+    const url = await this.stripeService.createBillingPortalSession(company.stripeCustomerId);
+    if (!url) throw new BadRequestException('Stripe is not configured');
 
-    const session = await stripe.billingPortal.sessions.create({
-      customer: company.stripeCustomerId,
-      return_url: `${this.configService.get('FRONTEND_URL')}/settings/billing`,
-    });
-
-    return { url: session.url };
+    return { url };
   }
 
   async handleWebhook(rawBody: Buffer, signature: string) {
@@ -166,12 +148,6 @@ export class BillingService {
   }
 
   private async fetchSubscription(subscriptionId: string): Promise<Stripe.Subscription | null> {
-    const stripe = this.stripeService.client as Stripe | null;
-    if (!stripe) return null;
-    try {
-      return await stripe.subscriptions.retrieve(subscriptionId);
-    } catch {
-      return null;
-    }
+    return this.stripeService.retrieveSubscription(subscriptionId);
   }
 }

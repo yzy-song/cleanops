@@ -1,41 +1,34 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useCompany, useUpdateCompany, useStripeConnectStatus, useXeroConnectionStatus, useConnectXeroUrl, useDisconnectXero } from "@/hooks/use-company";
+import { useCompany, useUpdateCompany, useStripeStatus, useSaveStripeKey, useDisconnectStripe, useXeroConnectionStatus, useConnectXeroUrl, useDisconnectXero } from "@/hooks/use-company";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CreditCard, Link2, AlertCircle, CheckCircle2, ExternalLink } from "lucide-react";
+import { CreditCard, Link2, CheckCircle2, ExternalLink, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { api } from "@/lib/api";
 import { useRoleGuard } from "@/hooks/use-role-guard";
 
 export default function SettingsPage() {
   const { data: company, isLoading } = useCompany();
   useRoleGuard(["ADMIN", "MANAGER"]);
   const updateCompany = useUpdateCompany();
-  const { data: connectStatus, isLoading: connectLoading, refetch: refetchStatus } = useStripeConnectStatus();
+  const { data: stripeStatus, isLoading: stripeLoading, refetch: refetchStripe } = useStripeStatus();
+  const saveStripeKey = useSaveStripeKey();
+  const disconnectStripe = useDisconnectStripe();
   const { data: xeroStatus, isLoading: xeroLoading, refetch: refetchXero } = useXeroConnectionStatus();
   const { refetch: fetchXeroUrl } = useConnectXeroUrl();
   const disconnectXero = useDisconnectXero();
   const searchParams = useSearchParams();
-  const [connecting, setConnecting] = useState(false);
+  const [stripeKey, setStripeKey] = useState("");
+  const [showKey, setShowKey] = useState(false);
+  const [savingKey, setSavingKey] = useState(false);
   const [connectingXero, setConnectingXero] = useState(false);
-
-  useEffect(() => {
-    const stripeResult = searchParams.get("stripe");
-    if (stripeResult === "success") {
-      toast.success("Stripe account connected successfully!");
-      refetchStatus();
-    } else if (stripeResult === "error") {
-      toast.error("Failed to connect Stripe account. Please try again.");
-    }
-  }, [searchParams, refetchStatus]);
 
   useEffect(() => {
     const xeroResult = searchParams.get("xero");
@@ -48,14 +41,33 @@ export default function SettingsPage() {
     }
   }, [searchParams, refetchXero]);
 
-  const handleConnectStripe = async () => {
-    setConnecting(true);
+  const handleSaveStripeKey = async () => {
+    if (!stripeKey.trim()) return;
+    setSavingKey(true);
     try {
-      const res = await api.get("/company/stripe/connect");
-      window.location.href = res.data.data.url;
+      const result = await saveStripeKey.mutateAsync(stripeKey.trim());
+      if (result.success) {
+        toast.success("Stripe key saved");
+        setStripeKey("");
+        refetchStripe();
+      } else {
+        toast.error(result.message || "Invalid key");
+      }
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Failed to start Stripe connection");
-      setConnecting(false);
+      toast.error(err?.message || "Failed to save Stripe key");
+    } finally {
+      setSavingKey(false);
+    }
+  };
+
+  const handleDisconnectStripe = async () => {
+    if (!confirm("Remove Stripe key? Payment links will stop working.")) return;
+    try {
+      await disconnectStripe.mutateAsync();
+      toast.success("Stripe key removed");
+      refetchStripe();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed");
     }
   };
 
@@ -130,57 +142,63 @@ export default function SettingsPage() {
         </CardHeader>
       </Card>
 
-      {/* Stripe Connect */}
+      {/* Stripe */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Link2 className="h-5 w-5" />
-            Stripe Connect
+            <CreditCard className="h-5 w-5" />
+            Stripe Payments
           </CardTitle>
           <CardDescription>
-            Connect your Stripe account to receive payments directly from customers
+            Enter your Stripe secret key to receive payments directly to your account
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {connectLoading ? (
+          {stripeLoading ? (
             <Skeleton className="h-10 w-full" />
-          ) : connectStatus?.connected ? (
+          ) : stripeStatus?.connected ? (
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm">
-                {connectStatus.status === "enabled" ? (
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                ) : (
-                  <AlertCircle className="h-4 w-4 text-yellow-600" />
-                )}
-                <span className="font-medium">
-                  {connectStatus.status === "enabled"
-                    ? "Connected"
-                    : connectStatus.status === "restricted"
-                    ? "Needs Attention"
-                    : "Pending"}
-                </span>
-                {connectStatus.email && (
-                  <span className="text-muted-foreground">· {connectStatus.email}</span>
-                )}
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                <span className="font-medium">Connected</span>
+                <span className="text-muted-foreground">· {stripeStatus.mode === "live" ? "Live" : "Test"} mode</span>
               </div>
-              {connectStatus.status === "restricted" && (
-                <p className="text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-md p-2">
-                  Your Stripe account has verification requirements. Please check your Stripe dashboard.
-                </p>
-              )}
-              <Button variant="outline" size="sm" onClick={handleConnectStripe} disabled={connecting}>
-                <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
-                {connecting ? "Redirecting..." : "Reconnect Stripe Account"}
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={handleDisconnectStripe}>
+                  Remove Key
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Customers pay you directly via Stripe. CleanOps takes a 1% platform fee.
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Input
+                    type={showKey ? "text" : "password"}
+                    placeholder="sk_live_xxx or sk_test_xxx"
+                    value={stripeKey}
+                    onChange={(e) => setStripeKey(e.target.value)}
+                    className="pr-10 font-mono text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowKey(!showKey)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <Button onClick={handleSaveStripeKey} disabled={savingKey || !stripeKey.trim()}>
+                  {savingKey ? "Saving..." : "Save"}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Find your key in the{" "}
+                <a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noopener noreferrer" className="underline">
+                  Stripe Dashboard
+                </a>
+                . Money goes directly to your account — no platform fees.
               </p>
-              <Button onClick={handleConnectStripe} disabled={connecting}>
-                {connecting ? "Redirecting..." : "Connect Stripe Account"}
-              </Button>
             </div>
           )}
         </CardContent>

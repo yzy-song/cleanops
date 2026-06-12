@@ -45,16 +45,16 @@ export class JobService {
       try {
         const company = await this.prisma.client.company.findUnique({
           where: { id: companyId },
-          select: { stripeAccountId: true },
+          select: { stripeSecretKey: true },
         });
         let depositLink: string | null = null;
-        if (company?.stripeAccountId) {
-          depositLink = await this.stripeService.createConnectCheckoutSession({
-            amount: dto.depositAmount,
-            connectedAccountId: company.stripeAccountId,
-            description: `Deposit — ${job.customer.name} (Job #${job.id.slice(0, 8)})`,
-            metadata: { jobId: job.id, type: 'deposit', companyId },
-          });
+        if (company?.stripeSecretKey) {
+          depositLink = await this.stripeService.createPaymentLink(
+            companyId,
+            dto.depositAmount,
+            `Deposit — ${job.customer.name} (Job #${job.id.slice(0, 8)})`,
+            { jobId: job.id, type: 'deposit', companyId },
+          );
         }
         if (depositLink) {
           await this.emailService.sendDepositRequestEmail(job.customer, job, depositLink);
@@ -490,19 +490,18 @@ export class JobService {
     // Check Stripe Connect
     const company = await this.prisma.client.company.findUnique({
       where: { id: companyId },
-      select: { stripeAccountId: true, stripeAccountStatus: true },
+      select: { stripeSecretKey: true },
     });
-    if (!company?.stripeAccountId) {
-      throw new BadRequestException('Please connect your Stripe account in Settings first');
+    if (!company?.stripeSecretKey) {
+      throw new BadRequestException('Please add your Stripe secret key in Settings first');
     }
 
-    const description = `Deposit — ${job.customer?.name || 'Cleaning Service'} (Job #${jobId.slice(0, 8)})`;
-    const url = await this.stripeService.createConnectCheckoutSession({
-      amount: job.depositAmount,
-      connectedAccountId: company.stripeAccountId,
-      description,
-      metadata: { jobId, type: 'deposit', companyId },
-    });
+    const url = await this.stripeService.createPaymentLink(
+      companyId,
+      job.depositAmount,
+      `Deposit — ${job.customer?.name || 'Cleaning Service'} (Job #${jobId.slice(0, 8)})`,
+      { jobId, type: 'deposit', companyId },
+    );
 
     return {
       paymentLink: url,
