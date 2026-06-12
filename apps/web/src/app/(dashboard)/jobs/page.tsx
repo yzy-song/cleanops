@@ -17,7 +17,7 @@ import { Plus, Calendar, MapPin, Clock, XCircle, Mail, RefreshCw, Wallet, Wand2,
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
-import { format, addDays, startOfWeek } from "date-fns";
+import { format, addDays, startOfWeek, subDays } from "date-fns";
 
 const statusColors: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-800",
@@ -28,11 +28,23 @@ const statusColors: Record<string, string> = {
 
 export default function JobsPage() {
   const [filter, setFilter] = useState<string>("");
+  const [search, setSearch] = useState("");
+  const [quickDate, setQuickDate] = useState<string>(""); // today | tomorrow | week | all
   const { user } = useAuthStore();
   const isAdmin = user?.role === "ADMIN" || user?.role === "MANAGER";
   // Workers only see their own jobs
-  const query: JobQuery = filter ? { status: filter } : {};
+  const query: JobQuery = { ...(filter ? { status: filter } : {}) };
   if (user?.role === "WORKER" && user?.workerId) query.workerId = user.workerId;
+  if (quickDate === "today") {
+    const d = format(new Date(), "yyyy-MM-dd");
+    query.fromDate = d; query.toDate = d;
+  } else if (quickDate === "tomorrow") {
+    const d = format(addDays(new Date(), 1), "yyyy-MM-dd");
+    query.fromDate = d; query.toDate = d;
+  } else if (quickDate === "week") {
+    query.fromDate = format(new Date(), "yyyy-MM-dd");
+    query.toDate = format(addDays(new Date(), 7), "yyyy-MM-dd");
+  }
   const { data, isLoading, refetch } = useJobs(query);
   const { data: workers } = useWorkers();
   const cancelJob = useCancelJob();
@@ -58,7 +70,7 @@ export default function JobsPage() {
     setSelected(next);
   };
   const toggleAll = () => {
-    const all = data?.data?.map((j: any) => j.id) || [];
+    const all = jobs.map((j: any) => j.id);
     setSelected(selected.size === all.length ? new Set() : new Set(all));
   };
 
@@ -135,7 +147,15 @@ export default function JobsPage() {
     }
   };
 
-  const jobs = data?.data ?? [];
+  const jobs = (data?.data ?? []).filter((job: any) => {
+    if (!search) return true;
+    const s = search.toLowerCase();
+    return (
+      job.customer?.name?.toLowerCase().includes(s) ||
+      job.customer?.address?.toLowerCase().includes(s) ||
+      job.notes?.toLowerCase().includes(s)
+    );
+  });
 
   const handleSendInvoice = async (id: string) => {
     try {
@@ -202,10 +222,30 @@ export default function JobsPage() {
         </div>
       )}
 
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-2 items-center flex-wrap">
+        {/* Quick date filter */}
+        {["all", "today", "tomorrow", "week"].map((d) => (
+          <Button
+            key={d}
+            variant={quickDate === d || (d === "all" && !quickDate) ? "default" : "outline"}
+            size="sm"
+            onClick={() => setQuickDate(d === "all" ? "" : d)}
+          >
+            {d === "all" ? "All Dates" : d === "today" ? "Today" : d === "tomorrow" ? "Tomorrow" : "This Week"}
+          </Button>
+        ))}
+        <span className="w-px h-6 bg-border mx-1" />
+        {/* Search */}
+        <Input
+          placeholder="Search customer..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-48 h-8 text-sm"
+        />
+        <span className="w-px h-6 bg-border mx-1" />
         {isAdmin && (
           <button onClick={toggleAll} className="mr-1 shrink-0" title="Select all">
-            {selected.size > 0 && selected.size === (data?.data?.length || 0)
+            {selected.size > 0 && selected.size === jobs.length
               ? <CheckSquare className="h-5 w-5 text-primary" />
               : <Square className="h-5 w-5 text-muted-foreground" />}
           </button>
