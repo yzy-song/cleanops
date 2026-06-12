@@ -1,4 +1,5 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 import { QueryJobDto } from './dto/query-job.dto';
@@ -13,6 +14,8 @@ import { paginate } from '../common/utils/pagination.util';
 
 @Injectable()
 export class JobService {
+  private readonly logger = new Logger(JobService.name);
+
   constructor(
     private prisma: PrismaService,
     private emailService: EmailService,
@@ -517,5 +520,88 @@ export class JobService {
       customerName: job.customer?.name,
       customerPhone: job.customer?.phone,
     };
+  }
+
+  // ==================== Recurring Job Cron ====================
+
+  @Cron('0 6 * * *') // Every day at 6 AM
+  async generateRecurringJobs() {
+    this.logger.log('Cron: Generating recurring jobs...');
+
+    const recurringJobs = await this.prisma.client.job.findMany({
+      where: {
+        isRecurring: true,
+        recurrenceRule: { not: null },
+        status: { not: 'CANCELLED' },
+        // Only generate for jobs whose next instance is within 14 days
+        scheduledStart: { lt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) },
+      },
+      include: { assignments: true, customer: true },
+      orderBy: { recurrenceLastDate: 'asc' },
+    });
+
+    let generated = 0;
+    for (const job of recurringJobs) {
+      try {
+        // Calculate next occurrence
+        const lastDate = job.recurrenceLastDate || job.scheduledStart;
+        const days = job.recurrenceRule === 'BI-WEEKLY' ? 14 : 7;
+        const nextDate = new Date(lastDate);
+        nextDate.setDate(nextDate.getDate() + days);
+
+        // Only generate if the next date is in the future but within 30 days
+        if (nextDate.getTime() <= Date.now()) continue;
+        if (nextDate.getTime() > Date.now() + 30 * 24 * 60 * 60 * 1000) continue;
+
+        // Check if a job already exists for this date (avoid duplicates)
+        const existing = await this.prisma.client.job.findFirst({
+          where: {
+            companyId: job.companyId,
+            customerId: job.customerId,
+            scheduledStart: {
+              gte: new Date(nextDate.getFullYear(), nextDate.getMonth(), nextDate.getDate()),
+              lt: new Date(nextDate.getFullYear(), nextDate.getMonth(), nextDate.getDate() + 1),
+            },
+            isRecurring: true,
+          },
+        });
+        if (existing) continue;
+
+        // Create the next instance
+        const workerIds = job.assignments.map((a) => a.workerId);
+        const newJob = await this.prisma.client.job.create({
+          data: {
+            scheduledStart: nextDate,
+            estimatedDuration: job.estimatedDuration,
+            notes: job.notes,
+            isRecurring: true,
+            recurrenceRule: job.recurrenceRule,
+            recurrenceLastDate: null,
+            customer: { connect: { id: job.customerId } },
+            company: { connect: { id: job.companyId } },
+            assignments: {
+              create: workerIds.map((workerId) => ({
+                worker: { connect: { id: workerId } },
+              })),
+            },
+          },
+        });
+
+        // Update source job's last generated date
+        await this.prisma.client.job.update({
+          where: { id: job.id },
+          data: { recurrenceLastDate: nextDate },
+        });
+
+        generated++;
+        this.logger.log(`Generated recurring job ${newJob.id.substring(0, 8)} for ${job.customer.name} on ${nextDate.toISOString().split('T')[0]}`);
+      } catch (err) {
+        this.logger.warn(`Failed to generate recurring job for ${job.id.substring(0, 8)}: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    }
+
+    if (generated > 0) {
+      this.logger.log(`Generated ${generated} recurring jobs`);
+    }
   }
 }
