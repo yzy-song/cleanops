@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useJobs, useCancelJob, useSendInvoice, type JobQuery } from "@/hooks/use-jobs";
 import { useWorkers } from "@/hooks/use-workers";
+import { useAuthStore } from "@/store/auth.store";
 import { NewJobSheet } from "@/components/job/new-job-sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,8 @@ export default function JobsPage() {
   const query: JobQuery = filter ? { status: filter } : {};
   const { data, isLoading, refetch } = useJobs(query);
   const { data: workers } = useWorkers();
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === "ADMIN" || user?.role === "MANAGER";
   const cancelJob = useCancelJob();
   const sendInvoice = useSendInvoice();
 
@@ -154,29 +157,27 @@ export default function JobsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Jobs</h1>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => { setScheduleOpen(true); setScheduleResult(null); }}>
-            <Wand2 className="mr-1 h-4 w-4" />
-            Auto Schedule
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/jobs/calendar">
-              <Calendar className="mr-1 h-4 w-4" />
-              Calendar
-            </Link>
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleExportCsv}>
-            <FileText className="mr-1 h-4 w-4" />
-            CSV
-          </Button>
-          <Button onClick={() => setJobSheetOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Job
-          </Button>
+          {isAdmin && (
+            <>
+              <Button variant="outline" size="sm" onClick={() => { setScheduleOpen(true); setScheduleResult(null); }}>
+                <Wand2 className="mr-1 h-4 w-4" /> Auto Schedule
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/jobs/calendar"><Calendar className="mr-1 h-4 w-4" /> Calendar</Link>
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleExportCsv}>
+                <FileText className="mr-1 h-4 w-4" /> CSV
+              </Button>
+              <Button onClick={() => setJobSheetOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" /> Create Job
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Batch action bar */}
-      {selected.size > 0 && (
+      {/* Batch action bar — admin only */}
+      {isAdmin && selected.size > 0 && (
         <div className="flex items-center gap-3 rounded-lg border bg-blue-50 px-4 py-3">
           <span className="text-sm font-medium text-blue-800">{selected.size} selected</span>
           <Select onValueChange={(wid) => handleBatchAssign(wid)} disabled={batchBusy}>
@@ -198,11 +199,13 @@ export default function JobsPage() {
       )}
 
       <div className="flex gap-2 items-center">
-        <button onClick={toggleAll} className="mr-1 shrink-0" title="Select all">
-          {selected.size > 0 && selected.size === (data?.data?.length || 0)
-            ? <CheckSquare className="h-5 w-5 text-primary" />
-            : <Square className="h-5 w-5 text-muted-foreground" />}
-        </button>
+        {isAdmin && (
+          <button onClick={toggleAll} className="mr-1 shrink-0" title="Select all">
+            {selected.size > 0 && selected.size === (data?.data?.length || 0)
+              ? <CheckSquare className="h-5 w-5 text-primary" />
+              : <Square className="h-5 w-5 text-muted-foreground" />}
+          </button>
+        )}
         {["", "PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED"].map((s) => (
           <Button
             key={s}
@@ -227,11 +230,13 @@ export default function JobsPage() {
             <Card key={job.id} className={selected.has(job.id) ? "ring-2 ring-primary" : ""}>
               <CardContent className="flex items-center justify-between p-4">
                 <div className="flex items-start gap-4">
-                  <button onClick={() => toggleSelect(job.id)} className="mt-2 shrink-0">
-                    {selected.has(job.id)
-                      ? <CheckSquare className="h-5 w-5 text-primary" />
-                      : <Square className="h-5 w-5 text-muted-foreground" />}
-                  </button>
+                  {isAdmin && (
+                    <button onClick={() => toggleSelect(job.id)} className="mt-2 shrink-0">
+                      {selected.has(job.id)
+                        ? <CheckSquare className="h-5 w-5 text-primary" />
+                        : <Square className="h-5 w-5 text-muted-foreground" />}
+                    </button>
+                  )}
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                     <Calendar className="h-5 w-5 text-primary" />
                   </div>
