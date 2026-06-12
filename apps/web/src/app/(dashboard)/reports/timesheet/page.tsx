@@ -11,6 +11,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Clock } from "lucide-react";
+import { useRoleGuard } from "@/hooks/use-role-guard";
 
 const eur = (cents: number) => `€${(cents / 100).toFixed(2)}`;
 
@@ -22,6 +23,7 @@ const tabs = [
 
 export default function TimesheetPage() {
   const pathname = usePathname();
+  useRoleGuard(["ADMIN", "MANAGER"]);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [workerId, setWorkerId] = useState("");

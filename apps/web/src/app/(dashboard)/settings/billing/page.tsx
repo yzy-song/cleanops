@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "sonner";
+import { useRoleGuard } from "@/hooks/use-role-guard";
 
 const planLabels: Record<string, string> = {
   STARTER: "Starter",
@@ -18,6 +19,7 @@ const planLabels: Record<string, string> = {
 
 export default function BillingPage() {
   const { data: sub, isLoading } = useSubscription();
+  useRoleGuard(["ADMIN", "MANAGER"]);
   const checkout = useCreateCheckout();
   const portal = useCreatePortal();
   const searchParams = useSearchParams();

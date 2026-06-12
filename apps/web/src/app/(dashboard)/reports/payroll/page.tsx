@@ -11,6 +11,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Euro, Users, TrendingUp } from "lucide-react";
+import { useRoleGuard } from "@/hooks/use-role-guard";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from "recharts";
@@ -36,6 +37,7 @@ const CHART_COLORS = [
 
 export default function PayrollPage() {
   const pathname = usePathname();
+  useRoleGuard(["ADMIN", "MANAGER"]);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const { data, isLoading } = usePayroll(from || undefined, to || undefined);

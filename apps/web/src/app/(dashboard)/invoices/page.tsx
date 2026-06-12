@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { FileText, CheckCircle, XCircle, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useRoleGuard } from "@/hooks/use-role-guard";
 
 const statusColors: Record<string, string> = {
   UNPAID: "bg-yellow-100 text-yellow-800",
@@ -27,6 +28,7 @@ const eur = (cents: number) => `€${(cents / 100).toFixed(2)}`;
 
 export default function InvoicesPage() {
   const [filter, setFilter] = useState<string>("");
+  useRoleGuard(["ADMIN", "MANAGER"]);
   const { data, isLoading } = useInvoices(filter ? { status: filter } : undefined);
   const markAsPaid = useMarkAsPaid();
   const voidInvoice = useVoidInvoice();

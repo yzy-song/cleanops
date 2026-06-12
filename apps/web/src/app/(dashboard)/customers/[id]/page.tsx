@@ -13,9 +13,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useRoleGuard } from "@/hooks/use-role-guard";
 
 export default function CustomerDetailPage() {
   const { id } = useParams<{ id: string }>();
+  useRoleGuard(["ADMIN", "MANAGER"]);
   const router = useRouter();
   const { data: customer, isLoading } = useCustomer(id);
   const updateCustomer = useUpdateCustomer();

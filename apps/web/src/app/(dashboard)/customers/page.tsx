@@ -7,9 +7,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Pencil, Trash2, Building2, MapPin, AlertTriangle, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { useRoleGuard } from "@/hooks/use-role-guard";
 
 export default function CustomersPage() {
   const { data: customers, isLoading } = useCustomers();
+  useRoleGuard(["ADMIN", "MANAGER"]);
   const { data: creditRisks } = useCustomersCreditRisk();
   const deleteCustomer = useDeleteCustomer();
 

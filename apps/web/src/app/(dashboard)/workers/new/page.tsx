@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useRoleGuard } from "@/hooks/use-role-guard";
 
 const SKILLS = [
   { value: "REGULAR", label: "Regular Cleaning" },
@@ -34,6 +35,7 @@ const DAYS = [
 
 export default function NewWorkerPage() {
   const router = useRouter();
+  useRoleGuard(["ADMIN", "MANAGER"]);
   const createWorker = useCreateWorker();
   const [form, setForm] = useState({
     firstName: "",

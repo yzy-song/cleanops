@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { FileText, Send, CheckCircle, XCircle, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useRoleGuard } from "@/hooks/use-role-guard";
 
 const statusColors: Record<string, string> = {
   DRAFT: "bg-gray-100 text-gray-700",
@@ -32,6 +33,7 @@ const eur = (cents: number) => `€${(cents / 100).toFixed(2)}`;
 
 export default function QuotesPage() {
   const [filter, setFilter] = useState<string>("");
+  useRoleGuard(["ADMIN", "MANAGER"]);
   const { data, isLoading } = useQuotes(filter ? { status: filter } : undefined);
   const sendQuote = useSendQuote();
   const convertToJob = useConvertQuoteToJob();

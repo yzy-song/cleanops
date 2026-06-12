@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/store/auth.store";
 import { useServices, useCreateService, useUpdateService, useDeleteService, type ServiceItem } from "@/hooks/use-services";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Package, Plus, Pencil, Trash2, Check, X } from "lucide-react";
 import { toast } from "sonner";
+import { useRoleGuard } from "@/hooks/use-role-guard";
 
 const eur = (c: number) => `€${(c / 100).toFixed(2)}`;
 
@@ -21,15 +20,11 @@ const emptyForm = { name: "", description: "", pricingModel: "FIXED", basePrice:
 
 export default function ServicesPage() {
   const { data: services, isLoading } = useServices();
+  useRoleGuard(["ADMIN", "MANAGER"]);
   const createMutation = useCreateService();
   const updateMutation = useUpdateService();
   const deleteMutation = useDeleteService();
-  const router = useRouter();
-  const { user } = useAuthStore();
 
-  useEffect(() => {
-    if (user && user.role === "WORKER") router.push("/dashboard");
-  }, [user, router]);
 
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);

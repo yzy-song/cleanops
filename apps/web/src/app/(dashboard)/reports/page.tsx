@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, ReceiptText, Clock } from "lucide-react";
+import { useRoleGuard } from "@/hooks/use-role-guard";
 
 const items = [
   {
@@ -26,6 +27,7 @@ const items = [
 ];
 
 export default function ReportsPage() {
+  useRoleGuard(["ADMIN", "MANAGER"]);
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Reports</h1>

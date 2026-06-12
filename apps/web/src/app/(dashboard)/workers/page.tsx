@@ -7,11 +7,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Pencil, Trash2, User } from "lucide-react";
 import { toast } from "sonner";
+import { useRoleGuard } from "@/hooks/use-role-guard";
 
 const eur = (cents: number | null) => `€${((cents ?? 0) / 100).toFixed(2)}`;
 
 export default function WorkersPage() {
   const { data: workers, isLoading } = useWorkers();
+  useRoleGuard(["ADMIN", "MANAGER"]);
   const deleteWorker = useDeleteWorker();
 
   const handleDelete = async (id: string, displayName: string) => {

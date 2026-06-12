@@ -13,9 +13,11 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import { useRoleGuard } from "@/hooks/use-role-guard";
 
 export default function SettingsPage() {
   const { data: company, isLoading } = useCompany();
+  useRoleGuard(["ADMIN", "MANAGER"]);
   const updateCompany = useUpdateCompany();
   const { data: connectStatus, isLoading: connectLoading, refetch: refetchStatus } = useStripeConnectStatus();
   const { data: xeroStatus, isLoading: xeroLoading, refetch: refetchXero } = useXeroConnectionStatus();

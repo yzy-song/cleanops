@@ -10,6 +10,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
+import { useRoleGuard } from "@/hooks/use-role-guard";
 
 const statusColors: Record<string, string> = {
   DRAFT: "bg-gray-100 text-gray-700",
@@ -51,6 +52,7 @@ const eur = (cents: number) => `€${(cents / 100).toFixed(2)}`;
 
 export default function QuoteDetailPage() {
   const { id } = useParams<{ id: string }>();
+  useRoleGuard(["ADMIN", "MANAGER"]);
   const { data: quote, isLoading } = useQuote(id);
   const sendQuote = useSendQuote();
   const convertToJob = useConvertQuoteToJob();

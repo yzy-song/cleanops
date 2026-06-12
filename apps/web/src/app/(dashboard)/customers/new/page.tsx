@@ -12,9 +12,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useRoleGuard } from "@/hooks/use-role-guard";
 
 export default function NewCustomerPage() {
   const router = useRouter();
+  useRoleGuard(["ADMIN", "MANAGER"]);
   const createCustomer = useCreateCustomer();
   const [form, setForm] = useState({
     name: "",

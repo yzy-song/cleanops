@@ -13,6 +13,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import { useRoleGuard } from "@/hooks/use-role-guard";
 
 const SERVICE_TYPES = [
   { value: "REGULAR", label: "Regular House Cleaning" },
@@ -46,6 +47,7 @@ const eur = (cents: number) => `€${(cents / 100).toFixed(2)}`;
 
 export default function NewQuotePage() {
   const router = useRouter();
+  useRoleGuard(["ADMIN", "MANAGER"]);
   const createQuote = useCreateQuote();
   const { data: customers } = useCustomers();
   const customerList = customers ?? [];

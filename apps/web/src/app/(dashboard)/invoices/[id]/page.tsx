@@ -13,6 +13,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
+import { useRoleGuard } from "@/hooks/use-role-guard";
 
 const eur = (cents: number) => `€${(cents / 100).toFixed(2)}`;
 
@@ -33,6 +34,7 @@ const PAYMENT_METHODS = ["STRIPE", "CASH", "REVOLUT", "BANK_TRANSFER"];
 
 export default function InvoiceDetailPage() {
   const { id } = useParams<{ id: string }>();
+  useRoleGuard(["ADMIN", "MANAGER"]);
   const { data: invoice, isLoading } = useInvoice(id);
   const markAsPaid = useMarkAsPaid();
   const voidInvoice = useVoidInvoice();

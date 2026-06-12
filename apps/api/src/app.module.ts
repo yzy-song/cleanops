@@ -32,7 +32,7 @@ import { QuoteModule } from './quote/quote.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: [".env.local", ".env"],
+      envFilePath: ['.env.local', '.env'],
     }),
     ThrottlerModule.forRoot([
       {

@@ -11,6 +11,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Building2, Home, ReceiptText, TrendingUp } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+import { useRoleGuard } from "@/hooks/use-role-guard";
 
 const eur = (cents: number) => `€${(cents / 100).toFixed(2)}`;
 
@@ -27,6 +28,7 @@ const DONUT_COLORS = [
 
 export default function VatPage() {
   const pathname = usePathname();
+  useRoleGuard(["ADMIN", "MANAGER"]);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const { data, isLoading } = useVatReport(from || undefined, to || undefined);

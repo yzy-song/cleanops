@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useRoleGuard } from "@/hooks/use-role-guard";
 
 const SKILLS = [
   { value: "REGULAR", label: "Regular Cleaning" },
@@ -35,6 +36,7 @@ const DAYS = [
 
 export default function WorkerDetailPage() {
   const { id } = useParams<{ id: string }>();
+  useRoleGuard(["ADMIN", "MANAGER"]);
   const router = useRouter();
   const { data: worker, isLoading } = useWorker(id);
   const updateWorker = useUpdateWorker();
