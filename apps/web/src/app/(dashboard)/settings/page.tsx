@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CreditCard, Link2, CheckCircle2, ExternalLink, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { useRoleGuard } from "@/hooks/use-role-guard";
@@ -146,6 +147,26 @@ export default function SettingsPage() {
           </CardTitle>
           <CardDescription>Manage your plan, payment methods, and billing history</CardDescription>
         </CardHeader>
+      </Card>
+
+      {/* Setup Checklist */}
+      <Card className="border-primary/20 bg-primary/5">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium text-primary">Setup Progress</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-3 text-xs">
+            <span className={cn("rounded-full px-3 py-1 font-medium", stripeStatus?.connected ? "bg-emerald-100 text-emerald-700" : "bg-muted text-muted-foreground")}>
+              {stripeStatus?.connected ? "✓ Stripe" : "○ Stripe"}
+            </span>
+            <span className={cn("rounded-full px-3 py-1 font-medium", xeroStatus?.connected ? "bg-emerald-100 text-emerald-700" : "bg-muted text-muted-foreground")}>
+              {xeroStatus?.connected ? "✓ Xero" : "○ Xero"}
+            </span>
+            <span className={cn("rounded-full px-3 py-1 font-medium", company?.vatNumber ? "bg-emerald-100 text-emerald-700" : "bg-muted text-muted-foreground")}>
+              {company?.vatNumber ? "✓ VAT Number" : "○ VAT Number"}
+            </span>
+          </div>
+        </CardContent>
       </Card>
 
       {/* Stripe */}
