@@ -6,7 +6,8 @@ import { useInvoices, useVoidInvoice, useMarkAsPaid, usePaymentLink, formatInvoi
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, CheckCircle, XCircle, ExternalLink } from "lucide-react";
+import { FileText, CheckCircle, XCircle, ExternalLink, Download, Building2 } from "lucide-react";
+import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRoleGuard } from "@/hooks/use-role-guard";
@@ -35,6 +36,18 @@ export default function InvoicesPage() {
   const paymentLink = usePaymentLink();
 
   const invoices = data?.data ?? [];
+  const totalUnpaid = invoices.filter((i: any) => i.status === 'UNPAID').reduce((s: number, i: any) => s + i.amount, 0);
+  const totalOverdue = invoices.filter((i: any) => i.status === 'UNPAID' && new Date(i.createdAt) < new Date(Date.now() - 30*86400000)).reduce((s: number, i: any) => s + i.amount, 0);
+  const totalPaid = invoices.filter((i: any) => i.status === 'PAID').reduce((s: number, i: any) => s + i.amount, 0);
+
+  const handleDownloadPdf = async (id: string) => {
+    try {
+      const res = await api.get(`/invoice/${id}/pdf`, { responseType: "blob" });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement("a"); a.href = url; a.download = `invoice-${id.slice(0,8)}.pdf`; a.click();
+      window.URL.revokeObjectURL(url);
+    } catch { toast.error("Failed to download PDF"); }
+  };
 
   const handleMarkPaid = async (id: string) => {
     if (!confirm("Mark as paid?")) return;
@@ -94,6 +107,29 @@ export default function InvoicesPage() {
           ))}
         </div>
       ) : (
+        <>
+        {/* Summary cards */}
+        <div className="grid grid-cols-3 gap-3">
+          <Card className="bg-red-50 border-red-200">
+            <CardContent className="p-3">
+              <p className="text-xs text-red-600 font-medium">Overdue</p>
+              <p className="text-lg font-bold text-red-700">{eur(totalOverdue)}</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-yellow-50 border-yellow-200">
+            <CardContent className="p-3">
+              <p className="text-xs text-yellow-600 font-medium">Unpaid</p>
+              <p className="text-lg font-bold text-yellow-700">{eur(totalUnpaid)}</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-emerald-50 border-emerald-200">
+            <CardContent className="p-3">
+              <p className="text-xs text-emerald-600 font-medium">Paid</p>
+              <p className="text-lg font-bold text-emerald-700">{eur(totalPaid)}</p>
+            </CardContent>
+          </Card>
+        </div>
+
         <Card>
           <CardContent className="p-0">
             <div className="divide-y">
@@ -130,6 +166,14 @@ export default function InvoicesPage() {
                           <ExternalLink className="mr-1 h-3 w-3" />
                           Pay Link
                         </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDownloadPdf(inv.id)} title="Download PDF">
+                          <Download className="h-3.5 w-3.5" />
+                        </Button>
+                        {inv.xeroInvoiceId && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1" title="Synced to Xero">
+                            <Building2 className="h-3 w-3 text-blue-500" />
+                          </span>
+                        )}
                         <Button variant="ghost" size="sm" onClick={() => handleMarkPaid(inv.id)}>
                           <CheckCircle className="mr-1 h-3 w-3" />
                           Paid
@@ -151,6 +195,7 @@ export default function InvoicesPage() {
             </div>
           </CardContent>
         </Card>
+        </>
       )}
     </div>
   );
