@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { useJobs, useAssignWorkers } from "@/hooks/use-jobs";
 import { useWorkers } from "@/hooks/use-workers";
+import { useRoleGuard } from "@/hooks/use-role-guard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +25,7 @@ const WORKER_ROUTE_COLORS = [
 ];
 
 export default function MapPage() {
+  useRoleGuard(["ADMIN", "MANAGER"]);
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [selectedJob, setSelectedJob] = useState<any | null>(null);
   const [assignWorkerId, setAssignWorkerId] = useState("");

@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { AuthGuard } from "@/components/layout/auth-guard";
+import { CommandPalette } from "@/components/layout/command-palette";
 
 const spring = { type: "spring" as const, stiffness: 350, damping: 30 };
 
@@ -13,6 +14,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <AuthGuard>
+      <CommandPalette />
       <div className="flex min-h-screen">
         <Sidebar />
         <div className="flex flex-1 flex-col pl-60">
