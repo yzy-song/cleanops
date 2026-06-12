@@ -268,6 +268,25 @@ export class CustomerPortalService {
     return invoice;
   }
 
+  async getBookInfo(slug: string) {
+    const company = await this.prisma.client.company.findFirst({
+      where: { slug },
+      select: { id: true, name: true },
+    });
+    if (!company) throw new BadRequestException('Booking not available');
+
+    const services = await this.prisma.client.service.findMany({
+      where: { companyId: company.id },
+      select: { id: true, name: true, basePrice: true },
+      orderBy: { name: 'asc' },
+    });
+
+    return {
+      companyName: company.name,
+      services: services.map((s) => ({ id: s.id, name: s.name, price: s.basePrice })),
+    };
+  }
+
   async createBooking(data: {
     name: string;
     email: string;

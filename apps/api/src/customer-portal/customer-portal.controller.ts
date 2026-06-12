@@ -18,6 +18,13 @@ import {
 export class CustomerPortalController {
   constructor(private readonly portalService: CustomerPortalService) {}
 
+  @Get('book-info/:slug')
+  @TrialBypass()
+  @ApiOperation({ summary: '获取公开预约页面信息' })
+  getBookInfo(@Param('slug') slug: string) {
+    return this.portalService.getBookInfo(slug);
+  }
+
   @Post('send-link')
   @Throttle({ default: { ttl: 60000, limit: 3 } })
   @ApiOperation({ summary: '发送 magic link 到客户邮箱' })
