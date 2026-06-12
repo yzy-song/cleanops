@@ -19,6 +19,7 @@ const tabs = [
   { href: "/reports/payroll", label: "Payroll" },
   { href: "/reports/vat", label: "VAT" },
   { href: "/reports/timesheet", label: "Timesheet" },
+  { href: "/reports/profitability", label: "Profitability" },
 ];
 
 export default function TimesheetPage() {
@@ -30,8 +31,8 @@ export default function TimesheetPage() {
   const { data: workers } = useWorkers();
   const { data, isLoading } = useTimesheet(workerId || undefined, from || undefined, to || undefined);
 
-  const totalHours = data?.reduce((sum, t) => sum + t.hours, 0) ?? 0;
-  const totalEarnings = data?.reduce((sum, t) => sum + t.earnings, 0) ?? 0;
+  const totalHours = data?.reduce((sum: number, t: any) => sum + t.hours, 0) ?? 0;
+  const totalEarnings = data?.reduce((sum: number, t: any) => sum + t.earnings, 0) ?? 0;
 
   return (
     <div className="space-y-4">
@@ -122,7 +123,7 @@ export default function TimesheetPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {data?.map((row, i) => (
+                  {data?.map((row: any, i: number) => (
                     <tr key={i} className="border-b">
                       <td className="p-3">{row.customerName}</td>
                       <td className="p-3">{new Date(row.date).toLocaleDateString()}</td>

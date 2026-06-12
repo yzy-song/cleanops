@@ -22,6 +22,7 @@ const tabs = [
   { href: "/reports/payroll", label: "Payroll" },
   { href: "/reports/vat", label: "VAT" },
   { href: "/reports/timesheet", label: "Timesheet" },
+  { href: "/reports/profitability", label: "Profitability" },
 ];
 
 const CHART_COLORS = [
@@ -42,7 +43,7 @@ export default function PayrollPage() {
   const [to, setTo] = useState("");
   const { data, isLoading } = usePayroll(from || undefined, to || undefined);
 
-  const chartData = (data?.payroll ?? []).map((row, i) => ({
+  const chartData = (data?.payroll ?? []).map((row: any, i: number) => ({
     name: row.workerName,
     gross: row.grossPay / 100,
     net: row.netPay / 100,
@@ -184,7 +185,7 @@ export default function PayrollPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(data?.payroll ?? []).map((row, i) => (
+                    {(data?.payroll ?? []).map((row: any, i: number) => (
                       <tr key={i} className="border-b hover:bg-muted/30 transition-colors">
                         <td className="p-3 font-medium">{row.workerName}</td>
                         <td className="p-3 text-right">{row.totalHours.toFixed(1)}</td>

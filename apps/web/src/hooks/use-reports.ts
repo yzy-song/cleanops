@@ -62,78 +62,78 @@ export function useDashboard() {
     queryKey: ["reports", "dashboard"],
     queryFn: async () => {
       const res = await api.get("/report/dashboard");
-      return res.data.data as DashboardData;
+      const raw = res.data.data;
+      raw.todayJobs = raw.todayJobDetails?.length ?? 0;
+      raw.overdueInvoicesCount = raw.overdueInvoices?.length ?? 0;
+      raw.overdueInvoicesAmount = raw.overdueInvoices?.reduce((s: number, inv: any) => s + inv.amount, 0) ?? 0;
+      raw.pendingInvoices = raw.pendingInvoicesCount ?? 0;
+      raw.pendingInvoicesAmount = raw.pendingInvoicesAmount ?? 0;
+      raw.todayRevenue = raw.todayRevenue ?? raw.todayExpectedRevenue ?? 0;
+      raw.pendingDepositsCount = raw.pendingDeposits?.length ?? 0;
+      raw.pendingDepositsAmount = raw.pendingDeposits?.reduce((s: number, d: any) => s + d.amount, 0) ?? 0;
+      raw.inProgressCount = raw.inProgressJobs?.length ?? 0;
+      raw.missingCheckIns = raw.missingCheckIns ?? 0;
+      return raw as DashboardData;
     },
   });
-}
-
-export interface PayrollItem {
-  workerId: string;
-  workerName: string;
-  totalHours: number;
-  hourlyRate: number;
-  grossPay: number;
-  pensionAmount: number;
-  prsiEstimate: number;
-  netPay: number;
-}
-
-export interface PayrollData {
-  payroll: PayrollItem[];
-  totals: { grossPay: number; pensionAmount: number; prsiEstimate: number; netPay: number };
-  eroMinimum: number;
 }
 
 export function usePayroll(from?: string, to?: string) {
   return useQuery({
     queryKey: ["reports", "payroll", from, to],
     queryFn: async () => {
-      const res = await api.get("/report/payroll", { params: { from, to } });
-      return res.data.data as PayrollData;
+      const params = new URLSearchParams();
+      if (from) { params.set("from", from) };
+      if (to) { params.set("to", to) };
+      const res = await api.get(`/report/payroll?${params.toString()}`);
+      return res.data.data as {
+        payroll: { workerId: string; workerName: string; totalHours: number; hourlyRate: number; grossPay: number; pensionAmount: number; prsiEstimate: number; netPay: number; jobCount: number }[];
+        totals: { grossPay: number; pensionAmount: number; prsiEstimate: number; netPay: number };
+        eroMinimum: number;
+      };
     },
   });
-}
-
-export interface VatReport {
-  residential: { count: number; vatTotal: number; amountTotal: number; vatRate: string };
-  commercial: { count: number; vatTotal: number; amountTotal: number; vatRate: string };
-  totalVatLiability: number;
-  totalRevenue: number;
 }
 
 export function useVatReport(from?: string, to?: string) {
   return useQuery({
     queryKey: ["reports", "vat", from, to],
     queryFn: async () => {
-      const res = await api.get("/report/vat", { params: { from, to } });
-      return res.data.data as VatReport;
+      const params = new URLSearchParams();
+      if (from) { params.set("from", from) };
+      if (to) { params.set("to", to) };
+      const res = await api.get(`/report/vat?${params.toString()}`);
+      return res.data.data;
     },
   });
-}
-
-export interface TimesheetItem {
-  jobId: string;
-  customerName: string;
-  date: string;
-  hours: number;
-  earnings: number;
 }
 
 export function useTimesheet(workerId?: string, from?: string, to?: string) {
   return useQuery({
     queryKey: ["reports", "timesheet", workerId, from, to],
     queryFn: async () => {
-      const res = await api.get("/report/timesheet", { params: { workerId, from, to } });
-      return res.data.data as TimesheetItem[];
+      const params = new URLSearchParams();
+      if (workerId) { params.set("workerId", workerId) };
+      if (from) { params.set("from", from) };
+      if (to) { params.set("to", to) };
+      const res = await api.get(`/report/timesheet?${params.toString()}`);
+      return res.data.data;
     },
   });
 }
 
 export interface OverviewData {
-  revenueByDay: { date: string; amount: number }[];
-  invoiceBreakdown: { paid: number; unpaid: number };
   thisWeekRevenue: number;
   lastWeekRevenue: number;
+  thisMonthRevenue: number;
+  workingNowCount: number;
+  workingNowNames: string[];
+  revenueByDay: { date: string; amount: number }[];
+  paid: number;
+  unpaid: number;
+  revenue: any[];
+  invoiceStatus: any;
+  [key: string]: any;
 }
 
 export function useOverview() {
@@ -142,6 +142,22 @@ export function useOverview() {
     queryFn: async () => {
       const res = await api.get("/report/overview");
       return res.data.data as OverviewData;
+    },
+  });
+}
+
+export function useProfitability(from?: string, to?: string) {
+  return useQuery({
+    queryKey: ["reports", "profitability", from, to],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (from) params.set("from", from);
+      if (to) params.set("to", to);
+      const res = await api.get(`/report/profitability?${params.toString()}`);
+      return res.data.data as {
+        jobs: { jobId: string; customer: string; date: string; revenue: number; laborCost: number; grossProfit: number; margin: number; minutes: number; workers: string }[];
+        summary: { totalJobs: number; totalRevenue: number; totalLaborCost: number; totalGrossProfit: number; totalMargin: number; totalHours: number; avgRevenuePerJob: number; avgLaborPerJob: number };
+      };
     },
   });
 }

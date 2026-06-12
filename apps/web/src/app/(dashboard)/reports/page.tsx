@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, ReceiptText, Clock } from "lucide-react";
+import { DollarSign, ReceiptText, Clock, TrendingUp } from "lucide-react";
 import { useRoleGuard } from "@/hooks/use-role-guard";
 
 const items = [
@@ -23,6 +23,12 @@ const items = [
     icon: Clock,
     title: "Timesheet",
     desc: "Hours worked and earnings per worker and customer.",
+  },
+  {
+    href: "/reports/profitability",
+    icon: TrendingUp,
+    title: "Profitability",
+    desc: "Revenue vs labor cost per job. Margin analysis.",
   },
 ];
 
