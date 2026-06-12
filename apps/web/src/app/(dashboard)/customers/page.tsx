@@ -7,7 +7,8 @@ import { NewCustomerSheet } from "@/components/customer/new-customer-sheet";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Pencil, Trash2, Building2, MapPin, AlertTriangle, FileText } from "lucide-react";
+import { Plus, Pencil, Trash2, Building2, MapPin, AlertTriangle, FileText, Search, Users, Building, Home } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useRoleGuard } from "@/hooks/use-role-guard";
 
@@ -17,8 +18,18 @@ export default function CustomersPage() {
   const { data: creditRisks } = useCustomersCreditRisk();
   const deleteCustomer = useDeleteCustomer();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<"" | "commercial" | "residential">("");
 
   const riskMap = new Map(creditRisks?.map((r) => [r.id, r]));
+
+  const filtered = (customers ?? []).filter((c: any) => {
+    if (search && !c.name?.toLowerCase().includes(search.toLowerCase()) &&
+        !c.address?.toLowerCase().includes(search.toLowerCase())) return false;
+    if (typeFilter === "commercial" && !c.isCommercial) return false;
+    if (typeFilter === "residential" && c.isCommercial) return false;
+    return true;
+  });
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Delete ${name}?`)) return;
@@ -53,8 +64,23 @@ export default function CustomersPage() {
         </Button>
       </div>
 
+      {/* Filters */}
+      <div className="flex gap-2 items-center">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 h-8 text-sm" />
+        </div>
+        {(["", "commercial", "residential"] as const).map((t) => (
+          <Button key={t} variant={typeFilter === t ? "default" : "outline"} size="sm" onClick={() => setTypeFilter(t)}>
+            {t === "" ? <Users className="mr-1 h-3.5 w-3.5" /> : t === "commercial" ? <Building className="mr-1 h-3.5 w-3.5" /> : <Home className="mr-1 h-3.5 w-3.5" />}
+            {t || "All"}
+          </Button>
+        ))}
+        <span className="ml-auto text-sm text-muted-foreground">{filtered.length} customers</span>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {customers?.map((c) => (
+        {filtered.map((c) => (
           <Card key={c.id}>
             <CardContent className="p-4">
               <div className="flex items-start justify-between">
@@ -111,7 +137,7 @@ export default function CustomersPage() {
             </CardContent>
           </Card>
         ))}
-        {!customers?.length && (
+        {!filtered.length && (
           <div className="col-span-full py-8 text-center text-muted-foreground">
             No customers yet. <Link href="/customers/new" className="text-primary hover:underline">Add your first customer</Link>
           </div>
