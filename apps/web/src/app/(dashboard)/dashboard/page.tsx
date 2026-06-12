@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useDashboard, useOverview } from "@/hooks/use-reports";
-import { useStripeConnectStatus } from "@/hooks/use-company";
+import { useStripeStatus } from "@/hooks/use-company";
 import { useAuthStore } from "@/store/auth.store";
 import { NewJobSheet } from "@/components/job/new-job-sheet";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
@@ -95,7 +95,7 @@ function TrendPill({
 export default function DashboardPage() {
   const { data, isLoading } = useDashboard();
   const { data: overview } = useOverview();
-  const { data: connectStatus } = useStripeConnectStatus();
+  const { data: connectStatus } = useStripeStatus();
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const router = useRouter();

@@ -4,9 +4,10 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useJobs, useUpdateJob } from "@/hooks/use-jobs";
+import { useWorkers } from "@/hooks/use-workers";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
+import { DndContext, useDraggable, useDroppable, DragOverlay } from "@dnd-kit/core";
 import { cn } from "@/lib/utils";
 import {
   startOfWeek,
@@ -238,8 +239,11 @@ const viewTabs: { mode: ViewMode; label: string }[] = [
 export default function CalendarPage() {
   const router = useRouter();
   const updateJob = useUpdateJob();
+  const { data: workers } = useWorkers();
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [offset, setOffset] = useState(0);
+  const [activeJob, setActiveJob] = useState<any>(null);
+  const [showWorkerPanel, setShowWorkerPanel] = useState(true);
 
   const today = new Date();
   let anchor: Date;
@@ -326,16 +330,35 @@ export default function CalendarPage() {
     return map;
   }, [data, viewMode, monthCells]);
 
-  /* ── Drag handler ── */
+  /* ── Drag handlers ── */
+  const activeWorkers = workers?.filter((w: any) => w.isActive !== false) || [];
+
+  const handleDragStart = (event: any) => {
+    setActiveJob(event.active.data.current?.job || null);
+  };
+
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
+    setActiveJob(null);
     if (!over) return;
     const job = active.data.current?.job;
     if (!job) return;
 
+    // If dropped on a worker, assign the worker
+    if (over.id?.startsWith('worker-')) {
+      const workerId = over.id.replace('worker-', '');
+      updateJob.mutateAsync({ id: job.id, workerIds: [workerId] })
+        .then(() => toast.success(`Assigned to worker`))
+        .catch((err: any) => toast.error(err?.message || 'Failed'));
+      return;
+    }
+
+    // Otherwise reschedule
     const targetDate = new Date(over.id);
     const oldDate = new Date(job.scheduledStart);
     targetDate.setHours(oldDate.getHours(), oldDate.getMinutes(), 0, 0);
+
+    if (Math.abs(targetDate.getTime() - oldDate.getTime()) < 60000) return; // same slot
 
     updateJob.mutateAsync({
       id: job.id,
@@ -406,6 +429,9 @@ export default function CalendarPage() {
               List
             </Link>
           </Button>
+          <Button variant="ghost" size="sm" onClick={() => setShowWorkerPanel(!showWorkerPanel)}>
+            {showWorkerPanel ? "Hide Workers" : "Show Workers"}
+          </Button>
         </div>
 
         <div className="flex items-center gap-2">
@@ -442,10 +468,24 @@ export default function CalendarPage() {
       {isLoading ? (
         <Skeleton className="h-[500px]" />
       ) : (
-        <>
+        <div className="flex gap-4">
+          {/* ── WORKER PANEL ── */}
+          {showWorkerPanel && (
+            <div className="w-48 shrink-0 space-y-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Workers</p>
+              {activeWorkers.length === 0 && (
+                <p className="text-xs text-muted-foreground">No active workers</p>
+              )}
+              {activeWorkers.map((worker: any) => (
+                <WorkerDropZone key={worker.id} worker={worker} />
+              ))}
+            </div>
+          )}
+
+          <div className="flex-1 min-w-0">
           {/* ── DAY VIEW ── */}
           {viewMode === "day" && (
-            <DndContext onDragEnd={handleDayDragEnd}>
+            <DndContext onDragStart={handleDragStart} onDragEnd={handleDayDragEnd}>
               <div className="border rounded-lg overflow-hidden">
                 {HOURS.map((hour) => {
                   const slotDate = setMinutes(setHours(anchor, hour), 0);
@@ -469,7 +509,7 @@ export default function CalendarPage() {
 
           {/* ── WEEK VIEW ── */}
           {viewMode === "week" && (
-            <DndContext onDragEnd={handleDragEnd}>
+            <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
               <div className="grid grid-cols-7 gap-2">
                 {weekDays.map((day) => (
                   <div key={day.toISOString()}>
@@ -497,7 +537,7 @@ export default function CalendarPage() {
 
           {/* ── MONTH VIEW ── */}
           {viewMode === "month" && (
-            <DndContext onDragEnd={handleDragEnd}>
+            <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
               <div className="border-t border-l">
                 {/* Day-of-week headers */}
                 <div className="grid grid-cols-7">
@@ -523,7 +563,42 @@ export default function CalendarPage() {
               </div>
             </DndContext>
           )}
-        </>
+          </div>{/* end flex-1 */}
+        </div>
+      )}
+
+      {/* ── DRAG OVERLAY ── */}
+      <DragOverlay dropAnimation={null}>
+        {activeJob ? (
+          <div className="rounded border border-primary bg-primary/10 px-3 py-2 text-xs shadow-xl opacity-90">
+            <p className="font-medium">{activeJob.customer?.name || "No customer"}</p>
+            <p className="text-muted-foreground">{format(parseISO(activeJob.scheduledStart), "HH:mm")}</p>
+          </div>
+        ) : null}
+      </DragOverlay>
+    </div>
+  );
+}
+
+/* ── Worker Drop Zone ── */
+function WorkerDropZone({ worker }: { worker: any }) {
+  const { setNodeRef, isOver } = useDroppable({ id: `worker-${worker.id}` });
+  const jobCount = worker._count?.assignments || 0;
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "rounded-lg border-2 border-dashed p-3 text-sm transition-all",
+        isOver ? "border-primary bg-primary/10 scale-105" : "border-muted-foreground/20 hover:border-muted-foreground/40",
+      )}
+    >
+      <p className="font-medium truncate">{worker.firstName} {worker.lastName}</p>
+      <p className="text-xs text-muted-foreground">
+        {worker.payModel === 'PER_JOB' ? 'Per Job' : `€${((worker.hourlyRate || 1480) / 100).toFixed(2)}/hr`}
+      </p>
+      {jobCount > 0 && (
+        <p className="text-xs text-muted-foreground mt-1">{jobCount} assigned today</p>
       )}
     </div>
   );
