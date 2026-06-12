@@ -46,11 +46,9 @@ export default function WorkersPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Workers</h1>
-        <Button asChild>
-          <Link href="/workers/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Worker
-          </Link>
+        <Button onClick={() => setSheetOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Worker
         </Button>
       </div>
 
@@ -90,11 +88,12 @@ export default function WorkersPage() {
             </div>
           ) : (
             <div className="p-6 text-center text-muted-foreground">
-              No workers yet. <Link href="/workers/new" className="text-primary hover:underline">Add your first worker</Link>
+              No workers yet. <button onClick={() => setSheetOpen(true)} className="text-primary hover:underline">Add your first worker</button>
             </div>
           )}
         </CardContent>
       </Card>
+      <NewWorkerSheet open={sheetOpen} onOpenChange={setSheetOpen} onCreated={() => refetch()} />
     </div>
   );
 }

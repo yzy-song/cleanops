@@ -351,7 +351,7 @@ export class JobController {
   @Auth(Role.ADMIN, Role.MANAGER)
   @ApiOperation({ summary: '导出工单为 CSV' })
   async exportCsv(@CurrentUser('companyId') companyId: string, @Res() res: Response) {
-    const jobs = await this.jobService.findAll(companyId, {} as any);
+    const jobs = await this.jobService.findAll(companyId, { page: 1, limit: 99999 });
     const rows = [
       ['ID', 'Customer', 'Status', 'Scheduled', 'Duration', 'Workers', 'Address', 'Notes'].join(','),
       ...(jobs as any).data.map((j: any) =>

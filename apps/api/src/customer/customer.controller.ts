@@ -20,28 +20,28 @@ export class CustomerController {
   }
 
   @Get()
-  @Auth()
+  @Auth(Role.ADMIN, Role.MANAGER)
   @ApiOperation({ summary: '获取客户列表' })
   findAll(@CurrentUser('companyId') companyId: string) {
     return this.customerService.findAll(companyId);
   }
 
   @Get('list/credit-risk')
-  @Auth()
+  @Auth(Role.ADMIN, Role.MANAGER)
   @ApiOperation({ summary: '获取客户信用风险列表' })
   findAllWithCreditRisk(@CurrentUser('companyId') companyId: string) {
     return this.customerService.findAllWithCreditRisk(companyId);
   }
 
   @Get(':id')
-  @Auth()
+  @Auth(Role.ADMIN, Role.MANAGER)
   @ApiOperation({ summary: '获取客户详情' })
   findOne(@Param('id') id: string) {
     return this.customerService.findOne(id);
   }
 
   @Get(':id/credit-summary')
-  @Auth()
+  @Auth(Role.ADMIN, Role.MANAGER)
   @ApiOperation({ summary: '获取客户信用摘要（未付账单和风险等级）' })
   getCreditSummary(@Param('id') id: string) {
     return this.customerService.getCreditSummary(id);

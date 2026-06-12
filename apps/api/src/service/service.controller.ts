@@ -20,14 +20,14 @@ export class ServiceController {
   }
 
   @Get()
-  @Auth()
+  @Auth(Role.ADMIN, Role.MANAGER)
   @ApiOperation({ summary: '获取服务列表' })
   findAll(@CurrentUser('companyId') companyId: string) {
     return this.serviceService.findAll(companyId);
   }
 
   @Get(':id')
-  @Auth()
+  @Auth(Role.ADMIN, Role.MANAGER)
   @ApiOperation({ summary: '获取服务详情' })
   findOne(@Param('id') id: string, @CurrentUser('companyId') companyId: string) {
     return this.serviceService.findOne(id, companyId);

@@ -30,14 +30,14 @@ export class InvoiceController {
   }
 
   @Get()
-  @Auth()
+  @Auth(Role.ADMIN, Role.MANAGER)
   @ApiOperation({ summary: '获取账单列表' })
   findAll(@CurrentUser('companyId') companyId: string, @Query() query: QueryInvoiceDto) {
     return this.invoiceService.findAll(companyId, query);
   }
 
   @Get(':id')
-  @Auth()
+  @Auth(Role.ADMIN, Role.MANAGER)
   @ApiOperation({ summary: '获取账单详情' })
   findOne(@Param('id') id: string, @CurrentUser('companyId') companyId: string) {
     return this.invoiceService.findOne(id, companyId);
@@ -108,7 +108,7 @@ export class InvoiceController {
   }
 
   @Get(':id/pdf')
-  @Auth()
+  @Auth(Role.ADMIN, Role.MANAGER)
   @ApiOperation({ summary: '下载账单 PDF' })
   async downloadPdf(
     @Param('id') id: string,

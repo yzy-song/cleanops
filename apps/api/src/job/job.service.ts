@@ -269,7 +269,7 @@ export class JobService {
       let paymentLink: string | undefined;
       try {
         const result = await this.invoiceService.generatePaymentLink(invoice.id, job.companyId);
-        paymentLink = result.paymentLink;
+        paymentLink = result.url;
       } catch {
         // payment link generation is optional
       }
@@ -351,7 +351,7 @@ export class JobService {
         let paymentLink: string | undefined;
         try {
           const result = await this.invoiceService.generatePaymentLink(invoice.id, job.companyId);
-          paymentLink = result.paymentLink;
+          paymentLink = result.url;
         } catch { /* optional */ }
         await this.emailService.sendInvoiceEmail(job.customer, job, invoice, paymentLink);
       } catch (error) {
@@ -409,7 +409,7 @@ export class JobService {
     let paymentLink: string | undefined;
     try {
       const result = await this.invoiceService.generatePaymentLink(job.invoice.id, companyId);
-      paymentLink = result.paymentLink;
+      paymentLink = result.url;
     } catch {
       // payment link generation is optional
     }

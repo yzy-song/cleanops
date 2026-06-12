@@ -14,7 +14,7 @@ export class BillingController {
   constructor(private readonly billingService: BillingService) {}
 
   @Get('subscription')
-  @Auth()
+  @Auth(Role.ADMIN, Role.MANAGER)
   @ApiOperation({ summary: '查询当前订阅状态' })
   getSubscription(@CurrentUser('companyId') companyId: string) {
     return this.billingService.getSubscriptionStatus(companyId);

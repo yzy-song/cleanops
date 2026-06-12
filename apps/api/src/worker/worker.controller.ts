@@ -36,14 +36,14 @@ export class WorkerController {
   }
 
   @Get()
-  @Auth()
+  @Auth(Role.ADMIN, Role.MANAGER)
   @ApiOperation({ summary: '获取清洁工列表' })
   findAll(@CurrentUser('companyId') companyId: string) {
     return this.workerService.findByCompany(companyId);
   }
 
   @Get(':id')
-  @Auth()
+  @Auth(Role.ADMIN, Role.MANAGER)
   @ApiOperation({ summary: '获取清洁工详情' })
   findOne(@Param('id') id: string) {
     return this.workerService.findOne(id);
@@ -57,7 +57,7 @@ export class WorkerController {
   }
 
   @Delete(':id')
-  @Auth(Role.ADMIN)
+  @Auth(Role.ADMIN, Role.MANAGER)
   @ApiOperation({ summary: '停用清洁工' })
   remove(@Param('id') id: string) {
     return this.workerService.remove(id);

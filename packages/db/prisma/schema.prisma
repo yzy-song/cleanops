@@ -84,6 +84,13 @@ model Company {
   // Marketing & Reputation
   googleReviewUrl   String?   // Google Business Profile 评价链接
 
+  // Contact & Banking (for invoices)
+  address           String?   // 公司注册地址
+  phone             String?   // 联系电话
+  email             String?   // 联系邮箱
+  iban              String?   // 银行 IBAN
+  bic               String?   // 银行 BIC/SWIFT
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -180,8 +187,8 @@ model Customer {
   address       String   // 物理地址
   postalCode    String?  // 爱尔兰 Eircode 邮编
   accessCode    String?  // 附加信息：如公寓大门密码 (都柏林刚需)
-  lat           Float    // 纬度：用于地缘围栏打卡校验
-  lng           Float    // 经度：用于地缘围栏打卡校验
+  lat           Float?   // 纬度：用于地缘围栏打卡校验
+  lng           Float?   // 经度：用于地缘围栏打卡校验
   isCommercial        Boolean   @default(false) // 商业客户(23% VAT)还是住宅客户(13.5% VAT)
   authToken           String?   // 客户自助门户 magic link token (一次性，30min TTL)
   authTokenExpiresAt  DateTime?

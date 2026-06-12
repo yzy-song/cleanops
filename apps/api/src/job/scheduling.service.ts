@@ -52,6 +52,12 @@ export class SchedulingService {
   async preview(dto: ScheduleRequest): Promise<ScheduleResult[]> {
     const start = new Date(dto.startDate);
     const end = new Date(dto.endDate);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      throw new BadRequestException('Invalid date format');
+    }
+    if (end < start) {
+      throw new BadRequestException('endDate must be after startDate');
+    }
     end.setHours(23, 59, 59, 999);
 
     const jobs = await this.prisma.client.job.findMany({

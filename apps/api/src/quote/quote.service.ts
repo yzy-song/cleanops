@@ -24,22 +24,25 @@ export class QuoteService {
   ) {}
 
   async create(companyId: string, dto: CreateQuoteDto) {
-    // Auto-calculate pricing unless manually overridden
+    // Auto-calculate pricing unless manually overridden or missing required fields
+    const hasPricingFields = dto.serviceType && dto.propertySize && dto.frequency;
     const isManual = dto.subtotal !== undefined && dto.lineItems;
-    const pricing = isManual ? null : await this.pricingService.calculatePrice({
-      serviceType: dto.serviceType,
-      propertySize: dto.propertySize,
-      bathrooms: dto.bathrooms,
-      frequency: dto.frequency,
-      isCommercial: dto.isCommercial,
-      companyId,
-    });
+    const shouldCalculate = !isManual && hasPricingFields;
 
-    const estimatedDuration = dto.estimatedDuration ?? pricing?.estimatedDuration ?? 120;
-    const subtotal = dto.subtotal ?? pricing!.subtotal;
-    const vatAmount = dto.vatAmount ?? pricing!.vatAmount;
-    const lineItems = dto.lineItems ?? pricing!.lineItems;
-    const depositRequired = isManual ? ((dto.depositAmount ?? 0) > 0) : pricing!.depositRequired;
+    const pricing = shouldCalculate ? await this.pricingService.calculatePrice({
+      serviceType: dto.serviceType!,
+      propertySize: dto.propertySize!,
+      bathrooms: dto.bathrooms,
+      frequency: dto.frequency!,
+      isCommercial: dto.isCommercial ?? false,
+      companyId,
+    }) : null;
+
+    const estimatedDuration = dto.estimatedDuration ?? pricing?.estimatedDuration ?? 60;
+    const subtotal = dto.subtotal ?? pricing?.subtotal ?? 0;
+    const vatAmount = dto.vatAmount ?? pricing?.vatAmount ?? 0;
+    const lineItems = dto.lineItems ?? pricing?.lineItems ?? [{ description: `${dto.serviceType ?? 'General'} service`, quantity: 1, unitPrice: 0, totalPrice: 0, sortOrder: 0 }];
+    const depositRequired = isManual ? ((dto.depositAmount ?? 0) > 0) : (pricing?.depositRequired ?? false);
     const depositAmount = dto.depositAmount ?? pricing?.depositAmount ?? null;
 
     let customerName: string;
@@ -77,11 +80,11 @@ export class QuoteService {
 
     return this.prisma.client.quote.create({
       data: {
-        serviceType: dto.serviceType,
-        propertySize: dto.propertySize,
-        bathrooms: dto.bathrooms,
-        frequency: dto.frequency,
-        isCommercial: dto.isCommercial,
+        serviceType: dto.serviceType ?? 'REGULAR',
+        propertySize: dto.propertySize ?? 'TWO_BED',
+        bathrooms: dto.bathrooms ?? 1,
+        frequency: dto.frequency ?? 'ONE_OFF',
+        isCommercial: dto.isCommercial ?? false,
         estimatedDuration,
         notes: dto.notes,
         subtotal,

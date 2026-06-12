@@ -12,7 +12,8 @@ import { paginate } from '../common/utils/pagination.util';
 import Stripe from 'stripe';
 import type { TDocumentDefinitions } from 'pdfmake/interfaces';
 import { format } from 'date-fns';
-const PdfPrinter = require('pdfmake');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const PdfPrinter = require('pdfmake/js/base').default;
 
 function formatInvoiceNumber(invoice: { invoiceNumber: number | null; createdAt: Date }): string {
   const num = invoice.invoiceNumber;
@@ -27,83 +28,129 @@ export class InvoiceService {
   constructor(
     private prisma: PrismaService,
     private stripeService: StripeService,
+    private emailService: EmailService,
     private xeroService: XeroService,
     private configService: ConfigService,
-    private emailService: EmailService,
     private companyService: CompanyService,
   ) {}
 
-  private async getNextInvoiceNumber(companyId: string): Promise<number> {
-    const result = await this.prisma.client.invoice.aggregate({
-      where: { companyId, invoiceNumber: { not: null } },
-      _max: { invoiceNumber: true },
-    });
-    return (result._max.invoiceNumber ?? 0) + 1;
-  }
-
-  async generateFromJob(companyId: string, jobId: string) {
-    const job = await this.prisma.client.job.findFirst({
-      where: { id: jobId, companyId },
-      include: { customer: true, company: true, assignments: { include: { worker: true } }, invoice: true },
-    });
-    if (!job) throw new NotFoundException('Job not found');
-    if (job.status !== 'COMPLETED') {
-      throw new BadRequestException('Can only generate invoice for completed jobs');
-    }
-    if (job.invoice) {
-      throw new BadRequestException('Job already has an invoice. Void the existing invoice first if you need to regenerate.');
-    }
-
-    let totalMinutes = 0;
-    if (job.actualStart && job.actualEnd) {
-      totalMinutes = Math.round((job.actualEnd.getTime() - job.actualStart.getTime()) / 60000);
-    } else if (job.estimatedDuration) {
-      totalMinutes = job.estimatedDuration;
-    }
-
-    const hours = totalMinutes / 60;
-    const worker = job.assignments[0]?.worker;
-    const hourlyRate = worker?.hourlyRate ?? job.company.baseHourlyRate;
-    const subtotal = Math.round(hours * hourlyRate);
-
-    const vatRate = job.customer.isCommercial ? 0.23 : 0.135;
-    const vatAmount = Math.round(subtotal * vatRate);
-    const amount = subtotal + vatAmount;
-
-    const invoiceNumber = await this.getNextInvoiceNumber(companyId);
-
-    return this.prisma.client.invoice.create({
-      data: {
-        invoiceNumber,
-        amount,
-        vatAmount,
-        status: 'UNPAID',
-        job: { connect: { id: jobId } },
-        company: { connect: { id: companyId } },
-      },
-      include: { job: { include: { customer: true } } },
-    });
-  }
-
   async create(companyId: string, dto: CreateInvoiceDto) {
-    const invoiceNumber = await this.getNextInvoiceNumber(companyId);
+    const company = await this.prisma.client.company.findUnique({ where: { id: companyId } });
+    if (!company) throw new NotFoundException('Company not found');
 
-    return this.prisma.client.invoice.create({
+    const lastInvoice = await this.prisma.client.invoice.findFirst({
+      where: { companyId },
+      orderBy: { invoiceNumber: 'desc' },
+    });
+    const nextNumber = (lastInvoice?.invoiceNumber ?? 0) + 1;
+
+    const created = await this.prisma.client.invoice.create({
       data: {
-        invoiceNumber,
+        invoiceNumber: nextNumber,
         amount: dto.amount,
         vatAmount: dto.vatAmount,
         status: 'UNPAID',
-        job: { connect: { id: dto.jobId } },
         company: { connect: { id: companyId } },
-      },
-      include: { job: { include: { customer: true } } },
+        job: dto.jobId ? { connect: { id: dto.jobId } } : undefined,
+      } as any,
     });
+
+    // Auto-sync to Xero
+    this.autoSyncToXero(created.id, companyId);
+
+    return created;
+  }
+
+  generateFromJob = this.generateFromJobMethod.bind(this);
+  private async generateFromJobMethod(companyId: string, jobId: string) {
+    const job = await this.prisma.client.job.findFirst({
+      where: { id: jobId, companyId },
+      include: { customer: true },
+    });
+    if (!job) throw new NotFoundException('Job not found');
+
+    const existing = await this.prisma.client.invoice.findFirst({
+      where: { jobId },
+    });
+    if (existing) throw new BadRequestException('Invoice already exists for this job');
+
+    const isCommercial = job.customer.isCommercial;
+    const vatRate = isCommercial ? 0.23 : 0.135;
+
+    const company = await this.prisma.client.company.findUnique({ where: { id: companyId } });
+    const hourlyRate = company?.baseHourlyRate ?? 1480;
+    const durationHours = (job.estimatedDuration ?? 60) / 60;
+    const subtotal = Math.round(hourlyRate * durationHours);
+    const vatAmount = Math.round(subtotal * vatRate);
+    const amount = subtotal + vatAmount;
+
+    const lastInvoice = await this.prisma.client.invoice.findFirst({
+      where: { companyId },
+      orderBy: { invoiceNumber: 'desc' },
+    });
+    const nextNumber = (lastInvoice?.invoiceNumber ?? 0) + 1;
+
+    return this.prisma.client.invoice.create({
+      data: {
+        invoiceNumber: nextNumber,
+        amount,
+        vatAmount,
+        status: 'UNPAID',
+        companyId,
+        jobId,
+      },
+    }).then(async (invoice) => {
+      // Auto-sync to Xero in background
+      this.autoSyncToXero(invoice.id, companyId);
+      return invoice;
+    });
+  }
+
+  private async autoSyncToXero(invoiceId: string, companyId: string): Promise<void> {
+    try {
+      const hasXero = await this.prisma.client.company.findUnique({
+        where: { id: companyId },
+        select: { xeroTenantId: true },
+      });
+      if (!hasXero?.xeroTenantId) return;
+      await this.syncToXero(invoiceId, companyId);
+    } catch (err) {
+      this.logger.warn(`Auto-sync to Xero failed for invoice ${invoiceId.substring(0, 8)}: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
+  private async autoUpdateXeroStatus(invoiceId: string, companyId: string, newStatus: 'PAID' | 'VOIDED'): Promise<void> {
+    try {
+      const invoice = await this.prisma.client.invoice.findFirst({
+        where: { id: invoiceId, companyId },
+        select: { xeroInvoiceId: true },
+      });
+      if (!invoice?.xeroInvoiceId) return;
+
+      const xero = await this.xeroService.getClient(companyId);
+      if (!xero) return;
+
+      const company = await this.prisma.client.company.findUnique({
+        where: { id: companyId },
+        select: { xeroTenantId: true },
+      });
+      if (!company?.xeroTenantId) return;
+
+      await xero.accountingApi.updateInvoice(
+        company.xeroTenantId,
+        invoice.xeroInvoiceId,
+        { invoices: [{ status: newStatus as any }] },
+      );
+      this.logger.log(`Xero invoice ${invoice.xeroInvoiceId} updated to ${newStatus}`);
+    } catch (err) {
+      this.logger.warn(`Auto-update Xero status failed for invoice ${invoiceId.substring(0, 8)}: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 
   async findAll(companyId: string, query: QueryInvoiceDto) {
     const where: any = { companyId };
     if (query.status) where.status = query.status;
+    if ((query as any).customerId) where.job = { customerId: (query as any).customerId };
 
     const { page, limit } = query;
     const [data, total] = await Promise.all([
@@ -134,242 +181,132 @@ export class InvoiceService {
     if (invoice.status === 'PAID') {
       throw new BadRequestException('Cannot update a paid invoice');
     }
-    return this.prisma.client.invoice.update({
-      where: { id },
-      data: dto,
-      include: { job: { include: { customer: true } } },
-    });
-  }
-
-  async markAsPaid(id: string, companyId: string, paymentMethod?: string) {
-    const invoice = await this.findOne(id, companyId);
-    if (invoice.status === 'PAID') {
-      throw new BadRequestException('Invoice is already paid');
-    }
-    return this.prisma.client.invoice.update({
-      where: { id },
-      data: { status: 'PAID', paidAt: new Date(), paymentMethod: paymentMethod ?? null },
-    });
-  }
-
-  async voidInvoice(id: string, companyId: string) {
-    return this.prisma.client.invoice.update({
-      where: { id },
-      data: { status: 'VOID' },
-    });
+    return this.prisma.client.invoice.update({ where: { id }, data: dto as any });
   }
 
   async generatePaymentLink(id: string, companyId: string) {
     const invoice = await this.findOne(id, companyId);
-    if (invoice.status === 'PAID') {
-      throw new BadRequestException('Invoice is already paid');
-    }
+    if (invoice.status === 'PAID') throw new BadRequestException('Invoice already paid');
+    if (invoice.paymentLink) return { url: invoice.paymentLink };
 
-    // Check Stripe Connect is set up
-    const company = await this.prisma.client.company.findUnique({
-      where: { id: companyId },
-      select: { stripeAccountId: true, stripeAccountStatus: true },
-    });
-    if (!company?.stripeAccountId) {
-      throw new BadRequestException('Please connect your Stripe account in Settings first');
-    }
-    if (company.stripeAccountStatus === 'restricted') {
-      throw new BadRequestException('Your Stripe account needs attention. Please check Settings.');
-    }
-
-    const customer = invoice.job.customer;
-    const invoiceRef = formatInvoiceNumber(invoice);
-    const description = `CleanOps — ${customer.name} (${invoiceRef})`;
+    const company = await this.prisma.client.company.findUnique({ where: { id: companyId } });
+    if (!company?.stripeAccountId) throw new BadRequestException('Stripe Connect is not set up for this company');
 
     const url = await this.stripeService.createConnectCheckoutSession({
       amount: invoice.amount,
       connectedAccountId: company.stripeAccountId,
-      description,
-      metadata: { invoiceId: invoice.id, companyId, type: 'invoice' },
+      description: `Invoice ${invoice.invoiceNumber ?? invoice.id.slice(0, 8)}`,
+      metadata: { invoiceId: invoice.id },
+      successUrl: `${this.configService.get('FRONTEND_URL')}/invoices/${invoice.id}?paid=true`,
+      cancelUrl: `${this.configService.get('FRONTEND_URL')}/invoices/${invoice.id}`,
     });
 
-    if (url) {
-      await this.prisma.client.invoice.update({
-        where: { id },
-        data: { paymentLink: url },
-      });
-    }
+    if (!url) throw new BadRequestException('Failed to create payment link');
 
-    return { paymentLink: url, invoice };
+    await this.prisma.client.invoice.update({
+      where: { id },
+      data: { paymentLink: url },
+    });
+
+    return { url };
+  }
+
+  async markAsPaid(id: string, companyId: string, paymentMethod?: string) {
+    const invoice = await this.findOne(id, companyId);
+    if (invoice.status === 'PAID') throw new BadRequestException('Already paid');
+    const updated = await this.prisma.client.invoice.update({
+      where: { id },
+      data: { status: 'PAID', paidAt: new Date(), paymentMethod: paymentMethod || null },
+    });
+    // Auto-update Xero status
+    this.autoUpdateXeroStatus(id, companyId, 'PAID');
+    return updated;
   }
 
   async handleStripeWebhook(rawBody: Buffer, signature: string) {
-    const webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
-    if (!webhookSecret) {
-      this.logger.warn('STRIPE_WEBHOOK_SECRET not configured, skipping webhook');
-      return { received: true };
-    }
-
-    let event: Stripe.Event;
+    const secret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
+    if (!secret) { this.logger.warn('STRIPE_WEBHOOK_SECRET not configured'); return { received: true }; }
     try {
-      event = this.stripeService.constructWebhookEvent(rawBody, signature, webhookSecret);
+      const event = this.stripeService.constructWebhookEvent(rawBody, signature, secret);
+      await this.processPaymentWebhook(event);
     } catch (err: any) {
-      this.logger.error(`Webhook signature verification failed: ${err.message}`);
+      this.logger.error(`Payment webhook error: ${err.message}`);
       throw new BadRequestException('Invalid signature');
     }
+    return { received: true };
+  }
 
+  async handleConnectWebhook(rawBody: Buffer, signature: string) {
+    const secret = this.configService.get<string>('STRIPE_CONNECT_WEBHOOK_SECRET');
+    if (!secret) { this.logger.warn('STRIPE_CONNECT_WEBHOOK_SECRET not configured'); return { received: true }; }
+    try {
+      const event = this.stripeService.constructWebhookEvent(rawBody, signature, secret);
+      await this.processConnectWebhookEvent(event);
+    } catch (err: any) {
+      this.logger.error(`Connect webhook error: ${err.message}`);
+      throw new BadRequestException('Invalid signature');
+    }
+    return { received: true };
+  }
+
+  private async processPaymentWebhook(event: any): Promise<void> {
     if (event.type === 'checkout.session.completed') {
-      const session = event.data.object as Stripe.Checkout.Session;
-      const { invoiceId, jobId, type } = session.metadata || {};
-
-      if (type === 'deposit' && jobId) {
-        const job = await this.prisma.client.job.update({
-          where: { id: jobId },
-          data: { isDepositPaid: true },
-          include: { customer: true },
-        });
-        this.logger.log(`Job ${jobId} deposit marked as PAID via Stripe webhook`);
-        try {
-          await this.emailService.sendDepositConfirmationEmail(job.customer, job);
-        } catch (err: any) {
-          this.logger.warn(`Failed to send deposit confirmation: ${err.message}`);
+      const session = event.data.object;
+      const invoiceId = session.metadata?.invoiceId;
+      if (invoiceId && session.payment_status === 'paid') {
+        const invoice = await this.prisma.client.invoice.findUnique({ where: { id: invoiceId } });
+        if (invoice && invoice.status !== 'PAID') {
+          await this.markAsPaid(invoiceId, invoice.companyId, 'STRIPE');
         }
-      } else if (invoiceId) {
-        await this.prisma.client.invoice.update({
-          where: { id: invoiceId },
-          data: { status: 'PAID', paidAt: new Date(), paymentMethod: 'STRIPE' },
-        });
-        this.logger.log(`Invoice ${invoiceId} marked as PAID via Stripe webhook`);
       }
     }
-
-    // Handle refunds — check if we need to void the connected invoice
-    if (event.type === 'charge.refunded') {
-      const charge = event.data.object as Stripe.Charge;
-      // Refunds via Stripe Connect with reverse_transfer automatically return the app fee.
-      // We just log it; the connected account balance is adjusted by Stripe.
-      this.logger.log(`Charge ${charge.id} refunded — platform fee reversed if applicable`);
-    }
-
-    return { received: true };
   }
 
-  /** Handle Stripe Connect account.updated webhook events. */
-  async handleConnectWebhook(rawBody: Buffer, signature: string) {
-    const webhookSecret = this.configService.get<string>('STRIPE_CONNECT_WEBHOOK_SECRET');
-    if (!webhookSecret) {
-      this.logger.warn('STRIPE_CONNECT_WEBHOOK_SECRET not configured');
-      return { received: true };
-    }
-
-    let event: Stripe.Event;
-    try {
-      event = this.stripeService.constructWebhookEvent(rawBody, signature, webhookSecret);
-    } catch (err: any) {
-      this.logger.error(`Connect webhook signature verification failed: ${err.message}`);
-      throw new BadRequestException('Invalid signature');
-    }
-
+  private async processConnectWebhookEvent(event: any): Promise<void> {
     if (event.type === 'account.updated') {
-      const account = event.data.object as Stripe.Account;
-      await this.companyService.updateConnectAccountStatus(account.id, account.charges_enabled);
+      const account = event.data.object;
+      await this.prisma.client.company.updateMany({
+        where: { stripeAccountId: account.id },
+        data: { stripeAccountStatus: account.charges_enabled ? 'enabled' : 'restricted' },
+      });
     }
-
-    return { received: true };
   }
 
-  async generatePdf(id: string, companyId: string): Promise<Buffer> {
+  async voidInvoice(id: string, companyId: string) {
     const invoice = await this.findOne(id, companyId);
-    const job = invoice.job;
-    const customer = job.customer;
-    const company = invoice.company;
-    const subtotal = invoice.amount - invoice.vatAmount;
-    const vatRate = customer.isCommercial ? '23%' : '13.5%';
-    const eur = (cents: number) => `€${(cents / 100).toFixed(2)}`;
+    if (invoice.status === 'PAID') throw new BadRequestException('Cannot void a paid invoice');
+    const updated = await this.prisma.client.invoice.update({
+      where: { id },
+      data: { status: 'VOID' },
+    });
+    // Auto-update Xero status
+    this.autoUpdateXeroStatus(id, companyId, 'VOIDED');
+    return updated;
+  }
 
-    const workerNames = job.assignments
-      ?.map((a) => `${a.worker?.firstName} ${a.worker?.lastName}`)
-      .join(', ') || '—';
+  async sendReminder(id: string, companyId: string) {
+    const invoice = await this.findOne(id, companyId);
+    if (invoice.status !== 'UNPAID') throw new BadRequestException('Can only remind for unpaid invoices');
 
-    const content: any[] = [
-      { text: company?.name || 'CleanOps', style: 'header' },
-      { text: formatInvoiceNumber(invoice), style: 'subheader' },
-      { text: format(new Date(invoice.createdAt), 'PPP'), style: 'subheader' },
-      { text: '\n' },
-      { text: 'Bill To:', style: 'label' },
-      { text: customer.name, style: 'body' },
-      { text: customer.address, style: 'body' },
-      { text: '\n' },
-      { text: 'Service Details', style: 'label' },
-      { text: `Date: ${format(new Date(job.scheduledStart), 'PPP \'at\' HH:mm')}`, style: 'body' },
-      { text: `Worker: ${workerNames}`, style: 'body' },
-      { text: '\n' },
-      {
-        style: 'table',
-        table: {
-          widths: ['*', 'auto'],
-          body: [
-            ['Subtotal', eur(subtotal)],
-            [`VAT (${vatRate})`, eur(invoice.vatAmount)],
-            [{ text: 'Total', bold: true }, { text: eur(invoice.amount), bold: true }],
-          ],
-        },
-      },
-      { text: '\n' },
-    ];
-
-    if (company?.vatNumber) {
-      content.splice(1, 0, { text: `VAT: ${company.vatNumber}`, style: 'subheader' });
+    const customer = invoice.job.customer;
+    if (customer.email) {
+      await this.emailService.sendInvoiceReminderEmail(invoice, customer);
     }
 
-    if (invoice.status === 'PAID') {
-      content.push({ text: `Paid on ${format(new Date(invoice.paidAt!), 'PPP')}`, style: 'paidStamp' });
-    } else {
-      content.push({ text: invoice.status, style: 'statusStamp' });
-    }
-
-    if (invoice.paymentLink) {
-      content.push({ text: '\nPay online: ' + invoice.paymentLink, style: 'link' });
-    }
-
-    const docDefinition: TDocumentDefinitions = {
-      content,
-      styles: {
-        header: { fontSize: 18, bold: true, marginBottom: 4 },
-        subheader: { fontSize: 10, color: '#666' },
-        label: { fontSize: 11, bold: true, marginTop: 8, marginBottom: 4 },
-        body: { fontSize: 11 },
-        paidStamp: { fontSize: 14, bold: true, color: '#10b981', marginTop: 8 },
-        statusStamp: { fontSize: 14, bold: true, color: '#f59e0b', marginTop: 8 },
-        link: { fontSize: 9, color: '#3b82f6' },
-      },
-      defaultStyle: { font: 'Roboto' },
-    };
-
-    const printer = new PdfPrinter({
-      Roboto: {
-        normal: 'Helvetica',
-        bold: 'Helvetica-Bold',
-        italics: 'Helvetica-Oblique',
-        bolditalics: 'Helvetica-BoldOblique',
-      },
+    await this.prisma.client.invoice.update({
+      where: { id },
+      data: { reminderSentAt: new Date(), reminderCount: { increment: 1 } },
     });
 
-    const pdfDoc = printer.createPdfKitDocument(docDefinition);
-
-    return new Promise<Buffer>((resolve, reject) => {
-      const chunks: Buffer[] = [];
-      pdfDoc.on('data', (chunk: Buffer) => chunks.push(chunk));
-      pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));
-      pdfDoc.on('error', reject);
-      pdfDoc.end();
-    });
+    return { message: 'Reminder sent' };
   }
 
   async syncToXero(id: string, companyId: string) {
     const invoice = await this.findOne(id, companyId);
-
-    if (invoice.xeroInvoiceId) {
-      throw new BadRequestException('Invoice already synced to Xero');
-    }
+    if (invoice.xeroInvoiceId) throw new BadRequestException('Already synced to Xero');
 
     const xero = await this.xeroService.getClient(companyId);
-    if (!xero) throw new BadRequestException('Xero is not connected');
+    if (!xero) throw new BadRequestException('Xero not connected');
 
     const company = await this.prisma.client.company.findUnique({
       where: { id: companyId },
@@ -382,148 +319,242 @@ export class InvoiceService {
       ?.map((a: any) => `${a.worker.firstName} ${a.worker.lastName}`)
       .join(', ') || '';
 
-    // 1. Find or create Xero contact
     const contactId = await this.findOrCreateXeroContact(xero, company.xeroTenantId, customer);
 
-    // 2. Build invoice line item
-    const cleanopsServiceDescription = workerNames
-      ? `Cleaning service — ${workerNames}`
-      : `Cleaning service — ${customer.address}`;
-
-    const vatAmount = invoice.vatAmount / 100;
-    const subtotal = (invoice.amount - invoice.vatAmount) / 100;
-
-    const taxType = customer.isCommercial
-      ? this.configService.get('XERO_TAX_TYPE_COMMERCIAL') || 'OUTPUT2'
-      : this.configService.get('XERO_TAX_TYPE_RESIDENTIAL') || 'OUTPUT';
-
-    const accountCode = this.configService.get('XERO_ACCOUNT_CODE') || '200';
-
-    const xeroInvoice = {
-      type: 'ACCREC' as const,
-      contact: { contactID: contactId },
-      lineItems: [
-        {
-          description: cleanopsServiceDescription,
-          quantity: 1.0,
-          unitAmount: subtotal,
-          accountCode,
-          taxType,
-        },
-      ],
-      date: invoice.createdAt.toISOString().split('T')[0],
-      dueDate: new Date().toISOString().split('T')[0],
-      reference: formatInvoiceNumber(invoice),
-      status: 'AUTHORISED' as const,
+    const lineItem = {
+      description: `Cleaning service — ${customer.name} (${workerNames})`,
+      quantity: 1,
+      unitAmount: invoice.amount - invoice.vatAmount,
+      accountCode: '200',
     };
 
-    try {
-      const response = await (xero as any).accountingApi.createInvoices(
-        company.xeroTenantId,
-        { invoices: [xeroInvoice] },
-        true, // summarizeErrors
-        4,    // unitdp
-      );
+    const xeroInvoice = await xero.accountingApi.createInvoices(
+      company.xeroTenantId,
+      {
+        invoices: [{
+          type: 'ACCREC' as any,
+          contact: { contactID: contactId },
+          lineItems: [lineItem],
+          date: format(invoice.createdAt, 'yyyy-MM-dd'),
+          dueDate: format(new Date(invoice.createdAt.getTime() + 30 * 86400000), 'yyyy-MM-dd'),
+          reference: invoice.invoiceNumber?.toString() ?? invoice.id.slice(0, 8),
+          status: 'AUTHORISED' as any,
+        }],
+      },
+    );
 
-      const createdInvoices = response?.body?.invoices || response?.body?.Invoices || [];
-      const created = createdInvoices[0];
-
-      if (created?.invoiceID) {
-        await this.prisma.client.invoice.update({
-          where: { id },
-          data: { xeroInvoiceId: created.invoiceID, xeroSyncedAt: new Date() },
-        });
-      }
-
-      return { success: true, xeroInvoiceId: created?.invoiceID || null };
-    } catch (err: any) {
-      const errorBody = err?.response?.body || err.message;
-      this.logger.error(`Xero sync failed for invoice ${id}: ${JSON.stringify(errorBody)}`);
-      throw new BadRequestException(
-        `Failed to sync to Xero: ${err?.response?.body?.title || err.message}`,
-      );
+    const xeroId = xeroInvoice.body.invoices?.[0]?.invoiceID;
+    if (xeroId) {
+      await this.prisma.client.invoice.update({
+        where: { id },
+        data: { xeroInvoiceId: xeroId, xeroSyncedAt: new Date() },
+      });
     }
+
+    return { xeroInvoiceId: xeroId };
   }
 
-  private async findOrCreateXeroContact(
-    xero: any,
-    tenantId: string,
-    customer: { name: string; email?: string | null; phone?: string | null; address: string },
-  ): Promise<string> {
-    // Search by name
-    try {
-      const searchResult = await xero.accountingApi.getContacts(
-        tenantId,
-        null, // ifModifiedSince
-        `Name=="${customer.name.replace(/"/g, '\\"')}"`, // where
-        null, // order
-        null, // page
-      );
+  private async findOrCreateXeroContact(xero: any, tenantId: string, customer: any): Promise<string> {
+    const existing = await xero.accountingApi.getContacts(tenantId, undefined, `Name=="${customer.name}"`);
+    if (existing.body.contacts?.length > 0) return existing.body.contacts[0].contactID;
 
-      const existing = searchResult?.body?.contacts || [];
-      if (existing.length > 0) {
-        return existing[0].contactID;
-      }
-    } catch (err: any) {
-      this.logger.warn(`Xero contact search failed: ${err.message}`);
-    }
-
-    // Create new contact
-    const newContact = {
-      name: customer.name,
-      emailAddress: customer.email || '',
-      phones: customer.phone
-        ? [{ phoneType: 'MOBILE' as const, phoneNumber: customer.phone }]
-        : [],
-      isCustomer: true,
-    };
-
-    try {
-      const createResult = await xero.accountingApi.createContacts(
-        tenantId,
-        { contacts: [newContact] },
-        true,
-      );
-      const contacts = createResult?.body?.contacts || createResult?.body?.Contacts || [];
-      if (contacts.length > 0) {
-        return contacts[0].contactID;
-      }
-    } catch (err: any) {
-      this.logger.warn(`Xero contact creation failed: ${err.message}`);
-    }
-
-    throw new BadRequestException('Failed to find or create Xero contact');
+    const created = await xero.accountingApi.createContacts(tenantId, {
+      contacts: [{
+        name: customer.name,
+        emailAddress: customer.email,
+        phones: customer.phone ? [{ phoneNumber: customer.phone }] : undefined,
+        addresses: [{ addressLine1: customer.address, city: customer.postalCode }],
+      }],
+    });
+    return created.body.contacts?.[0]?.contactID ?? '';
   }
 
-  async sendReminder(id: string, companyId: string) {
+  async generatePdf(id: string, companyId: string): Promise<Buffer> {
     const invoice = await this.findOne(id, companyId);
-    if (invoice.status !== 'UNPAID') {
-      throw new BadRequestException('Can only send reminders for unpaid invoices');
-    }
+    const job = invoice.job;
+    const customer = job.customer;
+    const company = invoice.company;
+    const subtotal = invoice.amount - invoice.vatAmount;
+    const vatRate = customer.isCommercial ? 23 : 13.5;
+    const eur = (cents: number) => `€${(cents / 100).toFixed(2)}`;
 
-    const customer = invoice.job.customer;
+    const workerNames = job.assignments
+      ?.map((a) => `${a.worker?.firstName} ${a.worker?.lastName}`)
+      .join(', ') || '—';
 
-    // Ensure a payment link exists
-    let paymentLink = invoice.paymentLink;
-    if (!paymentLink) {
-      try {
-        const result = await this.generatePaymentLink(id, companyId);
-        paymentLink = result.paymentLink;
-      } catch (err: any) {
-        this.logger.warn(`Could not generate payment link for reminder: ${err.message}`);
-      }
-    }
+    const dueDate = new Date(invoice.createdAt);
+    dueDate.setDate(dueDate.getDate() + 30);
 
-    await this.emailService.sendInvoiceReminderEmail(invoice, customer, paymentLink);
+    const divider = {
+      canvas: [{ type: 'line' as const, x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1, lineColor: '#e5e7eb' }],
+      marginBottom: 8,
+    };
 
-    await this.prisma.client.invoice.update({
-      where: { id },
-      data: {
-        reminderSentAt: new Date(),
-        reminderCount: { increment: 1 },
+    const serviceLabel = job.description || job.title || 'Cleaning service';
+
+    const content: any[] = [
+      // HEADER
+      {
+        columns: [
+          { text: company?.name || 'CleanOps', style: 'companyName', width: '*' },
+          { text: company?.vatNumber ? 'VAT INVOICE' : 'INVOICE', style: 'invoiceTitle', alignment: 'right' as const, width: 'auto' },
+        ],
+        marginBottom: 4,
+      },
+      company?.address ? { text: company.address, style: 'small' } : null,
+      company?.phone ? { text: `Tel: ${company.phone}`, style: 'small' } : null,
+      company?.email ? { text: company.email, style: 'small' } : null,
+      company?.vatNumber ? { text: `VAT Reg No: ${company.vatNumber}`, style: 'smallBold', marginTop: 2 } : null,
+      divider,
+
+      // INVOICE META
+      {
+        columns: [
+          {
+            width: '*',
+            stack: [
+              { text: 'Bill To:', style: 'label' },
+              { text: customer.name, style: 'body' },
+              { text: customer.address, style: 'body' },
+              customer.postalCode ? { text: customer.postalCode, style: 'body' } : null,
+              customer.email ? { text: customer.email, style: 'small' } : null,
+            ].filter(Boolean),
+          },
+          {
+            width: 'auto',
+            stack: [
+              { text: invoice.invoiceNumber ? `INV-${invoice.createdAt.getFullYear()}-${String(invoice.invoiceNumber).padStart(4, '0')}` : id.slice(0, 8), style: 'invoiceNumber' },
+              { text: `Issued: ${format(new Date(invoice.createdAt), 'dd MMM yyyy')}`, style: 'small', alignment: 'right' as const },
+              { text: `Due: ${format(dueDate, 'dd MMM yyyy')}`, style: 'small', alignment: 'right' as const },
+              invoice.status === 'PAID' ? { text: `Paid: ${format(new Date(invoice.paidAt!), 'dd MMM yyyy')}`, style: 'paidBadge', alignment: 'right' as const } : null,
+            ].filter(Boolean),
+          },
+        ],
+        marginBottom: 8,
+      },
+      divider,
+
+      // SERVICE DETAILS
+      { text: 'Service Details', style: 'sectionHeader', marginBottom: 6 },
+      {
+        table: {
+          headerRows: 1,
+          widths: ['*', 60, 80],
+          body: [
+            [
+              { text: 'Description', style: 'tableHeader' },
+              { text: 'Qty', style: 'tableHeader', alignment: 'center' as const },
+              { text: 'Amount', style: 'tableHeader', alignment: 'right' as const },
+            ],
+            [
+              {
+                stack: [
+                  { text: `${serviceLabel} — ${customer.name}`, bold: true },
+                  { text: `Scheduled: ${format(new Date(job.scheduledStart), 'dd MMM yyyy \'at\' HH:mm')}`, style: 'small' },
+                  { text: `Duration: ${job.estimatedDuration || '—'} min`, style: 'small' },
+                  { text: `Worker(s): ${workerNames}`, style: 'small' },
+                  customer.address ? { text: `Location: ${customer.address}`, style: 'small' } : null,
+                  job.notes ? { text: `Notes: ${job.notes}`, style: 'small', italics: true } : null,
+                ].filter(Boolean),
+              },
+              { text: '1', alignment: 'center' as const },
+              { text: eur(subtotal), alignment: 'right' as const },
+            ],
+          ],
+        },
+        layout: {
+          hLineWidth: () => 1,
+          vLineWidth: () => 0,
+          hLineColor: () => '#e5e7eb',
+          paddingLeft: () => 4,
+          paddingRight: () => 4,
+          paddingTop: () => 6,
+          paddingBottom: () => 6,
+        },
+        marginBottom: 8,
+      },
+
+      // TOTALS
+      {
+        table: {
+          widths: ['*', 120],
+          body: [
+            [{ text: 'Subtotal', alignment: 'right' as const, style: 'body' }, { text: eur(subtotal), alignment: 'right' as const, style: 'body' }],
+            [{ text: `VAT (${vatRate}%)`, alignment: 'right' as const, style: 'body' }, { text: eur(invoice.vatAmount), alignment: 'right' as const, style: 'body' }],
+            [{ text: 'TOTAL DUE', alignment: 'right' as const, style: 'totalLabel' }, { text: eur(invoice.amount), alignment: 'right' as const, style: 'totalAmount' }],
+          ],
+        },
+        layout: 'noBorders',
+        marginBottom: 16,
+      },
+
+      // PAYMENT INFO
+      divider,
+      { text: 'Payment Information', style: 'sectionHeader', marginBottom: 4 },
+      { text: 'Payment is due within 30 days of the invoice date.', style: 'small' },
+      { text: 'Please include the invoice number with your payment.', style: 'small' },
+      invoice.paymentLink ? { text: `Pay online: ${invoice.paymentLink}`, style: 'link', marginTop: 4 } : null,
+      company?.iban ? { text: `IBAN: ${company.iban}`, style: 'small', marginTop: 4 } : null,
+      company?.bic ? { text: `BIC: ${company.bic}`, style: 'small' } : null,
+
+      // STATUS
+      { text: '\n' },
+      invoice.status === 'PAID'
+        ? { text: `✓ PAID on ${format(new Date(invoice.paidAt!), 'dd MMM yyyy')}`, style: 'paidStamp', alignment: 'center' as const }
+        : invoice.status === 'VOID'
+          ? { text: 'VOID', style: 'voidStamp', alignment: 'center' as const }
+          : null,
+
+      // FOOTER
+      { text: '\n\n', fontSize: 4 },
+      { text: company?.name || 'CleanOps', style: 'footer', alignment: 'center' as const },
+      company?.vatNumber ? { text: `VAT Reg No: ${company.vatNumber}`, style: 'footer', alignment: 'center' as const } : null,
+      { text: 'This invoice is subject to Irish VAT regulations. Late payment may incur interest under EU Directive 2011/7/EU.', style: 'footer', alignment: 'center' as const, fontSize: 7 },
+    ].filter(Boolean);
+
+    const docDefinition: TDocumentDefinitions = {
+      pageSize: 'A4',
+      pageMargins: [40, 40, 40, 40],
+      content,
+      styles: {
+        companyName: { fontSize: 16, bold: true, color: '#111827' },
+        invoiceTitle: { fontSize: 20, bold: true, color: '#4f46e5' },
+        invoiceNumber: { fontSize: 12, bold: true, color: '#111827' },
+        label: { fontSize: 9, bold: true, color: '#6b7280', marginBottom: 2 },
+        body: { fontSize: 10, color: '#111827' },
+        small: { fontSize: 8, color: '#6b7280' },
+        smallBold: { fontSize: 8, bold: true, color: '#374151' },
+        sectionHeader: { fontSize: 11, bold: true, color: '#4f46e5', marginTop: 4, marginBottom: 4 },
+        tableHeader: { fontSize: 8, bold: true, color: '#6b7280' },
+        totalLabel: { fontSize: 12, bold: true, color: '#111827' },
+        totalAmount: { fontSize: 14, bold: true, color: '#4f46e5' },
+        paidStamp: { fontSize: 16, bold: true, color: '#10b981' },
+        paidBadge: { fontSize: 8, bold: true, color: '#10b981' },
+        voidStamp: { fontSize: 16, bold: true, color: '#ef4444' },
+        link: { fontSize: 8, color: '#4f46e5' },
+        footer: { fontSize: 7, color: '#9ca3af' },
+      },
+      defaultStyle: { font: 'Roboto', fontSize: 10, color: '#111827' },
+    };
+
+    const printer = new PdfPrinter();
+    printer.addFonts({
+      Roboto: {
+        normal: 'Helvetica',
+        bold: 'Helvetica-Bold',
+        italics: 'Helvetica-Oblique',
+        bolditalics: 'Helvetica-BoldOblique',
       },
     });
 
-    return { success: true };
+    const pdfDoc = await printer.createPdf(docDefinition);
+
+    return new Promise<Buffer>((resolve, reject) => {
+      const chunks: Buffer[] = [];
+      pdfDoc.on('data', (chunk: Buffer) => chunks.push(chunk));
+      pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));
+      pdfDoc.on('error', reject);
+      pdfDoc.end();
+    });
   }
 }

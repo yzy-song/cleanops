@@ -22,30 +22,35 @@ export class QuoteLineItemDto {
 }
 
 export class CreateQuoteDto {
-  @ApiProperty({ enum: ServiceType, example: 'REGULAR' })
+  @ApiProperty({ enum: ServiceType, example: 'REGULAR', required: false })
+  @IsOptional()
   @IsEnum(ServiceType)
-  serviceType: ServiceType;
+  serviceType?: ServiceType;
 
-  @ApiProperty({ enum: PropertySize, example: 'TWO_BED' })
+  @ApiProperty({ enum: PropertySize, example: 'TWO_BED', required: false })
+  @IsOptional()
   @IsEnum(PropertySize)
-  propertySize: PropertySize;
+  propertySize?: PropertySize;
 
   @ApiProperty({ required: false, example: 1 })
   @IsOptional()
   @IsNumber()
   bathrooms?: number;
 
-  @ApiProperty({ enum: ServiceFrequency, example: 'ONE_OFF' })
+  @ApiProperty({ enum: ServiceFrequency, example: 'ONE_OFF', required: false })
+  @IsOptional()
   @IsEnum(ServiceFrequency)
-  frequency: ServiceFrequency;
+  frequency?: ServiceFrequency;
 
-  @ApiProperty({ example: false })
+  @ApiProperty({ example: false, required: false })
+  @IsOptional()
   @IsBoolean()
-  isCommercial: boolean;
+  isCommercial?: boolean;
 
-  @ApiProperty({ example: 120, description: '预估时长（分钟）' })
+  @ApiProperty({ example: 120, description: '预估时长（分钟）', required: false })
+  @IsOptional()
   @IsNumber()
-  estimatedDuration: number;
+  estimatedDuration?: number;
 
   @ApiProperty({ required: false })
   @IsOptional()
