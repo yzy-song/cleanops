@@ -39,6 +39,19 @@ export class ReportController {
     return this.reportService.getPayroll(companyId, from, to);
   }
 
+  @Get('profitability')
+  @Auth(Role.ADMIN, Role.MANAGER)
+  @ApiOperation({ summary: 'Job毛利分析 — 收入 vs 人工成本' })
+  @ApiQuery({ name: 'from', required: false })
+  @ApiQuery({ name: 'to', required: false })
+  getProfitability(
+    @CurrentUser('companyId') companyId: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.reportService.getProfitability(companyId, from, to);
+  }
+
   @Get('payslip/:workerId/pdf')
   @Auth(Role.ADMIN, Role.MANAGER)
   @ApiOperation({ summary: '下载员工工资条 PDF (含 PAYE/PRSI/USC)' })

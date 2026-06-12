@@ -230,6 +230,83 @@ export class ReportService {
     return { payroll, totals, eroMinimum: company.baseHourlyRate };
   }
 
+  async getProfitability(companyId: string, from?: string, to?: string) {
+    const where: any = {
+      companyId,
+      status: 'COMPLETED',
+      invoice: { isNot: null },
+    };
+    if (from || to) {
+      where.actualEnd = {};
+      if (from) where.actualEnd.gte = new Date(from);
+      if (to) where.actualEnd.lte = new Date(to);
+    }
+
+    const company = await this.prisma.client.company.findUnique({ where: { id: companyId } });
+
+    const jobs = await this.prisma.client.job.findMany({
+      where,
+      include: {
+        customer: true,
+        assignments: { include: { worker: true } },
+        invoice: { select: { id: true, amount: true, status: true } },
+      },
+      orderBy: { actualEnd: 'desc' },
+      take: 200,
+    });
+
+    let totalRevenue = 0;
+    let totalLaborCost = 0;
+    let totalMinutes = 0;
+
+    const jobDetails = jobs.map((job) => {
+      const revenue = job.invoice?.amount ?? 0;
+      let laborCost = 0;
+      let minutes = 0;
+
+      for (const assign of job.assignments) {
+        const rate = assign.worker.hourlyRate ?? company?.baseHourlyRate ?? 1480;
+        if (job.actualStart && job.actualEnd) {
+          minutes = Math.round((job.actualEnd.getTime() - job.actualStart.getTime()) / 60000);
+        } else if (job.estimatedDuration) {
+          minutes = job.estimatedDuration;
+        }
+        const cost = Math.round((minutes / 60) * rate);
+        laborCost += cost;
+      }
+
+      totalRevenue += revenue;
+      totalLaborCost += laborCost;
+      totalMinutes += minutes;
+
+      return {
+        jobId: job.id,
+        customer: job.customer.name,
+        date: job.actualEnd || job.scheduledStart,
+        revenue,
+        laborCost,
+        grossProfit: revenue - laborCost,
+        margin: revenue > 0 ? Math.round(((revenue - laborCost) / revenue) * 100) : 0,
+        minutes,
+        workers: job.assignments.map((a) => `${a.worker.firstName} ${a.worker.lastName}`).join(', '),
+      };
+    });
+
+    return {
+      jobs: jobDetails,
+      summary: {
+        totalJobs: jobs.length,
+        totalRevenue,
+        totalLaborCost,
+        totalGrossProfit: totalRevenue - totalLaborCost,
+        totalMargin: totalRevenue > 0 ? Math.round(((totalRevenue - totalLaborCost) / totalRevenue) * 100) : 0,
+        totalHours: Math.round((totalMinutes / 60) * 100) / 100,
+        avgRevenuePerJob: jobs.length > 0 ? Math.round(totalRevenue / jobs.length) : 0,
+        avgLaborPerJob: jobs.length > 0 ? Math.round(totalLaborCost / jobs.length) : 0,
+      },
+    };
+  }
+
   async getVatReport(companyId: string, from?: string, to?: string) {
     const where: any = {
       companyId,
