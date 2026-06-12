@@ -4,6 +4,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateWorkerDto } from './dto/update-worker.dto';
 import { EmailService } from 'src/email/email.service';
 import { GeocodingService } from 'src/common/services/geocoding.service';
+import { assertWorkerLimit } from '../billing/plan-limits';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -14,11 +15,14 @@ export class WorkerService {
     private geocodingService: GeocodingService,
   ) {}
 
-  // apps/api/src/modules/worker/worker.service.ts
-
   async create(companyId: string, dto: CreateWorkerDto) {
     const existing = await this.prisma.client.user.findUnique({ where: { email: dto.email } });
     if (existing) throw new ConflictException('Email already registered');
+
+    // Plan limit: check if company can add more workers
+    const company = await this.prisma.client.company.findUnique({ where: { id: companyId } });
+    const workerCount = await this.prisma.client.worker.count({ where: { companyId } });
+    assertWorkerLimit(workerCount, company?.subscriptionPlan);
 
     const tempPassword = Math.random().toString(36).slice(-8);
     const hashedPassword = await bcrypt.hash(tempPassword, 10);

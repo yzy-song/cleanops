@@ -86,6 +86,7 @@ export default function LandingPage() {
           </Link>
           <div className="flex items-center gap-4 text-sm">
             <Link href="/tools" className="text-muted-foreground hover:text-foreground font-medium">Free Tools</Link>
+            <Link href="/pricing" className="text-muted-foreground hover:text-foreground font-medium">Pricing</Link>
             <Link href="/login" className="text-muted-foreground hover:text-foreground">Log In</Link>
             <Button size="sm" className="rounded-full px-5" asChild>
               <Link href="/register">Start Free Trial</Link>
