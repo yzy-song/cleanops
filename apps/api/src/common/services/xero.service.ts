@@ -2,7 +2,7 @@ import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { XeroClient } from 'xero-node';
+import { XeroClient, TokenSet } from 'xero-node';
 import crypto from 'crypto';
 
 interface XeroTokenSet {
@@ -59,7 +59,7 @@ export class XeroService {
       clientId: this.clientId,
       clientSecret: this.clientSecret,
       redirectUris: [this.redirectUri],
-      scopes: 'accounting.invoices accounting.contacts accounting.settings'.split(' '),
+      scopes: 'offline_access accounting.invoices accounting.contacts accounting.settings'.split(' '),
       state,
     });
 
@@ -142,17 +142,18 @@ export class XeroService {
       clientId: this.clientId,
       clientSecret: this.clientSecret,
       redirectUris: [this.redirectUri],
-      scopes: 'accounting.invoices accounting.contacts accounting.settings'.split(' '),
+      scopes: 'offline_access accounting.invoices accounting.contacts accounting.settings'.split(' '),
     });
 
-    // Populate token set manually
-    (xero as any).tokenSet = {
-      access_token: company.xeroAccessToken,
-      refresh_token: company.xeroRefreshToken,
-      expires_at: company.xeroTokenExpiresAt
-        ? Math.floor(company.xeroTokenExpiresAt.getTime() / 1000)
-        : undefined,
-    };
+    // Populate token set using the official setter
+    const tokenSet = new TokenSet();
+    tokenSet.access_token = company.xeroAccessToken;
+    tokenSet.refresh_token = company.xeroRefreshToken;
+    tokenSet.expires_at = company.xeroTokenExpiresAt
+      ? Math.floor(company.xeroTokenExpiresAt.getTime() / 1000)
+      : undefined;
+    tokenSet.token_type = 'Bearer';
+    xero.setTokenSet(tokenSet);
 
     return xero;
   }
