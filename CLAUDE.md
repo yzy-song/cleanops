@@ -14,6 +14,8 @@ Monorepo: NestJS API + Next.js 14 Web + Prisma + PostgreSQL.
 - **不改测试**（除非改动导致过时）
 - **不改 CLAUDE.md**（除非明确要求）
 - **国际化**: 所有用户可见文案通过 `t()` 函数
+- **提交粒度**: 一个功能点一个 commit，不攒一大堆。做完一个提交一个。
+- **提交格式**: `类型: 描述`（feat/fix/refactor/docs/test/chore）
 
 ## Common Commands
 | Command | What |
