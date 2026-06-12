@@ -59,7 +59,7 @@ export class XeroService {
       clientId: this.clientId,
       clientSecret: this.clientSecret,
       redirectUris: [this.redirectUri],
-      scopes: 'offline_access accounting.transactions accounting.contacts'.split(' '),
+      scopes: 'accounting.invoices accounting.contacts accounting.settings'.split(' '),
       state,
     });
 
@@ -142,7 +142,7 @@ export class XeroService {
       clientId: this.clientId,
       clientSecret: this.clientSecret,
       redirectUris: [this.redirectUri],
-      scopes: 'offline_access accounting.transactions accounting.contacts'.split(' '),
+      scopes: 'accounting.invoices accounting.contacts accounting.settings'.split(' '),
     });
 
     // Populate token set manually

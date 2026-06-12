@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useCompany, useUpdateCompany, useStripeStatus, useSaveStripeKey, useDisconnectStripe, useXeroConnectionStatus, useConnectXeroUrl, useDisconnectXero } from "@/hooks/use-company";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,13 +29,16 @@ export default function SettingsPage() {
   const [showKey, setShowKey] = useState(false);
   const [savingKey, setSavingKey] = useState(false);
   const [connectingXero, setConnectingXero] = useState(false);
+  const xeroToastShown = useRef(false);
 
   useEffect(() => {
     const xeroResult = searchParams.get("xero");
-    if (xeroResult === "success") {
+    if (xeroResult === "success" && !xeroToastShown.current) {
+      xeroToastShown.current = true;
       toast.success("Xero account connected successfully!");
       refetchXero();
-    } else if (xeroResult === "error") {
+    } else if (xeroResult === "error" && !xeroToastShown.current) {
+      xeroToastShown.current = true;
       const msg = searchParams.get("message");
       toast.error(msg || "Failed to connect Xero. Please try again.");
     }
@@ -77,6 +80,9 @@ export default function SettingsPage() {
       const result = await fetchXeroUrl();
       if (result.data?.url) {
         window.location.href = result.data.url;
+      } else {
+        toast.error("Failed to get Xero authorization URL");
+        setConnectingXero(false);
       }
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to start Xero connection");
