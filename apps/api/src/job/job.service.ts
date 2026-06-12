@@ -6,6 +6,7 @@ import { EmailService } from '../email/email.service';
 import { InvoiceService } from '../invoice/invoice.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { StripeService } from '../common/services/stripe.service';
+import { XeroTimesheetService } from '../common/services/xero-timesheet.service';
 import * as geolib from 'geolib';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { paginate } from '../common/utils/pagination.util';
@@ -18,6 +19,7 @@ export class JobService {
     private invoiceService: InvoiceService,
     private cloudinaryService: CloudinaryService,
     private stripeService: StripeService,
+    private xeroTimesheetService: XeroTimesheetService,
   ) {}
 
   async create(companyId: string, dto: CreateJobDto) {
@@ -344,6 +346,11 @@ export class JobService {
       where: { id: jobId },
       data: updateData,
     });
+
+    // Auto-sync GPS work hours to Xero Timesheets (non-blocking)
+    if (complete && job.actualStart) {
+      this.xeroTimesheetService.syncJobTimesheet(jobId, job.companyId);
+    }
 
     if (complete) {
       try {
