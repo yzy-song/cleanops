@@ -171,7 +171,7 @@ export class ReportService {
     const company = await this.prisma.client.company.findUnique({ where: { id: companyId } });
     const jobs = await this.prisma.client.job.findMany({
       where,
-      include: { assignments: { include: { worker: true } }, customer: true },
+      include: { assignments: { include: { worker: true } }, customer: true, invoice: { select: { amount: true } } },
     });
 
     // Aggregate per worker
@@ -196,16 +196,39 @@ export class ReportService {
 
     const payroll = Array.from(workerMap.values()).map((entry) => {
       const hours = entry.totalMinutes / 60;
-      const hourlyRate = entry.worker.hourlyRate ?? company.baseHourlyRate;
-      const grossPay = Math.round(hours * hourlyRate);
+      const worker = entry.worker;
+      const payModel = worker.payModel || 'HOURLY';
+      const hourlyRate = worker.hourlyRate ?? company.baseHourlyRate;
+
+      // Calculate gross pay based on pay model
+      let grossPay: number;
+      if (payModel === 'PER_JOB') {
+        if (worker.commissionRate != null) {
+          // Commission: % of each job's invoice revenue
+          grossPay = entry.jobs.reduce((sum, job: any) => {
+            const revenue = job.invoice?.amount ?? 0;
+            return sum + Math.round(revenue * worker.commissionRate! / 100);
+          }, 0);
+        } else if (worker.perJobRate != null) {
+          // Fixed rate per job
+          grossPay = entry.jobs.length * worker.perJobRate;
+        } else {
+          // Fallback to hourly
+          grossPay = Math.round(hours * hourlyRate);
+        }
+      } else {
+        grossPay = Math.round(hours * hourlyRate);
+      }
+
       const pensionAmount = company.pensionEnrollment ? Math.round(grossPay * 0.015) : 0;
       const prsiEstimate = Math.round(grossPay * 0.1115);
       const netPay = grossPay - pensionAmount;
 
       return {
-        workerId: entry.worker.id,
-        name: `${entry.worker.firstName} ${entry.worker.lastName}`,
-        workerName: `${entry.worker.firstName} ${entry.worker.lastName}`,
+        workerId: worker.id,
+        name: `${worker.firstName} ${worker.lastName}`,
+        workerName: `${worker.firstName} ${worker.lastName}`,
+        payModel,
         hours: Math.round(hours * 100) / 100,
         totalHours: Math.round(hours * 100) / 100,
         hourlyRate,
@@ -265,13 +288,21 @@ export class ReportService {
       let minutes = 0;
 
       for (const assign of job.assignments) {
-        const rate = assign.worker.hourlyRate ?? company?.baseHourlyRate ?? 1480;
+        const worker = assign.worker;
+        const payModel = worker.payModel || 'HOURLY';
         if (job.actualStart && job.actualEnd) {
           minutes = Math.round((job.actualEnd.getTime() - job.actualStart.getTime()) / 60000);
         } else if (job.estimatedDuration) {
           minutes = job.estimatedDuration;
         }
-        const cost = Math.round((minutes / 60) * rate);
+        let cost: number;
+        if (payModel === 'PER_JOB' && worker.commissionRate != null) {
+          cost = Math.round(revenue * worker.commissionRate / 100);
+        } else if (payModel === 'PER_JOB' && worker.perJobRate != null) {
+          cost = worker.perJobRate;
+        } else {
+          cost = Math.round((minutes / 60) * (worker.hourlyRate ?? company?.baseHourlyRate ?? 1480));
+        }
         laborCost += cost;
       }
 

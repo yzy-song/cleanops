@@ -27,11 +27,29 @@ export class CreateWorkerDto {
   @IsString()
   ppsn?: string;
 
-  @ApiProperty({ example: 1600, description: '时薪(分)', required: false })
+  @ApiProperty({ example: 'HOURLY', description: '计薪模式: HOURLY | PER_JOB', required: false, default: 'HOURLY' })
+  @IsOptional()
+  @IsString()
+  payModel?: string;
+
+  @ApiProperty({ example: 1600, description: '时薪(分) — HOURLY 模式使用', required: false })
   @IsOptional()
   @IsInt()
   @Min(1100)
   hourlyRate?: number;
+
+  @ApiProperty({ example: 40, description: '提成比例(%) — PER_JOB 模式 (e.g. 40 = 40%)', required: false })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  commissionRate?: number;
+
+  @ApiProperty({ example: 5000, description: '每单固定金额(分) — PER_JOB 模式', required: false })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  perJobRate?: number;
 
   @ApiProperty({ example: 'D02 X123', description: 'Eircode 或类似邮编', required: false })
   @IsOptional()

@@ -160,7 +160,10 @@ model Worker {
   phone         String   @unique // 核心：WhatsApp 登录唯一凭证
   email         String?
   ppsn          String?  // 爱尔兰个人税号 (用于报税)
-  hourlyRate    Int?     // 个体时薪 (分)，为空则使用 Company 默认值
+  hourlyRate    Int?     // 个体时薪 (分)，为空则使用 Company 默认值。HOURY 模式使用
+  payModel      String   @default("HOURLY") // HOURLY | PER_JOB — 计薪模式
+  commissionRate Int?    // PER_JOB 模式提成比例 (e.g. 40 = 40% of job revenue)
+  perJobRate    Int?     // PER_JOB 模式固定金额 (分) (e.g. 5000 = €50 per job)
   isActive      Boolean  @default(true)
   postalCode    String?  // Eircode 或类似邮编
   lat           Float?   // 地理编码：纬度
