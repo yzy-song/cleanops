@@ -42,4 +42,29 @@ export class GeocodingService {
       return null;
     }
   }
+
+  /** Reverse lookup: postal code → formatted address */
+  async reverseLookup(postalCode: string): Promise<string | null> {
+    if (!this.apiKey || !postalCode) return null;
+
+    try {
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?${new URLSearchParams({
+        address: postalCode + ' Ireland',
+        region: 'ie',
+        key: this.apiKey,
+      })}`;
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (data.status === 'OK' && data.results?.length > 0) {
+        return data.results[0].formatted_address;
+      }
+      this.logger.warn(`Reverse lookup returned status=${data.status} for "${postalCode}"`);
+      return null;
+    } catch (err) {
+      this.logger.error(`Reverse lookup failed for "${postalCode}": ${(err as Error).message}`);
+      return null;
+    }
+  }
 }

@@ -11,8 +11,6 @@ import { UserPlus, Search, Loader2 } from "lucide-react";
 
 interface Props { open: boolean; onOpenChange: (o: boolean) => void; onCreated?: () => void; }
 
-const GEOCODE_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
-
 export function NewWorkerSheet({ open, onOpenChange, onCreated }: Props) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -24,15 +22,13 @@ export function NewWorkerSheet({ open, onOpenChange, onCreated }: Props) {
   const [lookingUp, setLookingUp] = useState(false);
 
   const handleEircodeLookup = useCallback(async () => {
-    if (!postalCode || postalCode.length < 3 || !GEOCODE_KEY) return;
+    if (!postalCode || postalCode.length < 3) return;
     setLookingUp(true);
     try {
-      const res = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(postalCode + " Ireland")}&region=ie&key=${GEOCODE_KEY}`
-      );
-      const data = await res.json();
-      if (data.status === "OK" && data.results?.length > 0) {
-        toast.success("Eircode verified — " + data.results[0].formatted_address.split(",")[0]);
+      const res = await api.get("/geocode/lookup", { params: { postalCode } });
+      const addr = res.data?.data?.address || res.data?.data?.data?.address;
+      if (addr) {
+        toast.success("Eircode verified — " + addr.split(",")[0]);
       } else {
         toast.error("Eircode not found");
       }
