@@ -28,11 +28,16 @@ const statusColors: Record<string, string> = {
 
 export default function JobsPage() {
   const [filter, setFilter] = useState<string>("");
-  const query: JobQuery = filter ? { status: filter } : {};
-  const { data, isLoading, refetch } = useJobs(query);
-  const { data: workers } = useWorkers();
   const { user } = useAuthStore();
   const isAdmin = user?.role === "ADMIN" || user?.role === "MANAGER";
+
+  // Workers only see their own jobs
+  const baseQuery: JobQuery = filter ? { status: filter } : {};
+  if (user?.role === "WORKER" && user?.workerId) {
+    baseQuery.workerId = user.workerId;
+  }
+  const { data, isLoading, refetch } = useJobs(baseQuery);
+  const { data: workers } = useWorkers();
   const cancelJob = useCancelJob();
   const sendInvoice = useSendInvoice();
 

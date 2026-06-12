@@ -6,6 +6,7 @@ interface UserInfo {
   email: string;
   role: string;
   companyId: string;
+  workerId?: string;
 }
 
 interface AuthState {
@@ -25,6 +26,7 @@ function decodeJWT(token: string): UserInfo | null {
       email: decoded.email,
       role: decoded.role,
       companyId: decoded.companyId,
+      workerId: decoded.workerId,
     };
   } catch {
     return null;

@@ -37,6 +37,7 @@ export class AuthService {
   async login(email: string, pass: string) {
     const user = await this.prisma.client.user.findUnique({
       where: { email },
+      include: { worker: true },
     });
 
     if (!user || !(await bcrypt.compare(pass, user.password))) {
@@ -48,6 +49,7 @@ export class AuthService {
       email: user.email,
       role: user.role,
       companyId: user.companyId,
+      workerId: (user as any).worker?.id || undefined,
     };
 
     const accessToken = this.jwtService.sign(payload);
@@ -126,6 +128,7 @@ export class AuthService {
       email: user.email,
       role: user.role,
       companyId: user.companyId,
+      workerId: (user as any).worker?.id || undefined,
     };
 
     const accessToken = this.jwtService.sign(payload);
