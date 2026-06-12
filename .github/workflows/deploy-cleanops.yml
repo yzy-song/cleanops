@@ -35,7 +35,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: cd packages/db && DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy npx prisma generate
+        run: cd packages/db && DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy pnpm exec prisma generate
 
       - name: Build @cleanops/db
         run: cd packages/db && pnpm build
@@ -70,11 +70,11 @@ jobs:
             tar xzf dist.tar.gz && rm dist.tar.gz
             cd /var/www/cleanops/repo && git fetch origin main && git reset --hard origin/main
             sudo chown -R ubuntu:ubuntu /var/www/cleanops/repo
-            CI=true pnpm install
+            CI=true pnpm install --frozen-lockfile
             sudo mkdir -p /var/www/cleanops/logs && sudo chown cleanops:cleanops /var/www/cleanops/logs
             ln -sf /var/www/cleanops/repo/apps/api/node_modules $RELEASE_DIR/dist/node_modules
             sudo ln -nfs $RELEASE_DIR/dist /var/www/cleanops/current
-            export DATABASE_URL=\$(grep '^DATABASE_URL=' /var/www/cleanops/.env | cut -d= -f2-) && cd /var/www/cleanops/repo/packages/db && npx prisma generate && npx prisma migrate deploy
+            export DATABASE_URL=\$(grep '^DATABASE_URL=' /var/www/cleanops/.env | cut -d= -f2-) && cd /var/www/cleanops/repo && pnpm exec prisma generate --schema=packages/db/prisma/schema.prisma && pnpm exec prisma migrate deploy --schema=packages/db/prisma/schema.prisma
             sudo cp $RELEASE_DIR/ecosystem.config.cjs /var/www/cleanops/ecosystem.config.cjs
             sudo -u cleanops pm2 delete cleanops 2>/dev/null || true
             sudo -u cleanops pm2 start /var/www/cleanops/ecosystem.config.cjs
