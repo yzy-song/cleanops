@@ -113,6 +113,13 @@ export class JobService {
     return job;
   }
 
+  async findByIds(companyId: string, ids: string[]) {
+    return this.prisma.client.job.findMany({
+      where: { id: { in: ids }, companyId },
+      include: { customer: true, assignments: { include: { worker: true } } },
+    });
+  }
+
   async update(id: string, companyId: string, dto: UpdateJobDto) {
     const data: any = { ...dto };
     if (dto.scheduledStart) data.scheduledStart = new Date(dto.scheduledStart);

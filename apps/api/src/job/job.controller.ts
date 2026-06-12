@@ -4,6 +4,7 @@ import { ApiTags, ApiOperation, ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JobService } from './job.service';
 import { SchedulingService } from './scheduling.service';
+import { DirectionsService } from '../common/services/directions.service';
 import { InvoiceService } from '../invoice/invoice.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
@@ -19,6 +20,7 @@ export class JobController {
     private readonly jobService: JobService,
     private readonly schedulingService: SchedulingService,
     private readonly invoiceService: InvoiceService,
+    private readonly directionsService: DirectionsService,
   ) {}
 
   @Post()
@@ -249,6 +251,36 @@ export class JobController {
     @Body('endDate') endDate: string,
   ) {
     return this.schedulingService.preview({ startDate, endDate, companyId });
+  }
+
+  @Post('optimize-route')
+  @Auth(Role.ADMIN, Role.MANAGER)
+  @ApiOperation({ summary: '优化工人路线（Google Directions API + Haversine fallback）' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        workerLat: { type: 'number', example: 53.3498 },
+        workerLng: { type: 'number', example: -6.2603 },
+        jobIds: { type: 'array', items: { type: 'string' } },
+      },
+      required: ['workerLat', 'workerLng', 'jobIds'],
+    },
+  })
+  async optimizeRoute(
+    @CurrentUser('companyId') companyId: string,
+    @Body('workerLat') workerLat: number,
+    @Body('workerLng') workerLng: number,
+    @Body('jobIds') jobIds: string[],
+  ) {
+    const jobs = await this.jobService.findByIds(companyId, jobIds);
+    const stops = jobs.map((j: any) => ({
+      id: j.id,
+      name: j.customer?.name || 'Unknown',
+      lat: j.customer?.lat || 0,
+      lng: j.customer?.lng || 0,
+    }));
+    return this.directionsService.optimizeRoute({ lat: workerLat, lng: workerLng }, stops);
   }
 
   @Post('auto-schedule/apply')

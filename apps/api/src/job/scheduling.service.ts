@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { haversineDistance, travelTimeMinutes } from 'src/common/utils/distance.util';
+import { DirectionsService } from 'src/common/services/directions.service';
 
 interface ScheduleRequest {
   startDate: string;
@@ -47,7 +48,7 @@ const DAILY_CAPACITY_MINUTES = 480; // 8h
 
 @Injectable()
 export class SchedulingService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private directionsService: DirectionsService) {}
 
   async preview(dto: ScheduleRequest): Promise<ScheduleResult[]> {
     const start = new Date(dto.startDate);
@@ -85,7 +86,7 @@ export class SchedulingService {
         (w) => w.workDays.includes(dayOfWeek),
       );
 
-      const result = this.scheduleDay(
+      const result = await this.scheduleDay(
         dayJobs.map((j) => ({
           id: j.id,
           customerName: j.customer.name,
@@ -193,10 +194,10 @@ export class SchedulingService {
     return days;
   }
 
-  private scheduleDay(
+  private async scheduleDay(
     jobs: JobToSchedule[],
     workers: CandidateWorker[],
-  ): { assigned: DailyAssignment[]; unassigned: { jobId: string; customerName: string }[] } {
+  ): Promise<{ assigned: DailyAssignment[]; unassigned: { jobId: string; customerName: string }[] }> {
     const workerState = new Map<
       string,
       {
@@ -288,7 +289,21 @@ export class SchedulingService {
       const state = workerState.get(w.id)!;
       if (state.jobs.length === 0) continue;
 
-      const ordered = this.nearestNeighborOrder(state.jobs);
+      // Use Directions API for road-based optimization, fallback to Haversine
+      let ordered = this.nearestNeighborOrder(state.jobs);
+      try {
+        if (state.jobs.length >= 2 && w.lat && w.lng) {
+          const route = await this.directionsService.optimizeRoute(
+            { lat: w.lat, lng: w.lng },
+            state.jobs.map((j: any) => ({ id: j.jobId, name: j.customerName, lat: j.lat, lng: j.lng })),
+          );
+          // Re-order jobs to match Directions API order
+          const orderedIds = route.stops.map(s => s.id);
+          ordered = orderedIds
+            .map((id: string) => state.jobs.find((j: any) => j.jobId === id))
+            .filter(Boolean);
+        }
+      } catch { /* fallback to Haversine */ }
 
       let totalDuration = 0;
       let totalTravel = 0;
