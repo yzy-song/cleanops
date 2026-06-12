@@ -198,6 +198,12 @@ button:not([class*="ghost"]):active {
   animation: shimmer 1.5s infinite;
 }
 
+/* Marquee scroll */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
 input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear {
   display: none;

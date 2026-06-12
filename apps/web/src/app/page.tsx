@@ -97,32 +97,76 @@ export default function LandingPage() {
 
       {/* ====== Hero ====== */}
       <section className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-blue-950 text-white overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(37,99,235,0.15),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(37,99,235,0.2),transparent_50%),radial-gradient(ellipse_at_bottom_left,rgba(5,150,105,0.1),transparent_50%)]" />
+        {/* Subtle grid pattern */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
         <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 relative z-10">
-          <div className="max-w-3xl space-y-8">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm backdrop-blur-sm">
-              <span className="text-amber-400">★★★★★</span>
-              <span>Trusted by 50+ cleaning companies</span>
+          <div className="lg:grid lg:grid-cols-2 lg:gap-12 items-center">
+            <div className="space-y-8">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm backdrop-blur-sm">
+                <span className="text-amber-400">★★★★★</span>
+                <span>Trusted by 50+ cleaning companies</span>
+              </div>
+              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.05]">
+                Run your cleaning business<br />
+                <span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">like a machine.</span>
+              </h1>
+              <p className="text-lg text-white/70 max-w-xl">
+                The all-in-one platform that handles bookings, payments, staff scheduling, and customer management — so you can stop juggling spreadsheets.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <Button size="lg" className="gap-2 text-base px-8 rounded-full h-12 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 shadow-lg shadow-blue-500/25 group" asChild>
+                  <Link href="/register">Start Your Free Trial <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" /></Link>
+                </Button>
+                <Button size="lg" variant="outline" className="gap-2 text-base px-8 rounded-full h-12 border-white/20 text-white hover:bg-white/10 backdrop-blur-sm" asChild>
+                  <Link href="/book">See It In Action</Link>
+                </Button>
+              </div>
+              <p className="text-sm text-white/50">Free 14-day trial · No credit card required · Cancel anytime</p>
             </div>
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.05]">
-              Run your cleaning business<br />
-              <span className="text-blue-400">like a machine.</span>
-            </h1>
-            <p className="text-lg text-white/70 max-w-xl">
-              The all-in-one platform that handles bookings, payments, staff scheduling, and customer management — so you can stop juggling spreadsheets.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <Button size="lg" className="gap-2 text-base px-8 rounded-full h-12 bg-blue-500 hover:bg-blue-400" asChild>
-                <Link href="/register">Start Your Free Trial <ArrowRight className="h-4 w-4" /></Link>
-              </Button>
-              <Button size="lg" variant="outline" className="gap-2 text-base px-8 rounded-full h-12 border-white/20 text-white hover:bg-white/10" asChild>
-                <Link href="/book">See It In Action</Link>
-              </Button>
+            {/* Floating Dashboard Preview — desktop only */}
+            <div className="hidden lg:block relative">
+              <div className="absolute -top-8 -right-4 w-full h-full bg-gradient-to-br from-blue-500/20 to-emerald-500/10 rounded-3xl blur-3xl" />
+              <div className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-1 shadow-2xl shadow-black/40">
+                <div className="rounded-xl bg-slate-900/80 p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-slate-400">📊 Dashboard Preview</span>
+                    <span className="text-[10px] text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">LIVE DEMO</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[{ label: "Today", value: "12", sub: "Jobs" }, { label: "Revenue", value: "€1,420", sub: "This Week" }, { label: "Workers", value: "8", sub: "Active" }].map((k) => (
+                      <div key={k.label} className="rounded-lg bg-slate-800/50 p-3 text-center border border-white/5">
+                        <div className="text-lg font-bold text-white">{k.value}</div>
+                        <div className="text-[10px] text-slate-400">{k.label}</div>
+                        <div className="text-[9px] text-slate-500">{k.sub}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="rounded-lg bg-slate-800/30 h-20 flex items-end gap-1 px-2 pb-2">
+                    {[40, 65, 45, 80, 55, 90, 70].map((h, i) => (
+                      <div key={i} className="flex-1 bg-gradient-to-t from-blue-500/60 to-blue-400/30 rounded-sm" style={{ height: `${h}%` }} />
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
-            <p className="text-sm text-white/50">Free 14-day trial · No credit card required · Cancel anytime</p>
           </div>
         </div>
       </section>
+
+      {/* ====== Client Logos Marquee ====== */}
+      <div className="relative bg-slate-900 border-t border-white/5 py-8 overflow-hidden">
+        <p className="text-center text-xs text-slate-500 mb-4 tracking-wider uppercase">Trusted by cleaning companies across Ireland, UK &amp; beyond</p>
+        <div className="flex gap-12 animate-[marquee_30s_linear_infinite] whitespace-nowrap" style={{ maskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)" }}>
+          {[...Array(2)].map((_, round) => (
+            <div key={round} className="flex gap-12 shrink-0">
+              {["SparkleClean Co.", "Dublin Cleaning Co.", "Cork Home Services", "Galway Maid Pro", "Limerick Shine", "Elite Cleaners IE", "PureClean Solutions", "Green Clean Dublin"].map((name) => (
+                <span key={name} className="text-sm font-semibold text-slate-400 hover:text-white transition-colors cursor-default">{name}</span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* ====== Problem ====== */}
       <section className="py-24 bg-slate-900 text-white">
