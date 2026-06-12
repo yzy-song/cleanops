@@ -10,11 +10,11 @@ import { useRoleGuard } from "@/hooks/use-role-guard";
 const eur = (cents: number) => `€${(cents / 100).toFixed(2)}`;
 
 const columns = [
-  { key: "DRAFT", label: "Preparing", color: "bg-slate-100" },
-  { key: "SENT", label: "Sent", color: "bg-blue-100" },
-  { key: "ACCEPTED", label: "Won", color: "bg-emerald-100" },
-  { key: "DECLINED", label: "Lost", color: "bg-red-50" },
-  { key: "EXPIRED", label: "Expired", color: "bg-amber-50" },
+  { key: "DRAFT", label: "Preparing", border: "border-l-slate-400", bg: "bg-muted" },
+  { key: "SENT", label: "Sent", border: "border-l-blue-500", bg: "bg-muted" },
+  { key: "ACCEPTED", label: "Won", border: "border-l-emerald-500", bg: "bg-muted" },
+  { key: "DECLINED", label: "Lost", border: "border-l-red-400", bg: "bg-muted" },
+  { key: "EXPIRED", label: "Expired", border: "border-l-amber-400", bg: "bg-muted" },
 ];
 
 export default function PipelinePage() {
@@ -45,7 +45,7 @@ export default function PipelinePage() {
 
       <div className="grid gap-4 lg:grid-cols-5 overflow-x-auto">
         {columns.map((col) => (
-          <div key={col.key} className={`rounded-xl ${col.color} p-4 min-w-[200px]`}>
+          <div key={col.key} className={`rounded-xl border-l-4 ${col.border} ${col.bg} p-4 min-w-[200px]`}>
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm font-semibold">{col.label}</p>
               <span className="text-xs text-muted-foreground bg-white/60 rounded-full px-2 py-0.5">{grouped[col.key].length}</span>

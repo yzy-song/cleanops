@@ -30,13 +30,10 @@ export default function JobsPage() {
   const [filter, setFilter] = useState<string>("");
   const { user } = useAuthStore();
   const isAdmin = user?.role === "ADMIN" || user?.role === "MANAGER";
-
   // Workers only see their own jobs
-  const baseQuery: JobQuery = filter ? { status: filter } : {};
-  if (user?.role === "WORKER" && user?.workerId) {
-    baseQuery.workerId = user.workerId;
-  }
-  const { data, isLoading, refetch } = useJobs(baseQuery);
+  const query: JobQuery = filter ? { status: filter } : {};
+  if (user?.role === "WORKER" && user?.workerId) query.workerId = user.workerId;
+  const { data, isLoading, refetch } = useJobs(query);
   const { data: workers } = useWorkers();
   const cancelJob = useCancelJob();
   const sendInvoice = useSendInvoice();
@@ -100,7 +97,8 @@ export default function JobsPage() {
   };
 
   const handleExportCsv = () => {
-    window.open(`http://localhost:3000/jobs/export/csv`, "_blank");
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+    window.open(`${apiUrl}/jobs/export/csv`, "_blank");
   };
 
   const handlePreview = async () => {
