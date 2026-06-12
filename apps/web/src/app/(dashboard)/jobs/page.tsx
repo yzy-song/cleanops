@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useJobs, useCancelJob, useSendInvoice, type JobQuery } from "@/hooks/use-jobs";
 import { useWorkers } from "@/hooks/use-workers";
 import { useAuthStore } from "@/store/auth.store";
@@ -226,8 +227,17 @@ export default function JobsPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {jobs?.map((job: any) => (
-            <Card key={job.id} className={selected.has(job.id) ? "ring-2 ring-primary" : ""}>
+          <AnimatePresence mode="popLayout">
+            {jobs?.map((job: any) => (
+            <motion.div
+              key={job.id}
+              layout
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: "spring" as const, stiffness: 400, damping: 30 }}
+            >
+            <Card className={selected.has(job.id) ? "ring-2 ring-primary" : ""}>
               <CardContent className="flex items-center justify-between p-4">
                 <div className="flex items-start gap-4">
                   {isAdmin && (
@@ -306,7 +316,9 @@ export default function JobsPage() {
                 </div>
               </CardContent>
             </Card>
+            </motion.div>
           ))}
+          </AnimatePresence>
           {!jobs?.length && (
             <div className="py-8 text-center text-muted-foreground">
               No jobs found. <button onClick={() => setJobSheetOpen(true)} className="text-primary hover:underline">Create your first job</button>
