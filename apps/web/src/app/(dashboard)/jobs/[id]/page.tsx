@@ -57,7 +57,7 @@ export default function JobDetailPage() {
     setAdminLoading(true);
     try {
       const note = `[${new Date().toISOString().slice(0,10)} Admin Note] ${internalNote.trim()}`;
-      const existing = job?.internalNotes || '';
+      const existing = (job as any)?.internalNotes || '';
       await api.patch(`/jobs/${id}`, { internalNotes: existing ? `${existing}\n${note}` : note });
       toast.success("Note added");
       setInternalNote("");
