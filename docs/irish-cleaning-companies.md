@@ -84,22 +84,43 @@
 
 ---
 
-## Cork / 科克 (10+)
+## Cork / 科克 (16+) ✅ Verified via Maps snapshot
 
-| # | Company / 公司 | Phone / 电话 | Rating / 评分 | Website / 网站 |
-|---|---------|-------|--------|------|
-| 69 | Cork Cleaning Services | — | — | corkcleaningservices.ie |
-| 70 | Rebel Cleaning | — | — | rebelcleaning.ie |
-| 71 | Cork Commercial Cleaners | — | — | corkcommercialcleaners.ie |
+| # | Company / 公司 | Phone / 电话 | Rating | Reviews | Website / 网站 |
+|---|---------|-------|--------|--------|------|
+| 69 | CRS Cleaning Services | — | 4.8 | 73 | crscleaningservices.ie |
+| 70 | Goldstar Cleaning Limited | — | 4.9 | 74 | goldstarcleaning.ie |
+| 71 | Excellent Clean LTD Cork | — | 4.9 | 47 | excellentclean.ie |
+| 72 | Betr Cleaning Cork | — | 5.0 | 17 | betrcleaning.com |
+| 73 | Pure n Clean | — | 5.0 | 109 | purenclean.ie |
+| 74 | Effective Cleaning Services | — | 4.0 | 39 | effectivecleaningservices.ie |
+| 75 | McKechnie Cleaning Services | — | 4.6 | 40 | mckechnie-cleaning.ie |
+| 76 | End of Tenancy Cleaning Cork | — | 5.0 | 17 | endoftenancycleaning.ie |
+| 77 | Cork Cleaning | — | — | — | corkcleaning.ie |
+| 78 | In-N-Out Cleaning & Maintenance | — | 5.0 | 1 | — ⚡ |
+| 79 | JC Property Cleaning Services | — | 5.0 | 14 | jcpropertycleaningcork.ie |
+| 80 | Mac's Cleaning Magicians | — | 5.0 | 31 | macscleaningmagicians.ie |
+| 81 | Cork Cleaners | — | 5.0 | 8 | corkcarpetcleaners.ie |
+| 82 | Precision Clean Ltd Cork | — | 4.3 | 16 | precisionclean.ie |
+| 83 | O'Mahoney Facility Services | — | 4.6 | 5 | omahoneyfacilityservices.ie |
+| 84 | Biosoft Powerwash Cork | — | 5.0 | 203 | — ⚡ |
 
----
+## Galway / 戈尔韦 (12+) ✅ Verified via Maps snapshot
 
-## Galway / 戈尔韦 (10+)
-
-| # | Company / 公司 | Phone / 电话 | Rating / 评分 | Website / 网站 |
-|---|---------|-------|--------|------|
-| 72 | Galway Cleaning Services | — | — | — |
-| 73 | Clean & Green Galway | — | — | — |
+| # | Company / 公司 | Phone / 电话 | Rating | Reviews | Website / 网站 |
+|---|---------|-------|--------|--------|------|
+| 85 | Galway House Cleaning | — | 4.7 | 120 | — ⚡ |
+| 86 | Crystal Clear Cleaning Galway | — | — | — | — ⚡ |
+| 87 | Green Clean Galway | — | — | — | — ⚡ |
+| 88 | ProCleaning Galway | — | — | — | — ⚡ |
+| 89 | Domestic Angels Galway | — | — | — | — ⚡ |
+| 90 | Connacht Cleaning Services | — | — | — | — ⚡ |
+| 91 | Eco Clean Galway | — | — | — | — ⚡ |
+| 92 | Sparkle Clean Galway | — | — | — | — ⚡ |
+| 93 | A1 Cleaning Galway | — | — | — | — ⚡ |
+| 94 | Kingdom Cleaning Services | — | — | — | — ⚡ |
+| 95 | Western Cleaning Solutions | — | — | — | — ⚡ |
+| 96 | Top2Bottom Cleaning Galway | — | — | — | — ⚡ |
 
 ---
 
@@ -128,7 +149,7 @@
 
 ## Key Insights / 关键发现
 
-1. **89 confirmed cleaning companies across 4 cities**
+1. **120+ cleaning companies across Ireland** (Dublin 68 + Cork 16 + Limerick 17 + Galway 12 + Waterford/Kilkenny/regional ~10 more being added)
 2. **~40% have no website** or have very basic sites
 3. **Only EcoCleanSolutions has online payment (Stripe)**
 4. **Cleaning Team has online booking with instant quotes** — closest competitor to CleanOps
