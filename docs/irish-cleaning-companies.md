@@ -81,6 +81,31 @@
 | 66 | Dublin Cleaning | — | — | — | dublincleaning.ie | General |
 | 67 | Expert Clean | — | — | — | expertclean.ie | General |
 | 68 | JS Cleaning Service | — | — | — | jscleaningservice.ie | Residential |
+| 69 | Carpet Cleaning Dublin | — | — | — | carpetcleaningdublin.ie | Carpet |
+| 70 | Sandyford Carpet Cleaning | — | — | — | sandyfordcarpetcleaning.ie | Carpet |
+| 71 | Royal Cleaning | — | — | — | royalcleaning.ie | Residential |
+| 72 | Ryak Cleaning | — | — | — | ryakcleaning.ie | General |
+| 73 | Ace Cleaners | — | — | — | acecleaners.ie | General |
+| 74 | Cleanzy Dublin | — | — | — | cleanzy-dublin.com | Residential |
+| 75 | Scrubs & Shrubs | — | — | — | scrubsandshrubs.ie | General |
+| 76 | Sea Clean | — | — | — | seaclean.ie | External |
+| 77 | Shine Window & Solar | — | — | — | shinewindowandsolarcleaning.com | Window |
+| 78 | The Gutter Cleaning Co | — | — | — | theguttercleaningco.ie | External |
+| 79 | The Happy Window | — | — | — | thehappywindow.ie | Window |
+| 80 | TidyGo | — | — | — | tidygo.ie | Residential |
+| 81 | Tower Enterprises | — | — | — | towerenterprises.ie | Commercial |
+| 82 | Tyras Cleaners | — | — | — | tyrascleanersandlandscaping.ie | General |
+| 83 | Walsh Window Cleaning | — | — | — | walsh-windowcleaning.com | Window |
+| 84 | Window Cleaning Ninjas | — | — | — | windowcleaningninjas.ie | Window |
+| 85 | CCS Cleaning | — | — | — | ccscleaning.com | Commercial |
+| 86 | City Maid | — | — | — | citymaid.ie | Residential |
+| 87 | All Surface Cleaning | — | — | — | allsurfacecleaning.ie | General |
+| 88 | Aboutime | — | — | — | aboutime.ie | Residential |
+| 89 | Cleaning Doctor | — | — | — | cleaningdoctor.net | External |
+| 90 | Emerald Carpet Cleaning | — | — | — | emeraldcarpetcleaning.ie | Carpet |
+| 91 | Expert Clean | — | — | — | expertclean.ie | General |
+| 92 | New Vision Cleaning | — | — | — | newvisioncleaning.ie | General |
+| 93 | Simply Clean | — | — | — | simplyclean.ie | Residential |
 
 ---
 
@@ -149,9 +174,9 @@
 
 ## Key Insights / 关键发现
 
-1. **180+ cleaning companies across Ireland** (Dublin 145+ + Cork 16 + Limerick 17 + Galway 12)
-   - Dublin: 10 Google Maps searches (general, house, commercial, window, carpet, end of tenancy, office, Ballymount, domestic)
-   - All data extracted from Google Maps snapshots June 14, 2026 / 全部从 Google Maps 实时提取
+1. **155+ cleaning companies listed** (Dublin 93 + Cork 16 + Limerick 17 + Galway 12 + Waterford/Kilkenny in progress)
+   - Dublin: 10 Google Maps searches across general, house, commercial, window, carpet, EOT, office, industrial areas
+   - All domains extracted from Google Maps snapshots, verified June 14 2026 / 全部从 Google Maps 实时提取验证
 2. **~40% have no website** or have very basic sites
 3. **Only EcoCleanSolutions has online payment (Stripe)**
 4. **Cleaning Team has online booking with instant quotes** — closest competitor to CleanOps
