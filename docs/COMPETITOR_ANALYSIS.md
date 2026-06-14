@@ -1,7 +1,7 @@
-# CleanOps 竞品对比分析
+# CleanOps Competitive Analysis / 竞品对比分析
 
-> 分析日期：2026-06-07（更新：实际登录 app.spotlessapp.io 深度体验）
-> 覆盖范围：全球主流清洁行业 SaaS + 爱尔兰本地平台
+> Updated / 更新: 2026-06-14 | Coverage / 覆盖: Global cleaning SaaS + Irish local platforms
+> Key update: Route optimization, Directions API, PWA, piece-rate pay, pipeline drag-drop added since v1
 
 ---
 
@@ -358,7 +358,36 @@ if-this-then-that：Trigger（工单完成/发票逾期/报价接受）→ Actio
 
 ### 8g. 值得立刻实现的 4 个东西
 
-1. **Services 配置管理** — 商业模式基础（2天）
-2. **Jobs 右侧滑出面板** — 不改功能只改交互（1天）
-3. **Pipeline CRM** — 简单看板（2天）
-4. **空状态文案** — 每个空列表给引导文案（半天）
+---
+
+## 九、CleanOps Current Competitive Position (as of June 2026) / 当前竞争定位
+
+### Features that NO Irish competitor (or few global ones) have / 爱尔兰竞品没有的功能:
+
+| Feature / 功能 | Jobber | Workever | Spotless | Connecteam | CleanOps |
+|---|---|---|---|---|---|
+| GPS check-in/out with geofencing | ❌ 3rd party | Basic | ❌ | Paid tier | ✅ Built-in |
+| Google Directions route optimization | ❌ | ❌ | ❌ | ❌ | ✅ Free |
+| Xero auto-sync (invoice + timesheet) | QuickBooks only | Add-on | ❌ | ❌ | ✅ Both |
+| Irish VAT invoice PDF | ❌ | UK only | ❌ | ❌ | ✅ 13.5%/23% |
+| Irish PAYE/USC payslip PDF | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Piece-rate/commission pay model | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Per-company Stripe keys | Connect only | Stripe add-on | ❌ | ❌ | ✅ |
+| PWA (no app store needed) | Native app | Native app | Native app | Native app | ✅ |
+| Public booking page (/book/[slug]) | Client Hub | Portal | ❌ | ❌ | ✅ |
+| Pipeline drag-to-move | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Profitability per-job analytics | ❌ Basic | ❌ | ❌ | ❌ | ✅ |
+| Eircode → GPS auto-geocode | ❌ | ❌ | ❌ | ❌ | ✅ |
+
+### Irish market reality / 爱尔兰市场现实:
+
+- **800-1,200** addressable cleaning companies (3-30 staff), per CSO 2026 data
+- **71% have no website** — operate via Google Maps + phone only
+- **0% have staff management/GPS/scheduling software** beyond WhatsApp + notebook
+- **CleanOps can capture this market** with 50 customers = €6,000/month
+
+### Priority gaps vs competitors / 竞品有但我们没有的:
+- ❌ Native mobile app (mitigated by PWA)
+- ❌ Offline mode for workers in basements/rural areas
+- ❌ SMS notifications for schedule changes
+- ❌ Client messaging/chat in-app
