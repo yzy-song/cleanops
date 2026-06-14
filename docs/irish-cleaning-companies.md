@@ -174,9 +174,11 @@
 
 ## Key Insights / 关键发现
 
-1. **155+ cleaning companies listed** (Dublin 93 + Cork 16 + Limerick 17 + Galway 12 + Waterford/Kilkenny in progress)
-   - Dublin: 10 Google Maps searches across general, house, commercial, window, carpet, EOT, office, industrial areas
-   - All domains extracted from Google Maps snapshots, verified June 14 2026 / 全部从 Google Maps 实时提取验证
+1. **145 unique verified cleaning company domains** across Ireland
+   - Dublin ~110 + Cork ~15 + Limerick ~12 + Galway ~8
+   - Extracted from 21 Google Maps snapshots across 14 different searches, June 14 2026
+   - ~45 of 155 table entries have phone numbers verified / 约 45 条有验证过的电话
+   - ⚡ = phone-only (no website found) / 仅电话, 无网站
 2. **~40% have no website** or have very basic sites
 3. **Only EcoCleanSolutions has online payment (Stripe)**
 4. **Cleaning Team has online booking with instant quotes** — closest competitor to CleanOps
