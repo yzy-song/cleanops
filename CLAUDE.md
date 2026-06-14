@@ -1,21 +1,23 @@
-# CleanOps — Cleaning Business Management Platform
+# CleanOps — Cleaning Business Management Platform / 清洁业务管理平台
 
 Monorepo: NestJS API + Next.js 14 Web + Prisma + PostgreSQL.
 
-## Quick Links
-- Backend rules: [apps/api/CLAUDE.md](apps/api/CLAUDE.md)
-- Frontend rules: [apps/web/CLAUDE.md](apps/web/CLAUDE.md)
-- Database: [packages/db/prisma/schema.prisma](packages/db/prisma/schema.prisma)
+## Quick Links / 快速链接
+- Backend rules / 后端规范: [apps/api/CLAUDE.md](apps/api/CLAUDE.md)
+- Frontend rules / 前端规范: [apps/web/CLAUDE.md](apps/web/CLAUDE.md)
+- Database / 数据库: [packages/db/prisma/schema.prisma](packages/db/prisma/schema.prisma)
+- Docs / 文档: [docs/](docs/)
 
-## Shared Rules (all projects)
-- **金额**: 整数 cents，禁止浮点数。前端展示 `/100` 转 €
-- **时间**: UTC 存储，`date-fns-tz` 转用户时区展示
-- **新代码不碰相邻旧代码**，不顺手重构
-- **不改测试**（除非改动导致过时）
-- **不改 CLAUDE.md**（除非明确要求）
-- **国际化**: 所有用户可见文案通过 `t()` 函数
-- **提交粒度**: 一个功能点一个 commit，不攒一大堆。做完一个提交一个。
-- **提交格式**: `类型: 描述`（feat/fix/refactor/docs/test/chore）
+## Shared Rules / 共享规则 (all projects / 所有项目)
+- **Money / 金额**: 整数 cents，禁止浮点数。前端展示 `/100` 转 € / Integer cents only. Display ÷100 as €
+- **Time / 时间**: UTC 存储，`date-fns-tz` 转用户时区展示 / UTC storage, display with timezone
+- **新代码不碰相邻旧代码**，不顺手重构 / Don't refactor adjacent old code
+- **不改测试**（除非改动导致过时）/ Don't modify tests unless your change breaks them
+- **不改 CLAUDE.md**（除非明确要求）/ Don't modify CLAUDE.md unless explicitly asked
+- **Internationalization / 国际化**: 所有用户可见文案通过 `t()` 函数 / All user-facing text via t()
+- **Commit granularity / 提交粒度**: 一个功能点一个 commit，不攒一大堆 / One feature per commit
+- **Commit format / 提交格式**: `type: description`（feat/fix/refactor/docs/test/chore）
+- **New docs / 新文档**: 中英双语 / Bilingual Chinese + English
 
 ## Common Commands
 | Command | What |
