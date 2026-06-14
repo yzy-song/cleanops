@@ -1,275 +1,208 @@
-# CleanOps 功能清单
+# CleanOps Features / 功能清单
 
-最后更新: 2026-05-28
-
-## 已完成功能
-
-### 1. 认证与权限 (Auth)
-
-- JWT 登录/注册，角色区分 ADMIN / MANAGER / WORKER
-- 客户 Magic Link 免密登录（30 分钟有效期）
-- 全局 Throttle 限流（60s 内 100 次）
-
-| 端点 | 说明 |
-|------|------|
-| `POST /auth/login` | 后台用户登录 |
-| `POST /auth/register` | 注册新公司 + 管理员 |
-| `POST /portal/send-link` | 客户 Magic Link 发送 |
-| `POST /portal/verify` | Token 验证 |
-| `GET /portal/me` | 客户个人信息 |
+> Last updated / 最后更新: 2026-06-14
 
 ---
 
-### 2. 公司管理 (Company)
+## 1. Auth & Permissions / 认证与权限
 
-- 公司 Profile 管理，基础时薪配置
-- Stripe Connect OAuth 入网（接收收款）
-- Xero OAuth 会计同步连接
-- 14 天试用期 + 试用守卫（TrialGuard / @TrialBypass）
+| Feature / 功能 | Status |
+|---|---|
+| JWT login/register, roles: ADMIN / MANAGER / WORKER | ✅ |
+| Customer Magic Link (30-min TTL) / 客户免密登录 | ✅ |
+| Global Throttle (100 req/60s) / 全局限流 | ✅ |
+| @Auth() decorator with role guards / 角色守卫 | ✅ |
+| Worker restricted from Customers/Reports/Invoices/Workers | ✅ |
+| Manager: Automations, Worker deactivation restored | ✅ |
 
-| 端点 | 说明 |
-|------|------|
-| `GET /company/stripe/connect` | 获取 Stripe Connect OAuth URL |
-| `GET /company/stripe/callback` | OAuth 回调 |
-| `GET /company/stripe/status` | Stripe 账户状态 |
-| `GET /company/xero/connect` | 获取 Xero OAuth URL |
-| `GET /company/xero/callback` | Xero 回调 |
-| `GET /company/xero/status` | Xero 连接状态 |
+## 2. Company & Settings / 公司管理
 
----
+| Feature / 功能 | Status |
+|---|---|
+| Company profile, base hourly rate, VAT number | ✅ |
+| Per-company Stripe secret key (NOT Connect) / 公司自有密钥 | ✅ |
+| Stripe key input with show/hide in Settings | ✅ |
+| Xero OAuth2 connection + token refresh cron / 自动刷新 | ✅ |
+| 14-day trial + TrialGuard / 14天试用 | ✅ |
+| Stripe Billing webhook for subscriptions / 订阅支付回调 | ✅ |
+| Setup checklist: Stripe/Xero/VAT status badges | ✅ |
 
-### 3. 客户管理 (Customer)
+## 3. Customer Management / 客户管理
 
-- CRUD + 列表，支持名称/邮箱搜索
-- 爱尔兰 Eircode + Access Code 字段
-- 商业/住宅区分（影响 VAT）
+| Feature / 功能 | Status |
+|---|---|
+| CRUD + list with search / 列表搜索 | ✅ |
+| Irish Eircode + Access Code fields | ✅ |
+| Commercial/Residential distinction (affects VAT) | ✅ |
+| Credit risk list + summary per customer / 信用风险 | ✅ |
+| Customer slide-out sheet (NewCustomerSheet) | ✅ |
+| Auto-geocode: Eircode → Google Geocoding → lat/lng | ✅ |
+| Filter by type: All / Commercial / Residential | ✅ |
 
-| 端点 | 说明 |
-|------|------|
-| `GET /customer` | 客户列表 |
-| `POST /customer` | 新建客户 |
-| `GET /customer/:id` | 客户详情 |
-| `PATCH /customer/:id` | 更新客户 |
-| `DELETE /customer/:id` | 删除客户 |
+## 4. Worker Management / 工人管理
 
----
+| Feature / 功能 | Status |
+|---|---|
+| CRUD + list with deactivation / 停用 | ✅ |
+| Worker slide-out sheet (NewWorkerSheet) | ✅ |
+| Hourly rate, skills, work days / 工作日设置 | ✅ |
+| Pay models: HOURLY | PER_JOB (commission % or flat €) / 提成制 | ✅ |
+| Worker self-service: /worker/me/jobs, /worker/me/earnings | ✅ |
+| Eircode → backend geocodes to lat/lng for routing | ✅ |
 
-### 4. 任务调度 (Job)
+## 5. Job Management / 工单管理
 
-- 任务 CRUD + 状态机：PENDING → IN_PROGRESS → COMPLETED / ISSUE / CANCELLED
-- Worker 分配（多对多中间表 JobAssignment）
-- GPS 围栏打卡（start/end 位置 + 时间）
-- 现场照片（BEFORE / AFTER / CHECKIN，Cloudinary 存储）
-- 定金管理：生成 Stripe 支付链接 / 标记已付
+| Feature / 功能 | Status |
+|---|---|
+| CRUD + list with status filter (PENDING/IN_PROGRESS/COMPLETED/CANCELLED) | ✅ |
+| Create Job slide-out sheet / 右侧滑出 | ✅ |
+| Quick date filters: Today / Tomorrow / This Week / All Dates | ✅ |
+| Client-side search by customer name/address/notes | ✅ |
+| Calendar view: Day/Week/Month with drag-to-reschedule | ✅ |
+| Drag job onto worker in sidebar to assign / 拖拽分配工人 | ✅ |
+| GPS check-in/out with 200m geofencing / 地理围栏 | ✅ |
+| Auto-complete on check-out / 签退自动完成 | ✅ |
+| Recurring jobs: WEEKLY/BI-WEEKLY + daily 6AM auto-generation cron | ✅ |
+| Batch assign, batch invoice, batch cancel | ✅ |
+| CSV export (464 lines verified) | ✅ |
 
-| 端点 | 说明 |
-|------|------|
-| `GET /jobs` | 任务列表 |
-| `POST /jobs` | 创建任务 |
-| `GET /jobs/:id` | 任务详情 |
-| `PATCH /jobs/:id` | 更新任务 |
-| `POST /jobs/:id/deposit-link` | 生成定金支付链接 |
-| `PATCH /jobs/:id/mark-deposit-paid` | 手动标记定金已付 |
+## 6. Scheduling & Routing / 排班与路线
 
----
+| Feature / 功能 | Status |
+|---|---|
+| Auto-schedule: preview + apply / 自动排班预览+确认 | ✅ |
+| Date validation (reject endDate < startDate) | ✅ |
+| Nearest-neighbor TSP route optimization / 最近邻路线 | ✅ |
+| Google Directions API: real road distance + driving time | ✅ |
+| POST /jobs/optimize-route with polyline response | ✅ |
+| Worker route polylines on map / 工人路线连线 | ✅ |
 
-### 5. 报价系统 (Quote)
+## 7. Map / 地图调度台
 
-- Quote 状态机：DRAFT → SENT → ACCEPTED / DECLINED / EXPIRED
-- 7 种服务类型 × 8 种物业规模 × 4 种频率 → 自动定价
-- 爱尔兰 VAT（住宅 13.5% / 商业 23%）
-- 大额一次性订单自动要求 25% 定金
-- Admin 后台：手动创建/发送/转为任务/拒绝
-- 公开端：客户通过 token 链接查看报价、接受/拒绝
-- **接受时如需定金自动生成 Stripe Connect 支付链接**
+| Feature / 功能 | Status |
+|---|---|
+| Google Maps with markers (blue=assigned, gray=unassigned) | ✅ |
+| Date navigation: prev/next day + date picker + Today | ✅ |
+| InfoWindow: job details + worker assignment dropdown | ✅ |
+| Worker route polylines with direction arrows | ✅ |
+| Worker panel: availability status, assigned count | ✅ |
+| Navigate button → Google Maps directions | ✅ |
 
-| 管理端点 | 说明 |
-|------|------|
-| `POST /quote` | 创建报价 |
-| `GET /quote` | 报价列表 |
-| `GET /quote/:id` | 报价详情 |
-| `PATCH /quote/:id` | 更新报价 (DRAFT) |
-| `POST /quote/:id/send` | 发送报价 (DRAFT→SENT) |
-| `POST /quote/:id/convert` | 转为任务 (ACCEPTED→Job) |
-| `POST /quote/:id/decline` | 拒绝报价 |
+## 8. Invoices & Payments / 发票与收款
 
-| 公开端点 | 说明 |
-|------|------|
-| `POST /portal/quote/calculate` | 实时定价计算 |
-| `POST /portal/quote` | 公开表单创建报价 |
-| `GET /portal/quote/:token` | 查看报价 |
-| `POST /portal/quote/:token/accept` | 接受报价 → 创建任务 + 生成定金链接 |
-| `POST /portal/quote/:token/decline` | 拒绝报价 |
-| `GET /portal/quotes` | 客户自己的报价列表 |
+| Feature / 功能 | Status |
+|---|---|
+| Auto-generate invoice on job complete / 完工自动开票 | ✅ |
+| Invoice PDF: Irish-compliant VAT INVOICE / 合规发票 | ✅ |
+| Invoice PDF: VAT Reg No, IBAN/BIC, 30-day terms | ✅ |
+| Invoice list: Overdue/Unpaid/Paid summary cards | ✅ |
+| One-click PDF download from list view | ✅ |
+| Xero sync badge on synced invoices | ✅ |
+| Stripe Payment Link per invoice / 支付链接 | ✅ |
+| Generate, mark-paid, void, send reminder | ✅ |
+| Xero auto-sync on create/paid/void (non-blocking) | ✅ |
+| Stripe webhook: auto-mark-paid on checkout.session.completed | ✅ |
 
-| 前端页面 | 路径 |
-|------|------|
-| 报价列表 | `/quotes` |
-| 创建报价 | `/quotes/new` |
-| 报价详情 | `/quotes/[id]` |
-| 公开报价页 | `/portal/quote/[token]` |
+## 9. Quotes / 报价
 
-**关键文件**: `apps/api/src/quote/pricing.service.ts` (定价引擎), `apps/api/src/quote/quote.service.ts`, `apps/web/src/hooks/use-quotes.ts`
+| Feature / 功能 | Status |
+|---|---|
+| CRUD with status filter (DRAFT/SENT/ACCEPTED/DECLINED/EXPIRED) | ✅ |
+| Pricing calculator / 计价器 | ✅ |
+| Send, accept, decline, convert to job | ✅ |
+| Status counts + pending pipeline value / pipeline金额汇总 | ✅ |
 
----
+## 10. Pipeline / 销售看板
 
-### 6. 账单系统 (Invoice)
+| Feature / 功能 | Status |
+|---|---|
+| Kanban board: Preparing/Sent/Won/Lost/Expired / 看板 | ✅ |
+| Drag-to-move quotes between stages / 拖拽换状态 | ✅ |
+| Valid transitions enforced (e.g. SENT→ACCEPTED, not SENT→DRAFT) | ✅ |
+| Per-column revenue totals / 每列金额汇总 | ✅ |
+| Drag overlay during move | ✅ |
 
-- 任务完成自动生成账单
-- VAT 计算（13.5% / 23%）
-- Stripe Connect 支付链接（资金直达 Connected Account，平台收 1% 手续费）
-- 手动标记已付 / 作废 / 催款邮件
-- PDF 生成 + 下载
-- Xero 同步（创建 Contact + Invoice）
-- WhatsApp 分享支付链接
+## 11. Reports / 报表
 
-| 端点 | 说明 |
-|------|------|
-| `GET /invoice` | 账单列表 |
-| `POST /invoice` | 创建账单 |
-| `GET /invoice/:id` | 账单详情 |
-| `PATCH /invoice/:id` | 更新账单 |
-| `POST /invoice/:id/pay` | 生成 Stripe 支付链接 |
-| `PATCH /invoice/:id/mark-paid` | 手动标记已付 |
-| `PATCH /invoice/:id/void` | 作废 |
-| `POST /invoice/:id/remind` | 发送催款邮件 |
-| `GET /invoice/:id/pdf` | 下载 PDF |
+| Feature / 功能 | Status |
+|---|---|
+| Payroll: per-worker earnings, hours, PAYE/PRSI/pension | ✅ |
+| Payroll: bar chart + detail table + KPI cards | ✅ |
+| VAT: residential (13.5%) vs commercial (23%) pie chart | ✅ |
+| Timesheet: hours worked per worker, date range filter | ✅ |
+| Profitability: revenue vs labor cost per job, margin % | ✅ |
+| Profitability: bar chart + KPI (revenue/labor/profit/margin) / 毛利图表 | ✅ |
 
-| 前端页面 | 路径 |
-|------|------|
-| 账单列表 | `/invoices` |
-| 账单详情 | `/invoices/[id]` |
+## 12. PDFs / PDF文档
 
----
+| Feature / 功能 | Status |
+|---|---|
+| Irish VAT Invoice PDF (pdfmake) / 增值税发票 | ✅ |
+| Irish Payslip PDF: PAYE + PRSI + USC + YTD / 工资条 | ✅ |
+| GET /report/payslip/:workerId/pdf | ✅ |
+| pdfmake v0.3.x API migration completed | ✅ |
 
-### 7. SaaS 订阅计费 (Billing)
+## 13. Customer Portal / 客户门户
 
-- 14 天试用 → 3 档订阅：STARTER / PRO / BUSINESS
-- Stripe Customer Portal 管理订阅
-- 试用守卫：全场强制试用检查，webhook/公开端点豁免
+| Feature / 功能 | Status |
+|---|---|
+| Magic Link login / 免密登录 | ✅ |
+| View own jobs, invoices / 查看自己的工单和发票 | ✅ |
+| Book a service / 在线预约 | ✅ |
+| Accept/decline quotes / 接受/拒绝报价 | ✅ |
+| Leave review / 评价 | ✅ |
+| Public booking page: /book/[company-slug] / 公开预约页 | ✅ |
 
-| 端点 | 说明 |
-|------|------|
-| `GET /billing/subscription` | 订阅状态 |
-| `POST /billing/checkout` | 创建结账会话 |
-| `POST /billing/portal` | 客户门户 |
-| `POST /billing/webhook` | Stripe 订阅 webhook |
+## 14. Xero Integration / Xero集成
 
----
+| Feature / 功能 | Status |
+|---|---|
+| OAuth2 connection with offline_access / 离线token | ✅ |
+| Auto-sync invoice on create → Xero AUTHORISED invoice | ✅ |
+| Auto-update Xero status on paid/void | ✅ |
+| Auto-sync GPS work hours → Xero Payroll Timesheets / 工时同步 | ✅ |
+| Token refresh cron (every 25 min) / Token自动刷新 | ✅ |
+| New granular scopes: accounting.invoices + contacts + settings | ✅ |
+| TokenSet properly set via setTokenSet() (xero-node v17 fix) | ✅ |
 
-### 8. 客户自助门户 (Customer Portal)
+## 15. Google Maps / 谷歌地图
 
-- 客户查看自己的 Job 列表、发票列表、报价列表
-- Magic Link 免密登录（30min TTL），Session Token（7天 TTL）
-- 客户信息编辑：姓名 / 邮箱 / 电话 / 地址 / Eircode / Access Code
-- 在线预约：4 步表单（服务选择 → 物业规模 → 联系信息 → 确认），实时定价
-- 账单在线支付：Stripe Connect Checkout → 支付成功回调
-- 预约确认邮件自动发送
-- 任务改期 / 取消（仅 PENDING 状态）
-- 仪表盘摘要卡片：下次服务倒计时 / 未付账单总额 / 待处理报价
-- Rate Limiting：`/portal/send-link` 3次/60s/IP, 1次/5min/邮箱
+| Feature / 功能 | Status |
+|---|---|
+| Geocoding: Eircode → lat/lng (backend proxied) / 地址转坐标 | ✅ |
+| Directions API: real road optimization + polyline / 道路优化 | ✅ |
+| Map display: frontend key (HTTP restricted) / 地图显示 | ✅ |
+| Backend key (IP restricted) for Geocoding + Directions / 后端Key | ✅ |
 
-| 端点 | 说明 |
-|------|------|
-| `POST /portal/send-link` | Magic Link 发送（防邮箱枚举） |
-| `POST /portal/verify` | Token 验证 → 返回 sessionToken |
-| `GET /portal/me` | 客户个人信息 |
-| `PATCH /portal/me` | 更新客户信息 |
-| `POST /portal/logout` | 清除会话 |
-| `GET /portal/jobs` | 我的任务列表 |
-| `PATCH /portal/jobs/:id/reschedule` | 改期（PENDING 任务） |
-| `POST /portal/jobs/:id/cancel` | 取消（PENDING 任务） |
-| `GET /portal/invoices` | 账单列表（支持 status/page/limit） |
-| `POST /portal/invoices/:id/pay` | 生成 Stripe 支付链接 |
-| `POST /portal/book` | 在线预约 |
-| `GET /portal/quotes` | 我的报价列表 |
+## 16. PWA / 渐进式Web应用
 
-| 前端页面 | 路径 |
-|------|------|
-| 门户首页 | `/portal` |
-| 登录 | `/portal/login` |
-| Token 验证 | `/portal/verify` |
-| 个人资料编辑 | `/portal/profile` |
-| 在线预约 | `/book` |
-| 报价查看 | `/portal/quote/[token]` |
+| Feature / 功能 | Status |
+|---|---|
+| manifest.json: CleanOps branding, standalone mode, start /dashboard | ✅ |
+| iOS meta tags: apple-mobile-web-app-capable | ✅ |
+| Workbox service worker with precaching + offline cache | ✅ |
+| Install to home screen from any mobile browser / 安装到桌面 | ✅ |
 
----
+## 17. Dev Infrastructure / 开发基础设施
 
-### 9. 工人管理 (Worker)
-
-- CRUD + 列表
-- 关联 User（后台登录），关联 JobAssignment
-- 个体时薪配置
-
----
-
-### 10. 报表 (Report)
-
-- 工时代报：Worker × 日期范围 × 工时汇总
-- 发薪报：Worker 时薪 × 工时 × 金额
-- VAT 报：按时期汇总 subtotal / VAT
-
----
-
-### 11. Stripe 支付基础设施
-
-- **SaaS 订阅**: Stripe Billing (checkout.session.completed, customer.subscription.updated/deleted)
-- **Stripe Connect**: OAuth 入网，Connected Account 收款
-- **发票支付**: Connect 结账会话 + 平台 1% 手续费
-- **定金支付**: Job 定金 + Quote 接受时自动定金
-- **Webhook**: 3 条管道（订阅/发票支付/Connect 账户状态）
-- **退款**: `charge.refunded` 事件接收，反向转账退回手续费
+| Feature / 功能 | Status |
+|---|---|
+| CI/CD: GitHub Actions → Oracle Cloud deploy | ✅ |
+| CI: pnpm --filter @cleanops/db exec prisma migrate deploy / 数据库迁移 | ✅ |
+| Migration: 2 files, database schema up to date | ✅ |
+| CodeGraph: 2,791 nodes, 5,049 edges pre-indexed | ✅ |
+| CLAUDE.md: bilingual root + apps/api + apps/web | ✅ |
+| Docs: bilingual, organized in /docs | ✅ |
 
 ---
 
-### 12. 智能排班引擎 (Auto Scheduling)
+## Priority Gaps / 待做
 
-- 贪心多因子评分算法：距离分 + 聚类分 + 负载均衡分
-- 硬约束：Worker workDays + skills 匹配
-- 容量：480min/天 (8h)，含工单间路程缓冲 (距离÷30km/h)
-- 每个工人当天任务按最近邻排序 (nearest-neighbor TSP)
-- 预览方案不写库，确认后批量写入 JobAssignment
-- Worker 新字段：postalCode / lat / lng / skills / workDays
-- Google Geocoding API 自动解析 postalCode → lat/lng
-
-| 端点 | 说明 |
-|------|------|
-| `POST /jobs/auto-schedule` | 预览排班方案（不写库） |
-| `POST /jobs/auto-schedule/apply` | 确认应用排班 |
-| `POST /jobs/reassign` | 释放某工人当天任务并重排 |
-
-**关键文件**: `apps/api/src/job/scheduling.service.ts`, `apps/api/src/common/services/geocoding.service.ts`
-
----
-
-### 13. 地图调度台 (Map Dispatch Board)
-
-- `/map` 日期导航：← 前一天 / 今天 / 后一天 → + 日期选择器
-- 自定义标记：蓝色 = 已指派 / 灰色 = 待派
-- 点击已指派标记 → InfoWindow 显示工人信息
-- 点击待派标记 → 下拉菜单选工人指派
-- 底部工人卡片栏：头像/姓名/当天任务数，蓝色=有任务/绿色=空闲/灰色=休息
-
-**关键文件**: `apps/web/src/app/(dashboard)/map/page.tsx`
-
----
-
-## 待开发
-
-| 功能 | 优先级 | 备注 |
-|------|--------|------|
-| 循环任务 (Recurring Jobs) | 高 | Schema 已有 isRecurring / recurrenceRule，缺自动生成逻辑 |
-| 距离矩阵 API 升级 | 中 | 当前用 Haversine 直线距离，后续换 Google Distance Matrix |
-| 拖拽指派 UI | 中 | `/map` 目前点击标记→下拉指派，拖拽交互待做 |
-| Stripe Elements 内嵌支付 | 低 | 目前用 Stripe 托管结账页，已可用 |
-| 客户门户 i18n | 低 | 当前全英文，需引入 next-intl |
-
----
-
-## 约定
-
-- 金额统一用 cents (Int) 存储，显示时 `/ 100`
-- 时间统一 UTC 存储，`date-fns-tz` 展示
-- API 响应格式: `{ data, meta?: { total, page, limit } }`
-- 前端数据用 React Query hooks，`useQuery` + `useMutation` + `invalidateQueries`
-- Git 提交: `<type>: <描述>` (feat / fix / refactor / chore)
+| # | Feature / 功能 | Priority |
+|---|---------|---------|
+| 1 | **Offline mode** for workers in basements/rural / 离线模式 | 🔴 |
+| 2 | **SMS notifications** for schedule changes / 排班短信通知 | 🔴 |
+| 3 | **Job photos** — before/after images / 现场拍照 | 🟡 |
+| 4 | **Mobile-friendly worker dashboard** — larger touch targets | 🟡 |
+| 5 | **Client messaging** — in-app chat / 客户沟通 | 🟢 |
+| 6 | **Forms/checklists** — job completion sign-off / 完工确认表 | 🟢 |

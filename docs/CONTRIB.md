@@ -1,6 +1,8 @@
-# 开发指南 (Contributing)
+# Contributing / 开发指南
 
-## 环境要求
+> Last updated / 最后更新: 2026-06-14
+
+## Requirements / 环境要求
 
 | 工具 | 版本 |
 |------|------|
@@ -142,10 +144,22 @@ pnpm --filter @cleanops/web dev
 ## 提交规范
 
 ```
-feat: 新功能
-fix: Bug 修复
-refactor: 重构
-chore: 杂项
-docs: 文档
-test: 测试
+feat: new feature / 新功能
+fix: bug fix / Bug 修复
+refactor: refactoring / 重构
+chore: maintenance / 杂项
+docs: documentation / 文档
+test: testing / 测试
 ```
+
+## Commit Rules / 提交规则
+
+- One feature per commit / 一个功能点一个 commit
+- Never batch unrelated changes / 不要攒一大堆一起提交
+- Commit format: `type: English description / 中文说明`
+
+## Documentation Rules / 文档规则
+
+- New docs must be bilingual (Chinese + English) / 新文档必须中英双语
+- Place in `docs/` directory / 放在 docs/ 目录
+- Update existing docs when features change / 功能变更时更新文档
