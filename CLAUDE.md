@@ -39,7 +39,7 @@ pnpm --filter @cleanops/db exec prisma migrate deploy
 
 ## Deploy
 - CI: `.github/workflows/deploy-cleanops.yml`
-- Server: Oracle Cloud (138.2.42.101)
+- Server: Oracle Cloud (129.225.181.19)
 - PM2: `ecosystem.config.cjs`
 - SSH: `ssh yzy`
 - Pre-deploy: `export DATABASE_URL=...` before starting node (Prisma reads it at import time)

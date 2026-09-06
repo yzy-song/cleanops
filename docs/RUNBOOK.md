@@ -8,7 +8,7 @@
 GitHub Repo (yzy-song/cleanops)
      │
      ├─→ GitHub Actions Deploy (apps/api/** or packages/db/** change)
-     │     └─→ SSH → Oracle Cloud (138.2.42.101)
+     │     └─→ SSH → Oracle Cloud (129.225.181.19)
      │           ├─→ pnpm --filter @cleanops/db exec prisma generate
      │           ├─→ pnpm --filter @cleanops/db exec prisma migrate deploy
      │           └─→ PM2 restart cleanops (as user 'cleanops', port 4000)
@@ -56,7 +56,7 @@ sudo -u cleanops pm2 restart cleanops
 
 ## Server / 服务器
 
-- **Host**: Oracle Cloud (138.2.42.101)
+- **Host**: Oracle Cloud (129.225.181.19)
 - **User**: ubuntu (deploy) / cleanops (PM2)
 - **PM2**: `sudo -u cleanops pm2 <cmd>`
 - **DB**: PostgreSQL, user 'cleanops', DB 'db-cleanops'
